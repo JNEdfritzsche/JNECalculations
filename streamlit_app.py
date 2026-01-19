@@ -19,6 +19,10 @@ st.caption("Theory • Examples • Calculators")
 def fmt(x, unit=""):
     if x is None:
         return "—"
+    try:
+        x = float(x)
+    except Exception:
+        return str(x)
     if abs(x) >= 1e6:
         s = f"{x:,.3g}"
     elif abs(x) >= 1:
@@ -44,6 +48,11 @@ def show_code_note(selected_code: str):
         "This site is written to be easy to follow. Always verify final selections against the code, "
         "project specs, equipment data, and a coordination study where required."
     )
+
+
+def eq(latex: str):
+    """Render a LaTeX equation in a consistent display style."""
+    st.latex(latex)
 
 
 # ----------------------------
@@ -78,268 +87,217 @@ with st.sidebar:
 # ----------------------------
 theory_tab, calc_tab = st.tabs(["📚 Theory", "🧮 Calculator"])
 
+
 # ============================
 # 1) Transformer Protection
 # ============================
 if page == "Transformer Protection":
     with theory_tab:
-        header("Transformer Protection", "Code-focused summary with a simple step-by-step method.")
+        header("Transformer Protection", "Code-focused theory and worked examples (full content).")
         show_code_note(code_mode)
 
+        # OESC Theory (full, reintroduced)
         if code_mode == "OESC":
+            st.subheader("OESC — Transformer Protection (Full Theory, simplified)")
+
+            st.markdown("### Document metadata / header (example)")
             st.markdown(
-                r"""
-## OESC Transformer Protection (Simple Guide)
-
-### Objective
-Select transformer overcurrent protection (breaker and/or fuses) to satisfy the **Ontario Electrical Safety Code (OESC)** rules for transformer circuits.
-
----
-
-## Scope (what this calculation covers)
-- Calculate **primary** and **secondary** full-load current (FLA)
-- Determine **maximum permitted** OCPD ratings/settings using the correct OESC rule
-- Convert calculated values to **standard device ratings** (commonly selected from **OESC Table 13**)
-- Note when **secondary protection or manufacturer protection** may allow relaxed primary requirements
-
----
-
-## Key OESC references (common ones used)
-- **26-248** — Disconnecting means for transformers (primary disconnect required)
-- **26-250** — Overcurrent protection for power/distribution transformers **over 750 V**
-- **26-252** — Overcurrent protection for power/distribution transformers **750 V or less**, other than dry-type
-- **26-254** — Overcurrent protection for **dry-type** transformers **750 V or less**
-- **26-258** — Transformer continuous load (ties into Rule 8-104)
-- **8-104** — Maximum circuit loading (continuous loading limits)
-
----
-
-## Assumptions (example template)
-- Ambient temperature: **40°C**
-- Conductor temperature rating: **75°C**
-- Copper conductors, free-air (field routed)
-- No more than 3 conductors per cable (incl. ground)
-- Max cable length: **50 m**
-- Natural cooling (no fans/pumps)
-
----
-
-## Step 1 — Get the transformer full-load currents
-**Use nameplate FLA if available.** If not, calculate (3Φ):
-
-\[
-I_L=\frac{S}{\sqrt{3}\,V_L}
-\]
-
-Compute both:
-- **Primary FLA:** \(I_{pri} = \frac{S}{\sqrt{3}\,V_{pri}}\)
-- **Secondary FLA:** \(I_{sec} = \frac{S}{\sqrt{3}\,V_{sec}}\)
-
----
-
-## Step 2 — Choose the correct OESC rule path
-Pick the rule based on **voltage** and **transformer type**:
-
-### A) Oil-cooled (or liquid-filled) **> 750 V** → **Rule 26-250**
-- **Fuses:** ≤ **150%** of rated primary current  
-- **Breakers:** ≤ **300%** of rated primary current  
-If 150% does not match a standard fuse size, the **next higher standard** is permitted.
-
-### B) Non-dry-type **≤ 750 V** → **Rule 26-252**
-- Primary OCPD generally ≤ **150%** of rated primary current  
-Special allowances exist for smaller currents and for some secondary-protection cases.
-
-### C) Dry-type **≤ 750 V** → **Rule 26-254**
-- Primary OCPD generally ≤ **125%** of rated primary current  
-If 125% doesn’t match a standard rating, **next higher standard** is permitted.
-- Appendix guidance: device should be able to carry
-  - **12× FLA for 0.1 s**
-  - **25× FLA for 0.01 s**
-
----
-
-## Step 3 — Convert to a standard device rating
-After calculating the allowable OCPD value:
-- Select the **next appropriate standard size** (commonly from **OESC Table 13**).
-
----
-
-## Worked Examples (from the template)
-
-### Example 1 — Oil-cooled, **> 750 V** (Rule 26-250)
-**2,000 kVA**, **27.6 kV / 600 V**, 3Φ
-
-Primary FLA:
-\[
-I_{pri}=\frac{2{,}000{,}000}{1.732\cdot 27{,}600}\approx 41.89\text{ A}
-\]
-
-- Max fuse (150%): \(41.89\times 1.5 \approx 62.83\text{ A}\) → **select 70 A (standard)**
-- Max breaker (300%): \(41.89\times 3.0 \approx 125.66\text{ A}\) → **select 150 A (standard)**
-
-### Example 2 — Non-dry-type, **≤ 750 V** (Rule 26-252)
-**75 kVA**, **600 V / 208 V**, 3Φ
-
-Primary FLA:
-\[
-I_{pri}=\frac{75{,}000}{1.732\cdot 600}\approx 72.17\text{ A}
-\]
-
-- Max primary OCPD (150%): \(72.17\times 1.5 \approx 108.26\text{ A}\) → **select 110 A (standard)**
-
-### Example 3 — Dry-type, **≤ 750 V** (Rule 26-254)
-**75 kVA**, **600 V / 208 V**, 3Φ
-
-- Max primary OCPD (125%): \(72.17\times 1.25 \approx 90.21\text{ A}\) → **select 100 A (standard)**
-- Inrush withstand (Appendix guidance):
-  - 12×: \(72.17\times 12 \approx 866\text{ A}\) for 0.1 s
-  - 25×: \(72.17\times 25 \approx 1804\text{ A}\) for 0.01 s
-
----
-
-## Practical design notes (after sizing)
-- Confirm **continuous loading** meets **Rule 26-258** and **Rule 8-104**
-- Confirm conductor ampacity and installation conditions (separate feeder calculation)
-- Perform a **coordination study** where needed (selectivity + equipment protection)
-- Consider winding configuration and grounding method (often Δ–Y for distribution)
+                """
+**Associated with WI-8.3-.06 Rev. 0, May 2019**  
+**Project #:** XX-XX-XXXX-XX — **Client:** JNE  
+**Project Title:** OESC Transformer Protection Design Calculation  
+**Calculation #:** EC-XXXX — **Revision:** A — **Date Initiated:** 08/17/2022
 """
             )
 
-        else:  # NEC
+            st.markdown("### Objective")
+            st.write(
+                "Determine required overcurrent protection for a transformer (primary breaker/fuse sizing) "
+                "so the transformer operates safely and the installation meets OESC requirements."
+            )
+
+            st.markdown("### Scope")
+            st.write(
+                "This calculation covers selecting primary (and when applicable secondary) overcurrent devices "
+                "for typical power/distribution transformers using OESC as the reference."
+            )
+
+            st.markdown("### Technical Criteria / Applicable Codes")
+            st.write(
+                "Primary reference: Ontario Electrical Safety Code (OESC) — relevant rules include 26-240 through 26-258 and Section 8 (Rule 8-104) for continuous loading."
+            )
+
+            st.markdown("### Assumptions (example template used in the document)")
             st.markdown(
-                r"""
-## NEC Transformer Protection (Simple Guide)
-
-### Objective
-Select transformer overcurrent protection (breaker and/or fuses) that complies with **NEC 450.3** using transformer nameplate data (preferred) or calculated full-load current (FLA).
-
----
-
-## Scope (what this calculation covers)
-- Calculate **primary** and **secondary** full-load currents
-- Select which NEC pathway applies:
-  - **450.3(A)** — Transformers **over 1000 V nominal**
-  - **450.3(B)** — Transformers **1000 V nominal or less**
-  - **450.3(C)** — Voltage (potential) transformers
-- Use **Table 450.3(A)** or **Table 450.3(B)** to determine the **maximum permitted** OCPD rating/setting
-- Select a **standard rating** from **NEC 240.6(A)** (or the next commercially available size where permitted)
-
----
-
-## Applicable NEC references (as used in the design calc)
-- **NEC 450.3** — Transformer overcurrent protection (A), (B), or (C)
-- **Table 450.3(A)** — Transformers over 1000 V
-- **Table 450.3(B)** — Transformers 1000 V or less
-- **NEC 240.6(A)** — Standard ampere ratings
-
----
-
-## Assumptions (template)
-- Ambient temperature: **40°C**
-- Conductor temperature rating: **75°C**
-- Copper conductors, free-air (field routed)
-- No more than 3 conductors per cable (incl. ground)
-- Max cable length: **50 m**
-- Transformer impedance **≤ 6%**
-- Transformer operating in **“any location”** (unsupervised)
-
----
-
-## Step 1 — Find transformer rated current (FLA)
-Use nameplate data when available. If FLA is unknown, calculate for 3Φ:
-
-\[
-I_L=\frac{S}{\sqrt{3}\,V_L}
-\]
-
-Compute:
-- Primary FLA: \(I_{pri} = \frac{S}{\sqrt{3}\,V_{pri}}\)
-- Secondary FLA: \(I_{sec} = \frac{S}{\sqrt{3}\,V_{sec}}\)
-
----
-
-## Step 2 — Apply NEC 450.3 based on transformer class
-
-### A) **450.3(A)** — Transformers **over 1000 V nominal**
-- Overcurrent protection is selected using **Table 450.3(A)**.
-- Table 450.3(A) depends on:
-  - protective device type (fuse / electronic fuse / breaker),
-  - transformer-rated current and impedance,
-  - primary/secondary voltages,
-  - and whether the transformer is in **“any location”** vs **supervised location**.
-
-**Key table notes (simplified):**
-1) If the computed rating/setting is not standard:
-   - You may select the **next higher standard rating** for devices **1000 V and below**, or
-   - the **next higher commercially available** rating/setting for devices **over 1000 V**.
-2) Where secondary OCPD is required, it may be **up to six** breakers or **six sets of fuses** grouped in one location,
-   and the **sum** of their ratings must not exceed the allowance for a single device.
-
-> The design calc emphasizes that secondary OCPD requirements in 450.3 are for **transformer protection** (not automatically conductor protection).
-> Conductor protection is addressed separately under **Article 240**.
-
-### B) **450.3(B)** — Transformers **1000 V nominal or less**
-- Overcurrent protection is selected using **Table 450.3(B)**.
-- Table 450.3(B) effectively supports two common approaches:
-  1) **Primary-only protection**, or
-  2) **Primary + secondary protection** (secondary limited per table, with corresponding primary limits).
-- If **125%** does not correspond to a standard fuse/nonadjustable breaker size, the **next higher standard** size is permitted (see the table notes and 240.6(A)).
-
-### C) **450.3(C)** — Voltage (potential) transformers
-- Voltage (potential) transformers installed **indoors or enclosed** shall be protected with **primary fuses**.
-- Certain instruments/pilot lights/PTs with potential coils in switchgear are typically supplied by a circuit protected at **15 A or less**, with listed exceptions.
-
----
-
-## Step 3 — Choose the standard device size
-After applying Table 450.3(A/B):
-- Select the **next standard size** using **NEC 240.6(A)** (or next commercially available, where allowed by table notes).
-
----
-
-## Worked Examples (from the NEC template conclusions)
-
-### Example 1 — **450.3(A)** (Over 1000 V), Z ≤ 6%, **any location**
-**2 MVA**, **27.6 kV / 4.16 kV**, 3Φ
-
-Primary FLA:
-\[
-I_{pri}=\frac{2{,}000{,}000}{1.732\cdot 27{,}600}\approx 41.89\text{ A}
-\]
-
-Secondary FLA:
-\[
-I_{sec}=\frac{2{,}000{,}000}{1.732\cdot 4{,}160}\approx 277.90\text{ A}
-\]
-
-Using **Table 450.3(A)** for the selected conditions, the standard OCPD selections shown were:
-- **Primary:** 300 A breaker **or** 150 A fuse
-- **Secondary:** 1000 A breaker **or** 700 A fuse
-
-### Example 2 — **450.3(B)** (1000 V or less), currents > 9 A
-**75 kVA**, **600 V / 208 V**, 3Φ
-
-Two schemes were shown:
-
-**(1) Primary-only protection**
-- **Breaker or fuse:** 100 A
-
-**(2) Primary + secondary protection**
-- **Primary:** 200 A (breaker or fuse)
-- **Secondary:** 300 A (breaker or fuse)
-
----
-
-## Practical design notes (after sizing)
-- **450.3 is transformer protection.** Conductor protection must be checked under **Article 240** where applicable.
-- Consider coordination (selectivity), device availability, and what each protective element is protecting.
-- Larger transformer applications may use relays (e.g., ANSI 50/51) as part of the overall protection strategy.
-- Confirm feeder conductor sizing separately (Transformer Feeders page).
+                """
+- Ambient temperature: **40 °C**  
+- Conductor temperature rating: **75 °C**  
+- Copper conductors routed in free-air (field routed)  
+- No more than 3 conductors per cable (including equipment grounding conductor)  
+- Maximum cable length: **50 m (~164 ft)**  
+- Transformer operating with **natural cooling** (no fans/pumps)
 """
             )
 
+            st.markdown("### Input Data")
+            st.write(
+                "Use transformer nameplate data where available. If using OEM documentation, include document name/number and equipment ID."
+            )
+
+            st.markdown("### Rated current formula (when FLA is not known)")
+            st.write("For three-phase transformers the rated line current is:")
+            eq(r"I_L=\frac{S}{\sqrt{3}\,V_L}")
+            st.write(
+                "where S = apparent power (VA), V_L = line-to-line voltage (V). Use this to calculate primary and secondary FLA:"
+            )
+            eq(r"I_{pri}=\frac{S}{\sqrt{3}\,V_{pri}}")
+            eq(r"I_{sec}=\frac{S}{\sqrt{3}\,V_{sec}}")
+
+            st.markdown("### Methodology (practical steps)")
+            st.write(
+                "1. Use nameplate FLA if available; otherwise compute FLA using the equation above.\n"
+                "2. Identify transformer type (oil-cooled, dry-type) and voltage class (>750 V or ≤750 V).\n"
+                "3. Apply the relevant OESC rule to determine the permitted OCPD multiplier (e.g., 150% for fuses, 300% for breakers for certain rules).\n"
+                "4. If the calculated device rating does not match a standard device rating, select the **next higher** standard rating as permitted by the rule.\n"
+                "5. Verify continuous loading limits (Rule 26-258 and Rule 8-104) and conductor ampacity separately."
+            )
+
+            st.markdown("### OESC Rule highlights (key subrules summarized)")
+            st.markdown(
+                """
+**OESC 26-250 — Overcurrent protection for transformers rated over 750 V (oil-cooled example)**  
+- Each ungrounded conductor of the transformer feeder shall have overcurrent protection.  
+- **Fuses:** rated at not more than **150%** of rated primary current.  
+- **Breakers:** rated/set at not more than **300%** of rated primary current.  
+- If 150% doesn't match a standard fuse, the next higher standard rating is permitted.
+
+**OESC 26-252 — Overcurrent protection for transformers 750 V or less (other than dry-type)**  
+- Primary OCPD generally ≤ **150%** of rated primary current (with exceptions for small currents and secondary protection cases).  
+- If rated primary current is ≥ 9 A and 150% doesn't match a standard rating, next higher standard rating permitted.
+
+**OESC 26-254 — Overcurrent protection for dry-type transformers 750 V or less**  
+- Primary OCPD generally ≤ **125%** of rated primary current.  
+- If the device must withstand inrush, refer to the appendix guidance: device should be able to carry **12× FLA for 0.1 s** and **25× FLA for 0.01 s**.
+"""
+            )
+
+            st.markdown("### Continuous load and conductor checks")
+            st.write(
+                "Refer to OESC 26-258 (Transformer continuous load) and Rule 8-104 for limits on continuous loading and conductor ampacity. "
+                "These requirements ensure the transformer protection and conductors are coordinated."
+            )
+
+            st.markdown("### Worked calculation examples (from the provided doc)")
+            st.write("Example A — Oil-cooled > 750 V (2,000 kVA, 27.6 kV / 600 V, 3Φ):")
+            eq(r"I_{pri}=\frac{2{,}000{,}000}{\sqrt{3}\cdot 27{,}600}\approx 41.89\ \mathrm{A}")
+            eq(r"I_{sec}=\frac{2{,}000{,}000}{\sqrt{3}\cdot 600}\approx 1926.78\ \mathrm{A}")
+            st.write("Using OESC 26-250 multipliers:")
+            eq(r"I_{fuse,max}=1.50\cdot I_{pri}\approx 62.83\ \mathrm{A}")
+            eq(r"I_{brk,max}=3.00\cdot I_{pri}\approx 125.66\ \mathrm{A}")
+            st.write("Selected standard sizes: **70 A fuse** or **150 A breaker** (next standard values).")
+
+            st.write("Example B — Oil-cooled ≤ 750 V (75 kVA, 600 V / 208 V):")
+            eq(r"I_{pri}=\frac{75{,}000}{\sqrt{3}\cdot 600}\approx 72.17\ \mathrm{A}")
+            eq(r"I_{ocpd,max}=1.50\cdot I_{pri}\approx 108.26\ \mathrm{A}")
+            st.write("Selected standard size: **110 A** (per Table 13 standard values).")
+
+            st.write("Example C — Dry-type ≤ 750 V (75 kVA, 600 V / 208 V):")
+            eq(r"I_{pri}\approx 72.17\ \mathrm{A}")
+            eq(r"I_{ocpd,max}=1.25\cdot I_{pri}\approx 90.21\ \mathrm{A}")
+            st.write("Selected standard size: **100 A**. Inrush checks: 12× and 25× multiples shown below.")
+            eq(r"12\times I_{pri}\approx 866.04\ \mathrm{A}")
+            eq(r"25\times I_{pri}\approx 1804.25\ \mathrm{A}")
+
+            st.markdown("### Design considerations & coordination")
+            st.write(
+                "After selecting initial device ratings, perform a coordination study. Consider transformer winding configuration "
+                "(Δ–Y, Y–Y, etc.), grounding method (open, solid, NGR), device availability, cost, and selective clearing of faults."
+            )
+
+            st.markdown("### Conclusion (example selections)")
+            st.write(
+                "- For the 2 MVA 27.6k/600V oil-cooled example: **70 A fuse** or **150 A breaker** selected.  \n"
+                "- For the 75 kVA 600/208V oil-cooled example: **110 A** selected.  \n"
+                "- For the 75 kVA dry-type example: **100 A** selected."
+            )
+
+            st.markdown("### Approval block (template)")
+            st.write(
+                "Prepared by: Michael Hommersen — Self-Check Completed? YES.  \n"
+                "Include signature/date fields in your deliverable calculation sheet."
+            )
+
+        # NEC Theory (full, reintroduced)
+        else:
+            st.subheader("NEC — Transformer Protection (Full Theory, simplified)")
+
+            st.markdown("### Objective")
+            st.write(
+                "Select transformer overcurrent protection (breaker/fuses) in accordance with **NEC Article 450** "
+                "so the device ratings meet the code allowances and protect the transformer."
+            )
+
+            st.markdown("### Scope & Key references")
+            st.write(
+                "Focus on NEC 450.3 and tables 450.3(A) / 450.3(B) depending on voltage class. Also consult NEC 240.6(A) for standard ratings."
+            )
+
+            st.markdown("### Assumptions (example template)")
+            st.markdown(
+                """
+- Ambient temperature: **40°C**  
+- Conductors: **75°C copper**, free-air routing  
+- Max cable length: **50 m**  
+- Transformer impedance: **≤ 6%** (common example used in the template)  
+- Installation: **any location** vs **supervised** (affects table choices)
+"""
+            )
+
+            st.markdown("### Method / Practical approach")
+            st.write(
+                "1. Use nameplate FLA when available; otherwise compute FLA for primary and secondary using the 3Φ formula below.  \n"
+                "2. Determine whether transformer is >1000 V (use Table 450.3(A)) or ≤1000 V (use Table 450.3(B)).  \n"
+                "3. Apply the table-based multipliers/limits to find allowable OCPD ratings.  \n"
+                "4. Round to the next standard/commercial device per NEC 240.6(A) as allowed."
+            )
+
+            st.markdown("### Rated current formula (3Φ)")
+            eq(r"I_L=\frac{S}{\sqrt{3}\,V_L}")
+            eq(r"I_{pri}=\frac{S}{\sqrt{3}\,V_{pri}}")
+            eq(r"I_{sec}=\frac{S}{\sqrt{3}\,V_{sec}}")
+
+            st.markdown("### NEC 450.3 highlights")
+            st.markdown(
+                """
+**450.3(A)** — Transformers **over 1000 V nominal**: use Table 450.3(A). Table values depend on device type, impedance, and location.  
+**450.3(B)** — Transformers **1000 V nominal or less**: use Table 450.3(B). Commonly permits primary-only or primary+secondary schemes.  
+**450.3(C)** — Voltage (potential) transformers: typical requirement is primary fusing for indoor/enclosed installations; small control/potential circuits often protected at 15 A or less with listed exceptions.
+"""
+            )
+
+            st.markdown("### Worked NEC examples (from the NEC calc document)")
+            st.write("Example 1 — 2 MVA, 27.6 kV / 4.16 kV, Z ≤ 6%, any location:")
+            eq(r"I_{pri}=\frac{2{,}000{,}000}{\sqrt{3}\cdot 27{,}600}\approx 41.89\ \mathrm{A}")
+            eq(r"I_{sec}=\frac{2{,}000{,}000}{\sqrt{3}\cdot 4{,}160}\approx 277.90\ \mathrm{A}")
+            st.write(
+                "Example table-derived (document example) selections: Primary 300 A breaker or 150 A fuse; Secondary 1000 A breaker or 700 A fuse."
+            )
+
+            st.write("Example 2 — 75 kVA, 600 V / 208 V (currents > 9 A):")
+            eq(r"I_{pri}=\frac{75{,}000}{\sqrt{3}\cdot 600}\approx 72.25\ \mathrm{A}")
+            eq(r"I_{sec}=\frac{75{,}000}{\sqrt{3}\cdot 208}\approx 208.43\ \mathrm{A}")
+            st.write(
+                "Two schemes presented in the document: primary-only → 100 A; primary+secondary → 200 A primary and 300 A secondary (example selections)."
+            )
+
+            st.markdown("### Practical design notes (NEC)")
+            st.write(
+                "NEC transformer OCPD sizing focuses on protecting the transformer. Conductor protection still must be checked under Article 240. Coordination, relay protection for large transformers (ANSI 50/51), and grounding/winding configuration should all be considered."
+            )
+
+    # Calculator tab for Transformer Protection
     with calc_tab:
-        header("Transformer Protection Calculator", "Compute transformer currents and basic OCPD limits (template).")
+        header("Transformer Protection Calculator", "Compute transformer currents + suggested OCPD limits (template).")
         show_code_note(code_mode)
 
         col1, col2, col3 = st.columns(3, gap="large")
@@ -359,7 +317,7 @@ Two schemes were shown:
         c2.metric("Secondary FLA", fmt(Is, "A"))
 
         st.divider()
-        st.markdown("### OCPD sizing helpers")
+        st.markdown("### OCPD sizing helpers / quick suggestions")
 
         if code_mode == "OESC":
             oesc_path = st.selectbox(
@@ -400,31 +358,29 @@ Two schemes were shown:
             )
 
             st.caption(
-                "This calculator currently shows FLA and provides example-style outputs. "
-                "Next step (if you want full automation) is implementing Table 450.3(A/B) lookups."
+                "This calculator shows currents and provides example-style outputs. To fully automate NEC table lookups, add inputs for impedance, location (any vs supervised), and the full Table 450.3 multipliers."
             )
 
             if nec_path.startswith("450.3(A)"):
-                st.markdown("### Example-style outputs (from the NEC calc template conclusions)")
+                st.markdown("### Example-style outputs (Document example)")
                 st.write("For a 2 MVA, 27.6 kV / 4.16 kV transformer (Z ≤ 6%, any location):")
                 st.success("Primary: **300 A breaker** or **150 A fuse**")
                 st.success("Secondary: **1000 A breaker** or **700 A fuse**")
                 st.caption("To automate: add impedance + location inputs and table multipliers from NEC 450.3(A).")
 
             elif nec_path.startswith("450.3(B)"):
-                st.markdown("### Example-style outputs (from the NEC calc template conclusions)")
+                st.markdown("### Example-style outputs (Document example)")
                 st.write("For a 75 kVA, 600 V / 208 V transformer (currents > 9 A):")
                 st.success("Method 1 (Primary-only): **100 A**")
                 st.success("Method 2 (Primary + Secondary): **200 A primary**, **300 A secondary**")
-                st.caption("To automate: add Method 1/2 selection and table logic from NEC 450.3(B).")
+                st.caption("To automate: add Method 1/2 selection and drive the limits from Table 450.3(B).")
 
             else:
                 st.markdown(
                     """
 ### NEC 450.3(C) quick notes (simplified)
-- Indoor/enclosed voltage (potential) transformers: **primary fuses required**
-- Potential-coil switchgear devices are commonly supplied from circuits protected at **15 A or less**
-- Exceptions exist (hazard interruption, very small ratings, etc.)
+- Indoor/enclosed voltage (potential) transformers: **primary fuses recommended/required** in many cases
+- Certain potential-coil switchgear devices commonly supplied from circuits protected at **15 A or less**
 """
                 )
 
@@ -433,27 +389,36 @@ Two schemes were shown:
 # ============================
 elif page == "Transformer Feeders":
     with theory_tab:
-        header("Transformer Feeders", "Feeder sizing concepts around transformer loads (template).")
+        header("Transformer Feeders — Theory")
         show_code_note(code_mode)
 
+        st.markdown("### Purpose")
+        st.write(
+            "Transformer feeder design ensures conductors supplying the transformer can carry the expected load, "
+            "meet continuous loading rules, and coordinate with overcurrent protection."
+        )
+
+        st.markdown("### Key points")
         st.markdown(
-            r"""
-### Key ideas (template)
-- Feeder ampacity typically starts from transformer secondary full-load current
-- Consider continuous loads, ambient/temp correction, conductor ratings, and coordination
-
-### Example (simplified)
-A **150 kVA**, **600V–208Y/120V** transformer:
-\[
-I_{sec} = \frac{150{,}000}{1.732 \cdot 208} \approx 416\text{ A}
-\]
-
-Start by sizing conductors ≥ this current (then apply code adjustments).
+            """
+- Start conductor sizing from transformer **secondary** full-load current.  
+- Apply continuous load multipliers (e.g., 125% where applicable).  
+- Adjust for ambient temperature, grouping, conductor insulation rating, and installation method.  
+- Perform coordination with upstream protection and consider voltage drop and fault clearing.
 """
         )
 
+        st.markdown("### Equations")
+        st.write("Secondary FLA (3Φ):")
+        eq(r"I_{sec}=\frac{S}{\sqrt{3}\,V_{sec}}")
+        st.write("Suggested continuous ampacity target (example):")
+        eq(r"I_{target}=1.25\cdot I_{sec}")
+
+        st.markdown("### Example")
+        eq(r"I_{sec}=\frac{150{,}000}{\sqrt{3}\cdot 208}\approx 416\ \mathrm{A}")
+
     with calc_tab:
-        header("Transformer Feeder Calculator", "Compute secondary full-load current and a basic feeder ampacity target.")
+        header("Transformer Feeder Calculator", "Compute secondary FLA and a simple ampacity target.")
         show_code_note(code_mode)
 
         col1, col2 = st.columns(2, gap="large")
@@ -462,41 +427,46 @@ Start by sizing conductors ≥ this current (then apply code adjustments).
         with col2:
             vsec = st.number_input("Secondary voltage (V LL)", min_value=1.0, value=208.0, step=1.0, key="tf_vsec")
 
-        continuous = st.checkbox("Treat as continuous load (125%)", value=True)
+        continuous = st.checkbox("Treat as continuous load (125%)", value=True, key="tf_cont")
         Is = (kva * 1000.0) / (math.sqrt(3) * vsec)
         target = Is * (1.25 if continuous else 1.0)
 
         st.metric("Secondary full-load current (A)", fmt(Is, "A"))
         st.success(f"Feeder ampacity target: **{fmt(target, 'A')}**")
+        st.markdown("### Equations used")
+        eq(r"I_{sec}=\frac{S}{\sqrt{3}\,V_{sec}}")
+        eq(r"I_{target}=1.25\cdot I_{sec}")
+
 
 # ============================
 # 3) Grounding/Bonding Conductor Sizing
 # ============================
 elif page == "Grounding/Bonding Conductor Sizing":
     with theory_tab:
-        header("Grounding/Bonding Conductor Sizing", "Conceptual sizing workflow (template).")
+        header("Grounding & Bonding — Theory")
         show_code_note(code_mode)
 
-        st.markdown(
-            r"""
-### Template concepts
-- Grounding electrode conductor (GEC) vs equipment grounding conductor (EGC) vs bonding jumper
-- Many codes size based on **largest ungrounded conductor** or **OCPD rating**
+        st.markdown("### Overview")
+        st.write(
+            "Grounding and bonding conductor sizing is usually table-driven. NEC/OESC specify conductor sizes "
+            "based on the largest ungrounded conductor or the OCPD rating. Consider electrode conductors (GEC), equipment grounding conductors (EGC), and bonding jumpers separately."
+        )
 
-### Example (placeholder)
-If an upstream OCPD is **200 A**, many workflows size the equipment grounding conductor from a table.
+        st.markdown("### Conceptual equation (placeholder)")
+        eq(r"\text{EGC size} = f(\text{OCPD rating})")
 
-> Add your NEC/OESC table references here, and optionally embed a lookup table.
-"""
+        st.markdown("### Practical notes")
+        st.write(
+            "- Use the specific NEC/OESC tables for exact conductor sizes.  \n"
+            "- For transformer-secondary grounding or neutral grounding, follow transformer-specific rules and coordinate with protective devices."
         )
 
     with calc_tab:
-        header("Grounding/Bonding Sizing Helper", "Simple placeholder (replace with real NEC/OESC table logic).")
+        header("Grounding/Bonding Helper", "Simple placeholder — replace with real NEC/OESC table logic.")
         show_code_note(code_mode)
 
         ocpd = st.number_input("Upstream OCPD rating (A)", min_value=1.0, value=200.0, step=1.0)
 
-        # Placeholder "table" logic (NOT code-accurate)
         if ocpd <= 60:
             egc = "10 AWG Cu (placeholder)"
         elif ocpd <= 100:
@@ -509,69 +479,70 @@ If an upstream OCPD is **200 A**, many workflows size the equipment grounding co
             egc = "See table / engineer (placeholder)"
 
         st.success(f"Equipment grounding conductor (example placeholder): **{egc}**")
-        st.caption("Replace this with real table-driven logic for NEC/OESC.")
+        st.markdown("### Equation used")
+        eq(r"\text{EGC size} = f(\text{OCPD rating})")
+
 
 # ============================
 # 4) Motor Protection
 # ============================
 elif page == "Motor Protection":
     with theory_tab:
-        header("Motor Protection", "Overload vs short-circuit/ground-fault protection (template).")
+        header("Motor Protection — Theory")
         show_code_note(code_mode)
 
-        st.markdown(
-            r"""
-### Motor protection types
-- **Overload protection**: protects motor from overheating (often based on nameplate/current)
-- **Short-circuit / ground-fault**: protects conductors/equipment (often based on tables/multipliers)
+        st.markdown("### Overview")
+        st.write(
+            "Motor protection includes overload protection (thermal overloads) and short-circuit/ground-fault protection. "
+            "Settings depend on motor FLA, service factor, and the code requirements for the protection type."
+        )
 
-### Example (simplified)
-A motor with **FLA = 28 A**:
-- Overload may be set around **115%–125%** depending on motor/service factor and code.
-"""
+        st.markdown("### Typical equations")
+        eq(r"I_{OL}=k\cdot I_{FLA}\quad\text{(overload setting)}")
+        eq(r"I_{SC}=m\cdot I_{FLA}\quad\text{(short-circuit device sizing placeholder)}")
+
+        st.markdown("### Notes")
+        st.write(
+            "- Overload multipliers often in the 1.15–1.25 range depending on motor and service factor.  \n"
+            "- Short-circuit device selection needs coordination with conductor ampacity and upstream devices."
         )
 
     with calc_tab:
-        header("Motor Protection Calculator", "Overload setting estimate + short-circuit device estimate (simplified).")
+        header("Motor Protection Calculator", "Estimate overload and short-circuit device settings.")
         show_code_note(code_mode)
 
         fla = st.number_input("Motor full-load amps (FLA)", min_value=0.1, value=28.0, step=0.1)
-        ol_mult = st.selectbox("Overload multiplier (simplified)", ["115%", "125%"], index=1)
-        ol = fla * (1.15 if ol_mult == "115%" else 1.25)
+        ol_mult = st.selectbox("Overload multiplier (k)", ["1.15", "1.25"], index=1)
+        sc_mult = st.selectbox("Short-circuit multiplier (m)", ["1.75", "2.50"], index=0)
 
-        sc_mult = st.selectbox("Short-circuit device multiplier (placeholder)", ["175%", "250%"], index=0)
-        sc = fla * (1.75 if sc_mult == "175%" else 2.50)
+        ol = fla * float(ol_mult)
+        sc = fla * float(sc_mult)
 
         c1, c2 = st.columns(2)
         c1.metric("Overload setting (A)", fmt(ol, "A"))
         c2.metric("Short-circuit device (A)", fmt(sc, "A"))
-        st.caption("Multipliers here are placeholders; implement your preferred NEC/OESC rule set.")
+
+        st.markdown("### Equations used")
+        eq(r"I_{OL}=k\cdot I_{FLA}")
+        eq(r"I_{SC}=m\cdot I_{FLA}")
+
 
 # ============================
 # 5) Motor Feeder
 # ============================
 elif page == "Motor Feeder":
     with theory_tab:
-        header("Motor Feeder", "Feeder sizing for motor circuits (template).")
+        header("Motor Feeder — Theory")
         show_code_note(code_mode)
 
-        st.markdown(
-            r"""
-### Template concepts
-- Motor branch-circuit conductors may be sized at a % of FLA (often 125% for single motor)
-- Feeders supplying multiple motors add additional allowances
-
-### Example (single motor, simplified)
-Motor FLA = 40 A  
-Conductor ampacity target:
-\[
-I_{target} = 1.25 \cdot 40 = 50\text{ A}
-\]
-"""
+        st.write(
+            "Feeder sizing for motors often starts with a multiplier of the motor FLA (commonly 125% for single motor feeders). "
+            "Apply correction factors, conductor ampacity tables, and check protection per code."
         )
+        eq(r"I_{target}=1.25\cdot I_{FLA}")
 
     with calc_tab:
-        header("Motor Feeder Calculator", "Single-motor conductor ampacity target (simplified).")
+        header("Motor Feeder Calculator", "Single-motor conductor ampacity target (template).")
         show_code_note(code_mode)
 
         fla = st.number_input("Motor FLA (A)", min_value=0.1, value=40.0, step=0.1, key="mf_fla")
@@ -579,31 +550,32 @@ I_{target} = 1.25 \cdot 40 = 50\text{ A}
         target = fla * (1.25 if cont else 1.0)
         st.success(f"Conductor ampacity target: **{fmt(target, 'A')}**")
 
+        st.markdown("### Equation used")
+        eq(r"I_{target}=1.25\cdot I_{FLA}")
+
+
 # ============================
 # 6) Cable Tray Size & Fill & Bend Radius
 # ============================
 elif page == "Cable Tray Size & Fill & Bend Radius":
     with theory_tab:
-        header("Cable Tray Size, Fill & Bend Radius", "Basics for organizing tray layouts (template).")
+        header("Cable Tray Size, Fill & Bend Radius — Theory")
         show_code_note(code_mode)
 
-        st.markdown(
-            r"""
-### Tray sizing concepts (template)
-- Tray **width/depth** selection depends on cable OD, quantity, and fill rules
-- **Bend radius** often based on cable type and overall diameter (OD)
+        st.write(
+            "Tray fill and bend-radius rules depend on cable type, manufacturer recommendations, and local code rules. "
+            "The following are geometric approximations to help estimate area and bend radius."
+        )
+        eq(r"A_{cables}\approx n\cdot \pi\left(\frac{d}{2}\right)^2")
+        eq(r"R_{min}=k\cdot d")
 
-### Example (simplified fill)
-If you have 20 cables with OD = 20 mm, a rough area estimate:
-\[
-A \approx n \cdot \pi(\frac{d}{2})^2
-\]
-Then compare to allowable tray fill area (your rule set).
-"""
+        st.markdown("### Notes")
+        st.write(
+            "- Real tray fill rules use percentage area limits and layering rules—replace these approximations with code tables for final designs."
         )
 
     with calc_tab:
-        header("Tray Fill & Bend Radius Calculator", "Estimate cable area + suggest a bend radius from OD (rule-of-thumb).")
+        header("Tray Fill & Bend Radius Calculator", "Estimate cable area + bend radius.")
         show_code_note(code_mode)
 
         col1, col2, col3 = st.columns(3, gap="large")
@@ -612,45 +584,36 @@ Then compare to allowable tray fill area (your rule set).
         with col2:
             od_mm = st.number_input("Cable OD (mm)", min_value=1.0, value=20.0, step=0.5)
         with col3:
-            tray_width_mm = st.number_input("Tray inside width (mm)", min_value=50.0, value=300.0, step=10.0)
+            br_mult = st.selectbox("Bend radius multiplier (k)", ["8", "12", "16"], index=1)
 
         cable_area_mm2 = n * math.pi * (od_mm / 2.0) ** 2
-        tray_area_mm2 = tray_width_mm * od_mm  # very rough single-layer estimate
+        bend_radius_mm = float(br_mult) * od_mm
 
-        st.metric("Estimated total cable cross-sectional area", fmt(cable_area_mm2, "mm²"))
-        st.metric("Rough single-layer tray area (width × OD)", fmt(tray_area_mm2, "mm²"))
-        st.caption("This is a rough geometric estimate. Real tray fill rules vary by code and tray type.")
+        st.metric("Estimated total cable area", fmt(cable_area_mm2, "mm²"))
+        st.success(f"Suggested bend radius (rule-of-thumb): **{fmt(bend_radius_mm, 'mm')}**")
 
-        br_mult = st.selectbox("Bend radius multiplier (rule-of-thumb)", ["8× OD", "12× OD", "16× OD"], index=1)
-        mult = {"8× OD": 8, "12× OD": 12, "16× OD": 16}[br_mult]
-        bend_radius_mm = mult * od_mm
-        st.success(f"Suggested minimum bend radius (rule-of-thumb): **{fmt(bend_radius_mm, 'mm')}**")
+        st.markdown("### Equations used")
+        eq(r"A_{cables}\approx n\cdot \pi\left(\frac{d}{2}\right)^2")
+        eq(r"R_{min}=k\cdot d")
+
 
 # ============================
 # 7) Conduit Size & Fill & Bend Radius
 # ============================
 elif page == "Conduit Size & Fill & Bend Radius":
     with theory_tab:
-        header("Conduit Size, Fill & Bend Radius", "Conduit fill and bending considerations (template).")
+        header("Conduit Size, Fill & Bend Radius — Theory")
         show_code_note(code_mode)
 
-        st.markdown(
-            r"""
-### Template concepts
-- Conduit fill is typically limited by % cross-sectional area (depends on number of conductors)
-- Bend radius depends on conduit type and trade size; also watch pull tension
+        st.write("Conduit fill is area-based; percent fill limits depend on conductor count and conduit type.")
+        eq(r"\text{Fill}=\frac{A_{wires}}{A_{conduit}}")
+        eq(r"R_{min}=6\cdot D_{ID}")
 
-### Example (simplified)
-If conduit inner area is \(A_c\) and conductors total area \(A_w\):
-\[
-\text{Fill} = \frac{A_w}{A_c}
-\]
-Compare to your allowed % fill.
-"""
-        )
+        st.markdown("### Notes")
+        st.write("- Use manufacturer/conduit tables for exact internal areas and correct fill percentages.")
 
     with calc_tab:
-        header("Conduit Fill Calculator", "Compute fill % using areas (you supply areas).")
+        header("Conduit Fill Calculator", "Compute fill % and a bend-radius placeholder.")
         show_code_note(code_mode)
 
         col1, col2 = st.columns(2, gap="large")
@@ -663,71 +626,62 @@ Compare to your allowed % fill.
         if fill is None:
             st.warning("Conduit area must be > 0.")
         else:
-            st.metric("Fill ratio", fmt(fill * 100.0, "%"))
-            st.caption("Compare this against your NEC/OESC fill limits for conductor count/type.")
+            st.metric("Fill (%)", fmt(fill * 100.0, "%"))
 
-        st.markdown("### Bend radius (rule-of-thumb)")
-        conduit_id_mm = st.number_input("Conduit ID (mm) (optional)", min_value=0.0, value=25.0, step=1.0)
-        br = 6 * conduit_id_mm
+        conduit_id_mm = st.number_input("Conduit ID (mm)", min_value=0.0, value=25.0, step=1.0)
+        br = 6.0 * conduit_id_mm
         st.success(f"Rule-of-thumb bend radius: **{fmt(br, 'mm')}**")
-        st.caption("Replace with your preferred conduit-type-based rule set.")
+
+        st.markdown("### Equations used")
+        eq(r"\text{Fill}=\frac{A_{wires}}{A_{conduit}}")
+        eq(r"R_{min}=6\cdot D_{ID}")
+
 
 # ============================
 # 8) Cable Tray Ampacity
 # ============================
 elif page == "Cable Tray Ampacity":
     with theory_tab:
-        header("Cable Tray Ampacity", "Ampacity depends on installation method, spacing, and insulation (template).")
+        header("Cable Tray Ampacity — Theory")
         show_code_note(code_mode)
 
-        st.markdown(
-            r"""
-### Template concepts
-- Tray ampacity depends on cable type, quantity, spacing, ambient temperature, and grouping
-- Many designs start with base ampacity then apply derating factors
-
-### Example (simplified)
-If base ampacity is 200 A and grouping factor is 0.8:
-\[
-I_{adj} = 200 \cdot 0.8 = 160\text{ A}
-\]
-"""
+        st.write(
+            "Ampacity in trays depends on cable grouping, spacing, ambient temperature, and insulation. "
+            "Start from a base ampacity and apply derating factors."
         )
+        eq(r"I_{adj}=I_{base}\cdot k_{group}\cdot k_{ambient}")
+
+        st.markdown("### Notes")
+        st.write("- Replace the simple model with table-driven derating per code/manufacturer for final designs.")
 
     with calc_tab:
-        header("Ampacity Derating Calculator", "Apply a base ampacity and derating factors (template).")
+        header("Ampacity Derating Calculator", "Apply base ampacity and derating factors.")
         show_code_note(code_mode)
 
         base = st.number_input("Base ampacity (A)", min_value=0.1, value=200.0, step=1.0)
         grouping = st.number_input("Grouping factor", min_value=0.0, max_value=1.0, value=0.80, step=0.01)
-        ambient = st.number_input("Ambient factor", min_value=0.0, max_value=1.5, value=1.00, step=0.01)
+        ambient = st.number_input("Ambient factor", min_value=0.0, max_value=1.50, value=1.00, step=0.01)
 
         adj = base * grouping * ambient
         st.success(f"Adjusted ampacity: **{fmt(adj, 'A')}**")
-        st.caption("Replace factors/inputs with NEC/OESC tables and tray-specific rules.")
+
+        st.markdown("### Equation used")
+        eq(r"I_{adj}=I_{base}\cdot k_{group}\cdot k_{ambient}")
+
 
 # ============================
 # 9) Demand Load
 # ============================
 elif page == "Demand Load":
     with theory_tab:
-        header("Demand Load", "Apply demand factors to connected load (template).")
+        header("Demand Load — Theory")
         show_code_note(code_mode)
 
-        st.markdown(
-            r"""
-### Template concepts
-- Connected load vs calculated (demand) load
-- Demand factor depends on occupancy type and load category
+        st.write("Demand (calculated) load is the connected load multiplied by a demand factor that depends on load category.")
+        eq(r"P_{demand}=P_{connected}\cdot f_{demand}")
 
-### Example (simplified)
-Connected load = 120 kW  
-Demand factor = 0.65  
-\[
-P_{demand} = 120 \cdot 0.65 = 78\text{ kW}
-\]
-"""
-        )
+        st.markdown("### Notes")
+        st.write("- Add category-specific demand factors (occupancy, appliances, HVAC, etc.) for full implementations.")
 
     with calc_tab:
         header("Demand Load Calculator", "Compute demand load from connected load and factor.")
@@ -735,40 +689,34 @@ P_{demand} = 120 \cdot 0.65 = 78\text{ kW}
 
         connected = st.number_input("Connected load (kW)", min_value=0.0, value=120.0, step=1.0)
         factor = st.number_input("Demand factor (0–1)", min_value=0.0, max_value=1.0, value=0.65, step=0.01)
-
         demand = connected * factor
         st.success(f"Demand load: **{fmt(demand, 'kW')}**")
-        st.caption("For a real implementation, add category-based factors and NEC/OESC references.")
+
+        st.markdown("### Equation used")
+        eq(r"P_{demand}=P_{connected}\cdot f_{demand}")
+
 
 # ============================
 # 10) Voltage Drop
 # ============================
 elif page == "Voltage Drop":
     with theory_tab:
-        header("Voltage Drop", "Basic voltage drop estimation (template).")
+        header("Voltage Drop — Theory")
         show_code_note(code_mode)
 
-        st.markdown(
-            r"""
-### Template concepts
-- Voltage drop depends on conductor resistance, length, current, and system type
-- Quick resistive estimates:
-  - Single-phase: \(V_d \approx 2 \cdot I \cdot R \cdot L\)
-  - Three-phase: \(V_d \approx \sqrt{3} \cdot I \cdot R \cdot L\)
+        st.write("Use resistive or full impedance models; the resistive approximations shown below are quick checks.")
+        st.markdown("Single-phase (2-wire) resistive estimate:")
+        eq(r"\Delta V \approx 2\,I\,R\,L")
+        st.markdown("Three-phase balanced resistive estimate:")
+        eq(r"\Delta V \approx \sqrt{3}\,I\,R\,L")
+        st.markdown("Percent voltage drop:")
+        eq(r"\%\Delta V = 100\cdot\frac{\Delta V}{V_{nom}}")
 
-### Example (simplified 3Φ)
-- \(I = 50\text{ A}\)
-- \(R = 0.0004\ \Omega/\text{m}\)
-- \(L = 80\text{ m}\)
-
-\[
-V_d \approx 1.732 \cdot 50 \cdot 0.0004 \cdot 80 \approx 2.77\text{ V}
-\]
-"""
-        )
+        st.markdown("### Notes")
+        st.write("- For accurate results include conductor reactance, power factor, and tabulated conductor resistance/impedance per length.")
 
     with calc_tab:
-        header("Voltage Drop Calculator", "Estimate V-drop (resistive model) for 1Φ or 3Φ.")
+        header("Voltage Drop Calculator", "Estimate voltage drop (resistive model).")
         show_code_note(code_mode)
 
         system = st.radio("System", ["Single-phase (2-wire)", "Three-phase (balanced)"], horizontal=True)
@@ -790,8 +738,10 @@ V_d \approx 1.732 \cdot 50 \cdot 0.0004 \cdot 80 \approx 2.77\text{ V}
 
         if system.startswith("Single"):
             Vd = 2.0 * I * R_per_m * L
+            eq_used = r"\Delta V \approx 2\,I\,R\,L"
         else:
             Vd = math.sqrt(3) * I * R_per_m * L
+            eq_used = r"\Delta V \approx \sqrt{3}\,I\,R\,L"
 
         pct = (Vd / V_nom) * 100.0 if V_nom > 0 else 0.0
 
@@ -799,4 +749,8 @@ V_d \approx 1.732 \cdot 50 \cdot 0.0004 \cdot 80 \approx 2.77\text{ V}
         c1.metric("Estimated voltage drop", fmt(Vd, "V"))
         c2.metric("Voltage drop (%)", fmt(pct, "%"))
 
-        st.caption("This is a resistive-only estimate. For better accuracy, add reactance, PF, and conductor data tables.")
+        st.markdown("### Equations used")
+        eq(eq_used)
+        eq(r"\%\Delta V = 100\cdot\frac{\Delta V}{V_{nom}}")
+
+# End of app
