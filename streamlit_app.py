@@ -55,6 +55,44 @@ def eq(latex: str):
     st.latex(latex)
 
 
+# Standard device rating helpers
+NEC_2406A_STANDARD = [
+    15, 20, 25, 30, 35, 40, 45, 50,
+    60, 70, 80, 90, 100, 110, 125, 150,
+    175, 200, 225, 250, 300, 350, 400, 450,
+    500, 600, 700, 800, 1000, 1200, 1600, 2000,
+    2500, 3000, 4000, 5000, 6000
+]
+
+# Practical "standard" list used by the attached OESC calc (Table 13 style). This list is commonly aligned with the NEC list.
+OESC_TABLE13_STANDARD = NEC_2406A_STANDARD[:]
+
+
+def next_standard(value, standard_list):
+    """Return the next standard value >= value. If value exceeds list, return None."""
+    try:
+        v = float(value)
+    except Exception:
+        return None
+    for s in standard_list:
+        if s >= v - 1e-12:
+            return s
+    return None
+
+
+def calc_fla(kva, volts, phase):
+    """
+    FLA from kVA and voltage.
+    - 3Φ: I = S / (sqrt(3)*V_LL)
+    - 1Φ: I = S / V
+    """
+    s_va = float(kva) * 1000.0
+    v = float(volts)
+    if phase == "3Φ":
+        return s_va / (math.sqrt(3) * v) if v > 0 else None
+    return s_va / v if v > 0 else None
+
+
 # ----------------------------
 # Sidebar navigation
 # ----------------------------
@@ -96,7 +134,7 @@ if page == "Transformer Protection":
         header("Transformer Protection", "Code-focused theory and worked examples (full content).")
         show_code_note(code_mode)
 
-        # OESC Theory (full, reintroduced)
+        # OESC Theory (full, corrected + reintroduced)
         if code_mode == "OESC":
             st.subheader("OESC — Transformer Protection (Full Theory, simplified)")
 
@@ -148,43 +186,58 @@ if page == "Transformer Protection":
             st.write("For three-phase transformers the rated line current is:")
             eq(r"I_L=\frac{S}{\sqrt{3}\,V_L}")
             st.write(
-                "where S = apparent power (VA), V_L = line-to-line voltage (V). Use this to calculate primary and secondary FLA:"
+                "where S = apparent power, V_L = line-to-line voltage. Use consistent units "
+                "(e.g., **S in VA with V in V**, or **S in kVA with V in kV**) so the result is in amperes."
             )
+            st.write("Use this to calculate primary and secondary FLA:")
             eq(r"I_{pri}=\frac{S}{\sqrt{3}\,V_{pri}}")
             eq(r"I_{sec}=\frac{S}{\sqrt{3}\,V_{sec}}")
 
             st.markdown("### Methodology (practical steps)")
             st.write(
-                "1. Use nameplate FLA if available; otherwise compute FLA using the equation above.\n"
-                "2. Identify transformer type (oil-cooled, dry-type) and voltage class (>750 V or ≤750 V).\n"
-                "3. Apply the relevant OESC rule to determine the permitted OCPD multiplier (e.g., 150% for fuses, 300% for breakers for certain rules).\n"
+                "1. Use nameplate FLA if available; otherwise compute FLA using the equations above.\n"
+                "2. Identify transformer type (oil-cooled vs dry-type) and voltage class (>750 V or ≤750 V).\n"
+                "3. Apply the relevant OESC rule to determine the permitted OCPD multiplier(s) and any conditions/exceptions.\n"
                 "4. If the calculated device rating does not match a standard device rating, select the **next higher** standard rating as permitted by the rule.\n"
-                "5. Verify continuous loading limits (Rule 26-258 and Rule 8-104) and conductor ampacity separately."
+                "5. Confirm whether an **individual primary device at the transformer** is required, or whether upstream feeder/branch protection is permitted to serve this role (rule-dependent).\n"
+                "6. Verify continuous loading limits (Rule 26-258 and Rule 8-104) and conductor ampacity separately."
             )
 
-            st.markdown("### OESC Rule highlights (key subrules summarized)")
+            st.markdown("### OESC Rule highlights (key subrules summarized — corrected)")
             st.markdown(
                 """
-**OESC 26-250 — Overcurrent protection for transformers rated over 750 V (oil-cooled example)**  
+**OESC 26-250 — Overcurrent protection for power and distribution transformer circuits rated over 750 V (oil-cooled / power & distribution)**  
 - Each ungrounded conductor of the transformer feeder shall have overcurrent protection.  
 - **Fuses:** rated at not more than **150%** of rated primary current.  
 - **Breakers:** rated/set at not more than **300%** of rated primary current.  
-- If 150% doesn't match a standard fuse, the next higher standard rating is permitted.
+- If **150%** does not correspond to a standard fuse rating, the **next higher standard fuse rating** is permitted.  
+- **An individual overcurrent device is not required** where the feeder/branch overcurrent device provides the protection specified in this rule.
 
-**OESC 26-252 — Overcurrent protection for transformers 750 V or less (other than dry-type)**  
-- Primary OCPD generally ≤ **150%** of rated primary current (with exceptions for small currents and secondary protection cases).  
-- If rated primary current is ≥ 9 A and 150% doesn't match a standard rating, next higher standard rating permitted.
+**OESC 26-252 — Overcurrent protection for transformers 750 V or less (oil-cooled / other than dry-type)**  
+- Primary overcurrent protection generally **≤ 150%** of rated primary current.  
+- If rated primary current is **9 A or more** and **150%** does not correspond to a standard rating of a fuse or non-adjustable breaker, the **next higher standard rating** is permitted.  
+- If rated primary current is **less than 9 A**, an overcurrent device **≤ 167%** is permitted.  
+- If rated primary current is **less than 2 A**, an overcurrent device **≤ 300%** is permitted.  
+- **An individual overcurrent device is not required** where the feeder/branch overcurrent device provides the protection specified in this rule.  
+- **Secondary-protection pathway (common allowance):** A transformer with a **secondary-side device ≤ 125%** of rated secondary current **need not have an individual primary device**, provided that the **primary feeder overcurrent device ≤ 300%** of rated primary current (rule conditions apply).
 
 **OESC 26-254 — Overcurrent protection for dry-type transformers 750 V or less**  
-- Primary OCPD generally ≤ **125%** of rated primary current.  
-- If the device must withstand inrush, refer to the appendix guidance: device should be able to carry **12× FLA for 0.1 s** and **25× FLA for 0.01 s**.
+- Primary overcurrent protection generally **≤ 125%** of rated primary current.  
+- If the required device rating does not correspond to a standard rating, the **next higher standard rating** may be permitted as allowed by the rule.  
+- **An individual overcurrent device is not required** where the feeder/branch overcurrent device provides the protection specified in this rule.  
+- **Secondary-protection pathway (common allowance):** A transformer with a **secondary-side device ≤ 125%** of rated secondary current **need not have an individual primary device**, provided that the **primary feeder overcurrent device ≤ 300%** of rated primary current (rule conditions apply).  
+- **Inrush withstand guidance (Appendix):** the device should be able to carry **12× FLA for 0.1 s** and **25× FLA for 0.01 s** (verify manufacturer curves).
 """
             )
 
-            st.markdown("### Continuous load and conductor checks")
+            st.markdown("### Continuous load and conductor checks (OESC 26-258 and Rule 8-104 intent)")
             st.write(
-                "Refer to OESC 26-258 (Transformer continuous load) and Rule 8-104 for limits on continuous loading and conductor ampacity. "
-                "These requirements ensure the transformer protection and conductors are coordinated."
+                "OESC 26-258 ties transformer overcurrent protection and conductor sizing (Rules 26-250 to 26-256) to the **continuous load** connected to the transformer secondary. "
+                "In general terms: the continuous load determined from the calculated load connected to the transformer secondary must not exceed the values specified in Rule 8-104 (as applicable)."
+            )
+            st.write(
+                "Appendix intent (plain language): this requirement helps ensure **coordination** between the secondary loads, the rating of transformer protection devices, "
+                "and the ampacity of transformer conductors so minimum acceptable conductor size and protection selection are aligned."
             )
 
             st.markdown("### Worked calculation examples (from the provided doc)")
@@ -199,7 +252,7 @@ if page == "Transformer Protection":
             st.write("Example B — Oil-cooled ≤ 750 V (75 kVA, 600 V / 208 V):")
             eq(r"I_{pri}=\frac{75{,}000}{\sqrt{3}\cdot 600}\approx 72.17\ \mathrm{A}")
             eq(r"I_{ocpd,max}=1.50\cdot I_{pri}\approx 108.26\ \mathrm{A}")
-            st.write("Selected standard size: **110 A** (per Table 13 standard values).")
+            st.write("Selected standard size: **110 A** (per standard device values).")
 
             st.write("Example C — Dry-type ≤ 750 V (75 kVA, 600 V / 208 V):")
             eq(r"I_{pri}\approx 72.17\ \mathrm{A}")
@@ -227,7 +280,7 @@ if page == "Transformer Protection":
                 "Include signature/date fields in your deliverable calculation sheet."
             )
 
-        # NEC Theory (full, reintroduced)
+        # NEC Theory (full, corrected + expanded to match document notes)
         else:
             st.subheader("NEC — Transformer Protection (Full Theory, simplified)")
 
@@ -239,7 +292,8 @@ if page == "Transformer Protection":
 
             st.markdown("### Scope & Key references")
             st.write(
-                "Focus on NEC 450.3 and tables 450.3(A) / 450.3(B) depending on voltage class. Also consult NEC 240.6(A) for standard ratings."
+                "Focus on NEC 450.3 and tables 450.3(A) / 450.3(B) depending on voltage class. Also consult NEC 240.6(A) for standard ratings "
+                "and device availability rules used when rounding to standard/commercial sizes."
             )
 
             st.markdown("### Assumptions (example template)")
@@ -249,29 +303,51 @@ if page == "Transformer Protection":
 - Conductors: **75°C copper**, free-air routing  
 - Max cable length: **50 m**  
 - Transformer impedance: **≤ 6%** (common example used in the template)  
-- Installation: **any location** vs **supervised** (affects table choices)
+- Installation location classification: **Any location** vs **Supervised location** (affects table choices)
 """
             )
 
             st.markdown("### Method / Practical approach")
             st.write(
                 "1. Use nameplate FLA when available; otherwise compute FLA for primary and secondary using the 3Φ formula below.  \n"
-                "2. Determine whether transformer is >1000 V (use Table 450.3(A)) or ≤1000 V (use Table 450.3(B)).  \n"
-                "3. Apply the table-based multipliers/limits to find allowable OCPD ratings.  \n"
-                "4. Round to the next standard/commercial device per NEC 240.6(A) as allowed."
+                "2. Determine whether transformer is **over 1000 V nominal** (use **Table 450.3(A)**) or **1000 V nominal or less** (use **Table 450.3(B)**).  \n"
+                "3. Determine whether the installation is **Any location** or a **Supervised location** (this can change allowable multipliers/limits).  \n"
+                "4. Apply the table-based multipliers/limits to find allowable OCPD ratings (primary-only or primary+secondary schemes, where applicable).  \n"
+                "5. Apply the table notes on rounding to standard/commercial device ratings and on how multiple secondary devices may be grouped."
             )
 
             st.markdown("### Rated current formula (3Φ)")
             eq(r"I_L=\frac{S}{\sqrt{3}\,V_L}")
+            st.write(
+                "Use consistent units (e.g., **S in VA with V in V**, or **S in kVA with V in kV**) so the result is in amperes."
+            )
             eq(r"I_{pri}=\frac{S}{\sqrt{3}\,V_{pri}}")
             eq(r"I_{sec}=\frac{S}{\sqrt{3}\,V_{sec}}")
 
-            st.markdown("### NEC 450.3 highlights")
+            st.markdown("### NEC 450.3 structure")
             st.markdown(
                 """
-**450.3(A)** — Transformers **over 1000 V nominal**: use Table 450.3(A). Table values depend on device type, impedance, and location.  
-**450.3(B)** — Transformers **1000 V nominal or less**: use Table 450.3(B). Commonly permits primary-only or primary+secondary schemes.  
-**450.3(C)** — Voltage (potential) transformers: typical requirement is primary fusing for indoor/enclosed installations; small control/potential circuits often protected at 15 A or less with listed exceptions.
+**450.3(A)** — Transformers **over 1000 V nominal**: overcurrent protection per Table 450.3(A).  
+**450.3(B)** — Transformers **1000 V nominal or less**: overcurrent protection per Table 450.3(B).  
+**450.3(C)** — Voltage (potential) transformers: protection requirements depend on application; often primary fusing for indoor/enclosed installations with common small-circuit protections in control/potential circuits (as applicable).
+"""
+            )
+
+            st.markdown("### Table 450.3 notes that materially affect design (carried into this app)")
+            st.markdown(
+                """
+**Table 450.3 Note 1 — Rounding to standard / commercially available sizes**  
+- If the required fuse rating or breaker setting does not correspond to a standard value, a higher rating/setting is permitted provided it does not exceed:  
+  - the **next higher standard rating/setting** for devices **1000 V and below**, or  
+  - the **next higher commercially available rating/setting** for devices **over 1000 V**.
+
+**Table 450.3 Note 2 — Multiple secondary devices (when secondary OCPD is required)**  
+- The secondary OCPD is permitted to consist of **not more than six** circuit breakers, or **six sets of fuses**, **grouped in one location**.  
+- Where multiple devices are used, the **sum of device ratings** shall not exceed the allowed value of a **single** overcurrent device.  
+- If **both breakers and fuses** are used, the total of the device ratings shall not exceed that allowed for **fuses**.
+
+**Supervised location (definition used in the calculation template)**  
+- A supervised location is one where maintenance/supervision ensure **only qualified persons** monitor and service the transformer installation (qualified persons have safety training and are familiar with operation and hazards).
 """
             )
 
@@ -279,110 +355,337 @@ if page == "Transformer Protection":
             st.write("Example 1 — 2 MVA, 27.6 kV / 4.16 kV, Z ≤ 6%, any location:")
             eq(r"I_{pri}=\frac{2{,}000{,}000}{\sqrt{3}\cdot 27{,}600}\approx 41.89\ \mathrm{A}")
             eq(r"I_{sec}=\frac{2{,}000{,}000}{\sqrt{3}\cdot 4{,}160}\approx 277.90\ \mathrm{A}")
+
+            st.markdown("**Document example multipliers (table-driven, Z ≤ 6%, any location):**")
+            st.write("Primary limits:")
+            eq(r"I_{pri,brk,max}=6.00\cdot I_{pri}\approx 251.34\ \mathrm{A}")
+            eq(r"I_{pri,fuse,max}=3.00\cdot I_{pri}\approx 125.67\ \mathrm{A}")
+            st.write("Secondary limits:")
+            eq(r"I_{sec,brk,max}=3.00\cdot I_{sec}\approx 833.70\ \mathrm{A}")
+            eq(r"I_{sec,fuse,max}=2.50\cdot I_{sec}\approx 694.75\ \mathrm{A}")
             st.write(
-                "Example table-derived (document example) selections: Primary 300 A breaker or 150 A fuse; Secondary 1000 A breaker or 700 A fuse."
+                "Example document selections (using commercially available sizes where applicable): "
+                "**Primary 300 A breaker** or **150 A fuse**; **Secondary 1000 A breaker** or **700 A fuse**."
             )
 
             st.write("Example 2 — 75 kVA, 600 V / 208 V (currents > 9 A):")
             eq(r"I_{pri}=\frac{75{,}000}{\sqrt{3}\cdot 600}\approx 72.25\ \mathrm{A}")
             eq(r"I_{sec}=\frac{75{,}000}{\sqrt{3}\cdot 208}\approx 208.43\ \mathrm{A}")
             st.write(
-                "Two schemes presented in the document: primary-only → 100 A; primary+secondary → 200 A primary and 300 A secondary (example selections)."
+                "Two schemes presented in the document (table-driven): primary-only → **100 A**; "
+                "primary+secondary → **200 A primary** and **300 A secondary** (example selections)."
             )
 
             st.markdown("### Practical design notes (NEC)")
             st.write(
-                "NEC transformer OCPD sizing focuses on protecting the transformer. Conductor protection still must be checked under Article 240. Coordination, relay protection for large transformers (ANSI 50/51), and grounding/winding configuration should all be considered."
+                "NEC transformer OCPD sizing focuses on protecting the transformer. Conductor protection still must be checked under Article 240. "
+                "Coordination, relay protection for large transformers (e.g., ANSI 50/51 where applicable), and grounding/winding configuration "
+                "should all be considered."
             )
 
-    # Calculator tab for Transformer Protection
+    # ----------------------------
+    # Calculator tab for Transformer Protection (CORRECT per attached docs)
+    # ----------------------------
     with calc_tab:
-        header("Transformer Protection Calculator", "Compute transformer currents + suggested OCPD limits (template).")
+        header("Transformer Protection Calculator", "Compute transformer currents + code-based OCPD limits (per attached calc documents).")
         show_code_note(code_mode)
 
-        col1, col2, col3 = st.columns(3, gap="large")
-        with col1:
-            kva = st.number_input("Transformer size (kVA)", min_value=0.1, value=75.0, step=1.0)
-        with col2:
-            vpri = st.number_input("Primary voltage (V LL)", min_value=1.0, value=600.0, step=1.0)
-        with col3:
-            vsec = st.number_input("Secondary voltage (V LL)", min_value=1.0, value=208.0, step=1.0)
+        st.markdown("### Inputs")
+        c1, c2, c3, c4 = st.columns([1, 1, 1, 1], gap="large")
+        with c1:
+            phase = st.selectbox("System", ["3Φ", "1Φ"], index=0, key="tp_phase")
+        with c2:
+            kva = st.number_input("Transformer size (kVA)", min_value=0.1, value=75.0, step=1.0, key="tp_kva")
+        with c3:
+            vpri = st.number_input("Primary voltage (V)", min_value=1.0, value=600.0, step=1.0, key="tp_vpri")
+        with c4:
+            vsec = st.number_input("Secondary voltage (V)", min_value=1.0, value=208.0, step=1.0, key="tp_vsec")
 
-        st.markdown("### Full-load current (3Φ assumed)")
-        Ip = (kva * 1000.0) / (math.sqrt(3) * vpri)
-        Is = (kva * 1000.0) / (math.sqrt(3) * vsec)
+        st.caption(
+            "Units note: This calculator assumes kVA and volts. For 3Φ, it uses line-to-line voltage. "
+            "Use nameplate FLA when available."
+        )
 
-        c1, c2 = st.columns(2)
-        c1.metric("Primary FLA", fmt(Ip, "A"))
-        c2.metric("Secondary FLA", fmt(Is, "A"))
+        st.markdown("### Full-load current (nameplate optional)")
+        use_nameplate = st.checkbox("Use nameplate FLA inputs instead of calculating from kVA/V", value=False, key="tp_use_nameplate")
+
+        if use_nameplate:
+            n1, n2 = st.columns(2, gap="large")
+            with n1:
+                Ip = st.number_input("Nameplate Primary FLA (A)", min_value=0.01, value=72.0, step=0.01, key="tp_Ip_nameplate")
+            with n2:
+                Is = st.number_input("Nameplate Secondary FLA (A)", min_value=0.01, value=208.0, step=0.01, key="tp_Is_nameplate")
+        else:
+            Ip = calc_fla(kva, vpri, phase)
+            Is = calc_fla(kva, vsec, phase)
+
+        m1, m2 = st.columns(2)
+        m1.metric("Primary FLA", fmt(Ip, "A"))
+        m2.metric("Secondary FLA", fmt(Is, "A"))
 
         st.divider()
-        st.markdown("### OCPD sizing helpers / quick suggestions")
+        st.markdown("### Code-based OCPD limits")
 
+        # ----------------------------
+        # OESC calculator (per OESC calc doc)
+        # ----------------------------
         if code_mode == "OESC":
-            oesc_path = st.selectbox(
-                "OESC path (simplified)",
-                [
-                    "26-250 (>750V) — Fuse 150% / Breaker 300%",
-                    "26-252 (≤750V non-dry) — Primary 150% (common case)",
-                    "26-254 (≤750V dry-type) — Primary 125% + inrush checks",
-                ],
-                index=1,
-            )
+            st.subheader("OESC — Rule-based sizing (implemented per the attached OESC calculation)")
 
-            if oesc_path.startswith("26-250"):
-                st.success(f"Max Fuse (150%): **{fmt(Ip * 1.50, 'A')}**")
-                st.success(f"Max Breaker (300%): **{fmt(Ip * 3.00, 'A')}**")
-                st.caption("Pick the next standard rating per your standard device table (e.g., OESC Table 13).")
+            cc1, cc2, cc3 = st.columns([1.2, 1.2, 1.2], gap="large")
+            with cc1:
+                xfmr_type = st.selectbox("Transformer type", ["Oil-cooled (non-dry)", "Dry-type"], index=0, key="tp_oesc_type")
+            with cc2:
+                # This matches how the attached document is organized
+                voltage_class = st.selectbox("Voltage class selection", ["> 750 V", "≤ 750 V"], index=1 if vpri <= 750 else 0, key="tp_oesc_vclass")
+            with cc3:
+                round_to_std = st.checkbox("Round up to standard rating (Table 13 style)", value=True, key="tp_oesc_round")
 
-            elif oesc_path.startswith("26-252"):
-                st.success(f"Max Primary OCPD (150%): **{fmt(Ip * 1.50, 'A')}**")
-                st.caption("OESC 26-252 includes additional allowances for small currents and certain secondary-protection cases.")
+            # Decide which rule path is valid
+            rule_options = []
+            if voltage_class == "> 750 V":
+                rule_options = ["26-250 (>750V) — Primary fuses 150% / breakers 300% (direct primary protection)"]
+            else:
+                if xfmr_type == "Dry-type":
+                    rule_options = [
+                        "26-254 (≤750V dry-type) — Primary 125% (direct primary protection)",
+                        "26-254 (≤750V dry-type) — Secondary device 125% + Primary feeder device 300% (no individual primary at transformer)",
+                    ]
+                else:
+                    rule_options = [
+                        "26-252 (≤750V non-dry) — Primary per 150% / 167% / 300% allowances (direct primary protection)",
+                        "26-252 (≤750V non-dry) — Secondary device 125% + Primary feeder device 300% (no individual primary at transformer)",
+                    ]
+
+            rule_path = st.selectbox("OESC rule path", rule_options, index=0, key="tp_oesc_rule_path")
+
+            std_list = OESC_TABLE13_STANDARD
+
+            def show_oesc_result(label, raw):
+                std = next_standard(raw, std_list) if round_to_std else None
+                if round_to_std:
+                    if std is None:
+                        st.error(f"{label}: Raw = **{fmt(raw,'A')}** → exceeds standard list. Enter final device manually.")
+                    else:
+                        st.success(f"{label}: Raw = **{fmt(raw,'A')}** → Selected standard = **{fmt(std,'A')}**")
+                else:
+                    st.success(f"{label}: **{fmt(raw,'A')}**")
+
+            # 26-250 (>750V) — per doc table: fuse 1.5, breaker 3.0 on primary.
+            if rule_path.startswith("26-250"):
+                st.markdown("#### 26-250 (>750 V) — Direct primary protection (per calc document)")
+                if Ip is None:
+                    st.error("Primary FLA could not be computed. Check inputs.")
+                else:
+                    raw_fuse = 1.50 * Ip
+                    raw_brk = 3.00 * Ip
+
+                    show_oesc_result("Max Primary Fuse (150%)", raw_fuse)
+                    show_oesc_result("Max Primary Breaker (300%)", raw_brk)
+
+                    with st.expander("Optional: show secondary reference values (not a required selection in this direct-primary example)", expanded=False):
+                        if Is is None:
+                            st.warning("Secondary FLA unavailable.")
+                        else:
+                            st.info("The attached calculation worksheet also shows secondary-side reference values using the same multipliers.")
+                            show_oesc_result("Secondary @ 150% (reference)", 1.50 * Is)
+                            show_oesc_result("Secondary @ 300% (reference)", 3.00 * Is)
+
+            # 26-252 (≤750V non-dry) — per doc: primary allowance depends on Ip (<2A 300%, <9A 167%, else 150%).
+            elif rule_path.startswith("26-252") and "direct primary" in rule_path.lower():
+                st.markdown("#### 26-252 (≤750 V, non-dry) — Direct primary protection (per calc document)")
+                if Ip is None:
+                    st.error("Primary FLA could not be computed. Check inputs.")
+                else:
+                    if Ip < 2.0:
+                        mult = 3.00
+                        reason = "Ip < 2 A → up to 300% permitted."
+                    elif Ip < 9.0:
+                        mult = 1.67
+                        reason = "Ip < 9 A → up to 167% permitted."
+                    else:
+                        mult = 1.50
+                        reason = "Ip ≥ 9 A → up to 150% permitted; if not a standard size, next higher standard permitted."
+
+                    raw_primary = mult * Ip
+                    st.caption(reason)
+                    show_oesc_result(f"Max Primary OCPD ({mult:.2f}×)", raw_primary)
+
+                    with st.expander("Optional: show secondary reference value from worksheet style", expanded=False):
+                        if Is is None:
+                            st.warning("Secondary FLA unavailable.")
+                        else:
+                            st.info("The attached worksheet also shows a secondary reference value using the same multiplier for this example format.")
+                            show_oesc_result(f"Secondary @ {mult:.2f}× (reference)", mult * Is)
+
+            # 26-252 secondary pathway — per doc text: secondary device <=125% and primary feeder device <=300%.
+            elif rule_path.startswith("26-252") and "secondary device" in rule_path.lower():
+                st.markdown("#### 26-252 (≤750 V, non-dry) — Secondary device + primary feeder allowance (per calc document)")
+                if (Ip is None) or (Is is None):
+                    st.error("Primary/Secondary FLA could not be computed. Check inputs.")
+                else:
+                    raw_sec_dev = 1.25 * Is
+                    raw_pri_feeder = 3.00 * Ip
+                    show_oesc_result("Max Secondary OCPD (125% of secondary FLA)", raw_sec_dev)
+                    show_oesc_result("Max Primary Feeder OCPD (300% of primary FLA)", raw_pri_feeder)
+                    st.caption(
+                        "This path reflects the allowance summarized in the attached OESC calculation: "
+                        "secondary-side device ≤125% and upstream primary feeder device ≤300% (verify rule conditions for your installation)."
+                    )
+
+            # 26-254 direct primary — per doc: primary 125%, next higher standard permitted, plus inrush 12x and 25x.
+            elif rule_path.startswith("26-254") and "direct primary" in rule_path.lower():
+                st.markdown("#### 26-254 (≤750 V, dry-type) — Direct primary protection (per calc document)")
+                if Ip is None:
+                    st.error("Primary FLA could not be computed. Check inputs.")
+                else:
+                    raw_primary = 1.25 * Ip
+                    show_oesc_result("Max Primary OCPD (125%)", raw_primary)
+
+                    st.markdown("**Inrush withstand checks (Appendix guidance in calc):**")
+                    st.write(f"12× FLA for 0.1 s: **{fmt(Ip * 12, 'A')}**")
+                    st.write(f"25× FLA for 0.01 s: **{fmt(Ip * 25, 'A')}**")
+                    st.caption("Verify manufacturer curves to confirm withstand/ride-through capability.")
+
+                    with st.expander("Optional: show secondary reference value from worksheet style", expanded=False):
+                        if Is is None:
+                            st.warning("Secondary FLA unavailable.")
+                        else:
+                            show_oesc_result("Secondary @ 125% (reference)", 1.25 * Is)
+
+            # 26-254 secondary pathway — per doc: secondary device <=125% and primary feeder device <=300%.
+            elif rule_path.startswith("26-254") and "secondary device" in rule_path.lower():
+                st.markdown("#### 26-254 (≤750 V, dry-type) — Secondary device + primary feeder allowance (per calc document)")
+                if (Ip is None) or (Is is None):
+                    st.error("Primary/Secondary FLA could not be computed. Check inputs.")
+                else:
+                    raw_sec_dev = 1.25 * Is
+                    raw_pri_feeder = 3.00 * Ip
+                    show_oesc_result("Max Secondary OCPD (125% of secondary FLA)", raw_sec_dev)
+                    show_oesc_result("Max Primary Feeder OCPD (300% of primary FLA)", raw_pri_feeder)
+
+                    st.markdown("**Inrush withstand checks (Appendix guidance in calc):**")
+                    st.write(f"12× FLA for 0.1 s: **{fmt(Ip * 12, 'A')}**")
+                    st.write(f"25× FLA for 0.01 s: **{fmt(Ip * 25, 'A')}**")
+
+                    st.caption(
+                        "This path reflects the allowance summarized in the attached OESC calculation: "
+                        "secondary-side device ≤125% and upstream primary feeder device ≤300% (verify rule conditions for your installation)."
+                    )
 
             else:
-                st.success(f"Max Primary OCPD (125%): **{fmt(Ip * 1.25, 'A')}**")
-                st.markdown("**Inrush withstand checks (Appendix guidance):**")
-                st.write(f"12× FLA for 0.1 s: **{fmt(Ip * 12, 'A')}**")
-                st.write(f"25× FLA for 0.01 s: **{fmt(Ip * 25, 'A')}**")
-                st.caption("Verify device curves / manufacturer data to confirm short-duration withstand capability.")
+                st.warning("Selected OESC path not recognized. Check selections.")
 
-        else:  # NEC
-            nec_path = st.selectbox(
-                "NEC path (simplified)",
-                [
-                    "450.3(A) — Transformers >1000V (table-based)",
-                    "450.3(B) — Transformers ≤1000V (table-based)",
-                    "450.3(C) — Voltage (Potential) Transformers (notes-based)",
-                ],
-                index=1,
-            )
+        # ----------------------------
+        # NEC calculator (per NEC calc doc)
+        # ----------------------------
+        else:
+            st.subheader("NEC — Table-based sizing (implemented per the attached NEC calculation)")
 
-            st.caption(
-                "This calculator shows currents and provides example-style outputs. To fully automate NEC table lookups, add inputs for impedance, location (any vs supervised), and the full Table 450.3 multipliers."
-            )
+            nc1, nc2, nc3 = st.columns([1.1, 1.1, 1.1], gap="large")
+            with nc1:
+                nec_case = st.selectbox(
+                    "NEC case",
+                    [
+                        "450.3(A) — Transformers >1000V (Z ≤ 6%, Any location) — multipliers per attached calc",
+                        "450.3(B) — Transformers ≤1000V (currents ≥ 9A) — multipliers per attached calc",
+                    ],
+                    index=1 if vpri <= 1000 else 0,
+                    key="tp_nec_case",
+                )
+            with nc2:
+                round_to_std = st.checkbox("Round up to standard rating (NEC 240.6(A) list)", value=True, key="tp_nec_round")
+            with nc3:
+                show_notes = st.checkbox("Show table-note reminders (Note 1 / Note 2)", value=True, key="tp_nec_notes")
 
-            if nec_path.startswith("450.3(A)"):
-                st.markdown("### Example-style outputs (Document example)")
-                st.write("For a 2 MVA, 27.6 kV / 4.16 kV transformer (Z ≤ 6%, any location):")
-                st.success("Primary: **300 A breaker** or **150 A fuse**")
-                st.success("Secondary: **1000 A breaker** or **700 A fuse**")
-                st.caption("To automate: add impedance + location inputs and table multipliers from NEC 450.3(A).")
+            std_list = NEC_2406A_STANDARD
 
-            elif nec_path.startswith("450.3(B)"):
-                st.markdown("### Example-style outputs (Document example)")
-                st.write("For a 75 kVA, 600 V / 208 V transformer (currents > 9 A):")
-                st.success("Method 1 (Primary-only): **100 A**")
-                st.success("Method 2 (Primary + Secondary): **200 A primary**, **300 A secondary**")
-                st.caption("To automate: add Method 1/2 selection and drive the limits from Table 450.3(B).")
+            def show_nec_result(label, raw, over_1000v=False):
+                # Note: for >1000V the calc doc uses "next higher commercially available";
+                # we still show rounding using the standard list for convenience, with a note.
+                std = next_standard(raw, std_list) if round_to_std else None
+                if round_to_std:
+                    if std is None:
+                        st.error(f"{label}: Raw = **{fmt(raw,'A')}** → exceeds standard list. Enter final device manually.")
+                    else:
+                        st.success(f"{label}: Raw = **{fmt(raw,'A')}** → Selected = **{fmt(std,'A')}**")
+                else:
+                    st.success(f"{label}: **{fmt(raw,'A')}**")
 
-            else:
+                if over_1000v:
+                    st.caption("For >1000 V cases, Table 450.3 Note 1 allows next higher **commercially available** rating/setting (not strictly the 240.6(A) list).")
+
+            if show_notes:
                 st.markdown(
                     """
-### NEC 450.3(C) quick notes (simplified)
-- Indoor/enclosed voltage (potential) transformers: **primary fuses recommended/required** in many cases
-- Certain potential-coil switchgear devices commonly supplied from circuits protected at **15 A or less**
+**Table-note reminders (from the attached NEC calc narrative):**  
+- **Note 1:** If the calculated rating/setting is not standard, the next higher is permitted (standard for ≤1000 V; commercially available for >1000 V).  
+- **Note 2:** If secondary protection is required, up to **six** breakers or **six** fuse sets may be grouped; the **sum** of device ratings must not exceed the allowed single-device value.
 """
                 )
+
+            if nec_case.startswith("450.3(A)"):
+                st.markdown("#### 450.3(A) (>1000 V) — Implemented multipliers (Z ≤ 6%, Any location) per attached calc")
+                if (Ip is None) or (Is is None):
+                    st.error("Primary/Secondary FLA could not be computed. Check inputs.")
+                else:
+                    # From attached calc table:
+                    # Primary breaker 6.00, primary fuse 3.00, secondary breaker 3.00, secondary fuse 2.50
+                    raw_pri_brk = 6.00 * Ip
+                    raw_pri_fuse = 3.00 * Ip
+                    raw_sec_brk = 3.00 * Is
+                    raw_sec_fuse = 2.50 * Is
+
+                    show_nec_result("Max Primary Breaker (6.00×)", raw_pri_brk, over_1000v=True)
+                    show_nec_result("Max Primary Fuse (3.00×)", raw_pri_fuse, over_1000v=True)
+                    show_nec_result("Max Secondary Breaker (3.00×)", raw_sec_brk, over_1000v=True)
+                    show_nec_result("Max Secondary Fuse (2.50×)", raw_sec_fuse, over_1000v=True)
+
+                    st.caption(
+                        "These multipliers match the attached NEC calculation example for a >1000 V transformer with impedance ≤ 6% in an 'any location' installation."
+                    )
+
+            else:
+                st.markdown("#### 450.3(B) (≤1000 V) — Implemented multipliers (currents ≥ 9A) per attached calc")
+                scheme = st.radio(
+                    "Protection scheme",
+                    ["Primary-only protection", "Primary + Secondary protection"],
+                    horizontal=True,
+                    key="tp_nec_4503b_scheme",
+                )
+
+                if (Ip is None) or (Is is None):
+                    st.error("Primary/Secondary FLA could not be computed. Check inputs.")
+                else:
+                    if Ip < 9.0:
+                        st.warning(
+                            "The attached NEC worksheet implements the ≥9A case. Your primary FLA is < 9A. "
+                            "Refer directly to NEC Table 450.3(B) for the correct small-current conditions."
+                        )
+
+                    if scheme == "Primary-only protection":
+                        # From attached calc: multiplier 1.25 on primary only
+                        raw_primary = 1.25 * Ip
+                        show_nec_result("Max Primary OCPD (1.25×)", raw_primary, over_1000v=False)
+                        st.caption("This matches the attached NEC calculation 'Primary Only ≥9A Multiplier: 1.25'.")
+
+                    else:
+                        # From attached calc: primary multiplier 2.50, secondary multiplier 1.25
+                        raw_primary = 2.50 * Ip
+                        raw_secondary = 1.25 * Is
+                        show_nec_result("Max Primary OCPD (2.50×)", raw_primary, over_1000v=False)
+                        show_nec_result("Max Secondary OCPD (1.25×)", raw_secondary, over_1000v=False)
+                        st.caption(
+                            "These multipliers match the attached NEC calculation 'Primary + Secondary' scheme for ≤1000 V with currents ≥ 9A."
+                        )
+
+        st.divider()
+        st.markdown("### Equations used")
+        if phase == "3Φ":
+            eq(r"I=\frac{S}{\sqrt{3}\,V}")
+        else:
+            eq(r"I=\frac{S}{V}")
+        st.caption("Where S is in VA and V is in volts (or kVA with kV).")
 
 # ============================
 # 2) Transformer Feeders
