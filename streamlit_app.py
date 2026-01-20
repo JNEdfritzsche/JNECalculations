@@ -107,6 +107,7 @@ PAGES = [
     "Cable Tray Ampacity",
     "Demand Load",
     "Voltage Drop",
+    "Conductors",  # <-- added
 ]
 
 with st.sidebar:
@@ -114,7 +115,7 @@ with st.sidebar:
     page = st.radio("Go to", PAGES, index=0)
 
     st.divider()
-    st.header("Unit Preferences")
+    st.header("Jurisdiction")
     code_mode = st.selectbox("Select electrical code", ["NEC", "OESC"], index=0)
 
     st.divider()
@@ -687,6 +688,7 @@ if page == "Transformer Protection":
             eq(r"I=\frac{S}{V}")
         st.caption("Where S is in VA and V is in volts (or kVA with kV).")
 
+
 # ============================
 # 2) Transformer Feeders
 # ============================
@@ -1055,5 +1057,354 @@ elif page == "Voltage Drop":
         st.markdown("### Equations used")
         eq(eq_used)
         eq(r"\%\Delta V = 100\cdot\frac{\Delta V}{V_{nom}}")
+
+
+# ============================
+# 11) Conductors
+# ============================
+elif page == "Conductors":
+    with theory_tab:
+        header("Conductors — Theory", "OESC Section 4 (Rule 4-004) workflow + worked example case study.")
+        show_code_note(code_mode)
+
+        if code_mode == "NEC":
+            st.warning(
+                "This page is based on an OESC/CEC (Ontario/Canada) conductor sizing workflow summary. "
+                "If you need NEC-specific conductor sizing, this page would need a separate NEC implementation."
+            )
+
+        st.subheader("Keywords")
+        st.markdown(
+            """
+- **Raceway:** any channel designed for holding wires, cables, or busbars, such as conduits, tubing, and ducts.  
+- **Spacing:** the separation between cables in a run, given as **% of largest cable diameter**.  
+- **Service factor:** a multiplying factor that indicates how much a piece of equipment can be overloaded without significant damage under specified conditions.
+"""
+        )
+
+        st.subheader("Summary")
+        st.write(
+            "This summary is intended to familiarize you with calculating cable sizes for different loads and runs, "
+            "using a CEC Handbook-style workflow and OESC tables (Tables 1–4 plus correction factors). "
+            "Always consult the full code book for final compliance."
+        )
+
+        st.subheader("Ampacity selection chart (ambient temperature ≤ 30°C)")
+        st.caption("Table-selection logic summarized from OESC Rule 4-004 guidance.")
+
+        st.markdown(
+            """
+| Subrule | Conductors | Condition | Spacing (% of cable diameter) | Use ampacity from |
+|---|---|---|---|---|
+| 4-004 (1) & (2) | a) Single | Free air | ≥ 100% | Table **1** (Cu) or **3** (Al) |
+| 4-004 (1) & (2) | b) 1 to 3 | Raceway or cable | N/A | Table **2** (Cu) or **4** (Al) |
+| 4-004 (1) & (2) | c) 4 or more | Raceway or cable | N/A | Table **2** or **4** × correction factor from Table **5C** |
+| 4-004 (1) & (2) | d) Not more than 4 | No. 1/0 AWG and larger underground run — direct buried or in a direct-buried raceway | Configurations in Diagrams D8 to D11 | Tables **D8A to D11B** or IEEE **835** method |
+| 4-004 (1) & (2) | e) Not more than 4 | No. 1/0 AWG and larger underground run — direct buried or in a direct-buried raceway | Configuration not described in D8 to D11 | IEEE **835** method |
+| 4-004 (1) & (2) | f) Not more than 4 | Smaller than No. 1/0 AWG underground run — direct buried or in a direct-buried raceway | Configuration not described in D8 to D11 | IEEE **835** method or as specified in Tables **2** and **4** |
+| 4-004 (8) | Single | Free air | 25% to 100% | Table **1** or **3** × correction factor from Table **5D** |
+| 4-004 (9) | Not more than 4 single | Free air | < 25% | Table **1** or **3** × correction factor from Table **5B** |
+| 4-004 (11) | 5 or more single | Free air | < 25% | Table **2** or **4** × correction factor from Table **5C** |
+"""
+        )
+
+        st.subheader("Typical assumptions used in the worked example")
+        st.markdown(
+            """
+- Termination temperature assumption often used for quick checks: **60°C** for equipment **<100A**, and **75°C** for equipment **>100A**  
+- Service factor often assumed for equipment: **SF = 1.25**  
+- Power factor often assumed: **pf ≈ 0.9**  
+- Ambient temperature: **≤ 30°C**
+"""
+        )
+
+        st.subheader("Common calculation relationships used in the workflow")
+        st.write("Service-factor (design multiplier) current:")
+        eq(r"I_{design} = I_{load}\times SF")
+
+        st.write("If using parallel runs (per set current):")
+        eq(r"I_{per\_set} = \frac{I_{design}}{N_{parallel}}")
+
+        st.write("If a correction factor applies (Table 5B / 5C / 5D), the base-table ampacity needed is:")
+        eq(r"I_{table} = \frac{I_{per\_set}}{k_{corr}}")
+
+        st.subheader("Worked example case study (steel mill — tasks 1 to 5)")
+        st.markdown(
+            """
+**Case:** steel mill installing new equipment and replacing old cables; a transformer supplies lighting, motors, control panels, heaters, etc.  
+**Conditions:** transformer inside electrical room; feeds equipment through free air (tray), raceways, and direct-buried routes.
+
+**Task 1:** 3Φ 500 kVA, 13.8 kV / 600 V transformer; single conductors for secondary connection.  
+- Primary/secondary FLA: **20.919 A / 481.139 A**  
+- With SF=1.25: **26.15 A / 601.42 A**  
+- Example result: **500 MCM** (Table 1, rounded up)
+
+**Task 2 (Free air / ladder tray):** ladder trays considered free-air.  
+- 40A 1Φ + GND (3C), plenty of spacing → design 50A → Table 2 → **No. 6 AWG**  
+- 100A 3Φ delta + GND (4 singles), spacing 25–100% → apply Table 5D → table current 150A → Table 1 → **No. 2 AWG**  
+- 200A 3Φ wye + GND, parallel singles, <25% spacing → per-conductor 100A → apply Table 5C → table current 179A → Table 2 → **No. 3/0 AWG**
+
+**Task 3 (Raceway):**  
+- 125A 3Φ 3W delta in its own conduit → 156.25A design → Table 2 → **No. 2/0 AWG**  
+- 150A 3Φ 4W wye in its own conduit (Al) → apply Table 5C → table current 234.38A → Table 4 → **350 MCM**
+
+**Task 4 (Direct-bury):** follow Diagrams D8–D11; otherwise IEEE 835 method.  
+- 325A 3Φ, 3 singles flat config (Diagram D8 Detail 1) → 406.25A design → Table D8A → **No. 4/0 AWG**  
+- 160A 3Φ using parallel 3C cables in underground conduit (Diagram D11 Detail 2) → diagram table shows smallest cable 185A, so example uses Table 2 → **No. 3 AWG**  
+*(Spacing often must be calculated and iterated.)*
+
+**Task 5 (Voltage drop / k-value):** 600V / 100A heater, 1.5 km away.  
+- Design current 125A; max VD = 5% = 30V  
+- Compute **k_max = 0.08 Ω/km**, select from Table D3 → **1000 MCM**
+"""
+        )
+
+        st.subheader("Voltage drop k-value relationship used in the example")
+        eq(r"k_{max} = \frac{\Delta V_{allow}}{2\,I\,L_{km}}")
+        st.caption("Compare k_max to manufacturer k-values (Ω/km). Tables 1–4 ampacities do not include voltage drop.")
+
+        with st.expander("Manufacturer spec reminder (why cable spec sheets matter)", expanded=False):
+            st.write(
+                "The Knowledge File includes examples of manufacturer spec pages (e.g., TECK90 and armored VFD cable). "
+                "In real projects, you’ll need spec-sheet details such as conductor class/stranding, insulation type, jacket/armor, OD, weight, "
+                "minimum bend radius, pull tension, and resistance/k-values for voltage drop and heat calculations."
+            )
+
+    with calc_tab:
+        header("Conductors — Calculator", "Workflow helper: design current, table selection, correction-factor math, and k-value voltage drop check.")
+        show_code_note(code_mode)
+
+        if code_mode == "NEC":
+            st.info(
+                "Calculator logic below follows the OESC/CEC workflow summary (Rule 4-004 style). "
+                "Switch the sidebar jurisdiction to **OESC** for best alignment."
+            )
+
+        st.markdown("## 1) Ampacity workflow helper (service factor + table selection)")
+
+        c1, c2, c3 = st.columns([1, 1, 1], gap="large")
+        with c1:
+            I_load = st.number_input("Load current (A)", min_value=0.0, value=100.0, step=1.0, key="cond_I_load")
+        with c2:
+            sf = st.number_input("Service factor (SF)", min_value=1.0, value=1.25, step=0.05, key="cond_sf")
+        with c3:
+            n_parallel = st.number_input("Parallel sets", min_value=1, value=1, step=1, key="cond_n_parallel")
+
+        mat = st.selectbox(
+            "Conductor material (table family)",
+            ["Copper (Tables 1–2)", "Aluminum (Tables 3–4)"],
+            index=0,
+            key="cond_material",
+        )
+
+        install = st.selectbox(
+            "Installation method / condition",
+            [
+                "Free air (ventilated / ladder tray)",
+                "Raceway or cable (conduit/tubing/cable)",
+                "Underground (direct buried / direct-buried raceway)",
+            ],
+            index=0,
+            key="cond_install",
+        )
+
+        # Base currents
+        I_design_total = I_load * sf
+        I_per_set = safe_div(I_design_total, n_parallel) if n_parallel else None
+
+        m1, m2 = st.columns(2, gap="large")
+        m1.metric("Design current (total)", fmt(I_design_total, "A"))
+        m2.metric("Design current per parallel set", fmt(I_per_set, "A"))
+
+        def cu_table(free_air: bool):
+            return "Table 1" if free_air else "Table 2"
+
+        def al_table(free_air: bool):
+            return "Table 3" if free_air else "Table 4"
+
+        is_cu = mat.startswith("Copper")
+
+        # Defaults
+        subrule = "—"
+        amp_table = "—"
+        corr_table = None
+        corr_needed = False
+        corr_hint = ""
+
+        if install.startswith("Free air"):
+            n_single = st.number_input(
+                "Number of single conductors in the group",
+                min_value=1,
+                value=4,
+                step=1,
+                key="cond_freeair_nsingle",
+            )
+
+            spacing = st.radio(
+                "Spacing between cables (% of largest cable diameter)",
+                ["≥ 100%", "25% to 100%", "< 25%"],
+                index=0,
+                horizontal=True,
+                key="cond_freeair_spacing",
+            )
+
+            if spacing == "≥ 100%":
+                subrule = "4-004 (1) & (2) — single in free air"
+                amp_table = cu_table(True) if is_cu else al_table(True)
+            elif spacing == "25% to 100%":
+                subrule = "4-004 (8) — single in free air"
+                amp_table = cu_table(True) if is_cu else al_table(True)
+                corr_table = "Table 5D"
+                corr_needed = True
+                corr_hint = "Enter k_corr from Table 5D (spacing 25%–100%)."
+            else:  # <25%
+                if n_single <= 4:
+                    subrule = "4-004 (9) — ≤4 single in free air"
+                    amp_table = cu_table(True) if is_cu else al_table(True)
+                    corr_table = "Table 5B"
+                    corr_needed = True
+                    corr_hint = "Enter k_corr from Table 5B (spacing <25%, ≤4 singles)."
+                else:
+                    subrule = "4-004 (11) — ≥5 single in free air"
+                    amp_table = cu_table(False) if is_cu else al_table(False)
+                    corr_table = "Table 5C"
+                    corr_needed = True
+                    corr_hint = "Enter k_corr from Table 5C (spacing <25%, ≥5 singles)."
+
+        elif install.startswith("Raceway"):
+            n_ccc = st.number_input(
+                "Number of conductors in raceway/cable (use current-carrying count per your code interpretation)",
+                min_value=1,
+                value=3,
+                step=1,
+                key="cond_raceway_nccc",
+            )
+
+            if n_ccc <= 3:
+                subrule = "4-004 (1) & (2) — 1 to 3 in raceway/cable"
+                amp_table = cu_table(False) if is_cu else al_table(False)
+            else:
+                subrule = "4-004 (1) & (2) — 4 or more in raceway/cable"
+                amp_table = cu_table(False) if is_cu else al_table(False)
+                corr_table = "Table 5C"
+                corr_needed = True
+                corr_hint = "Enter k_corr from Table 5C (4+ in raceway/cable)."
+
+        else:  # Underground
+            size_class = st.selectbox(
+                "Conductor size class (per chart split)",
+                ["No. 1/0 AWG and larger", "Smaller than No. 1/0 AWG"],
+                index=0,
+                key="cond_ug_sizeclass",
+            )
+            in_diagrams = st.radio(
+                "Is the configuration covered in Diagrams D8 to D11?",
+                ["Yes", "No"],
+                index=0,
+                horizontal=True,
+                key="cond_ug_diagrams",
+            )
+
+            if size_class.startswith("No. 1/0") and in_diagrams == "Yes":
+                subrule = "4-004 (1) & (2)(d) — underground, ≥1/0, config in D8–D11"
+                amp_table = "Tables D8A to D11B (or IEEE 835)"
+            elif size_class.startswith("No. 1/0") and in_diagrams == "No":
+                subrule = "4-004 (1) & (2)(e) — underground, ≥1/0, config NOT in D8–D11"
+                amp_table = "IEEE 835 calculation method"
+            elif size_class.startswith("Smaller") and in_diagrams == "No":
+                subrule = "4-004 (1) & (2)(f) — underground, <1/0, config NOT in D8–D11"
+                amp_table = f"{cu_table(False) if is_cu else al_table(False)} (or IEEE 835)"
+            else:
+                subrule = "Underground case (not explicitly shown in the chart)"
+                amp_table = f"{cu_table(False) if is_cu else al_table(False)} (confirm applicability)"
+                st.warning(
+                    "The chart explicitly calls out diagram usage for ≥1/0 AWG. "
+                    "For <1/0 AWG, the summary points to IEEE 835 or Tables 2/4 depending on configuration. "
+                    "Confirm in the full code/diagrams for your exact installation."
+                )
+
+        st.divider()
+        st.markdown("### Table / factor guidance result")
+        st.success(f"**Subrule path:** {subrule}")
+        st.success(f"**Use ampacity from:** {amp_table}")
+
+        corr_factor = 1.0
+        if corr_needed:
+            corr_factor = st.number_input(
+                f"Correction factor k_corr ({corr_table})",
+                min_value=0.01,
+                max_value=1.00,
+                value=0.80,
+                step=0.01,
+                key="cond_corr_factor",
+                help=corr_hint,
+            )
+            st.info(f"Correction factor source: **{corr_table}**")
+
+        I_table_required = None
+        if I_per_set is not None:
+            I_table_required = safe_div(I_per_set, corr_factor) if corr_needed else I_per_set
+
+        st.metric("Minimum base-table ampacity to look for", fmt(I_table_required, "A"))
+
+        st.markdown("### Equations used")
+        eq(r"I_{design} = I_{load}\times SF")
+        eq(r"I_{per\_set} = \frac{I_{design}}{N_{parallel}}")
+        eq(r"I_{table} = \frac{I_{per\_set}}{k_{corr}}")
+
+        st.divider()
+        st.markdown("## 2) Voltage drop — k-value helper (Task 5 style)")
+
+        vd1, vd2, vd3 = st.columns([1, 1, 1], gap="large")
+        with vd1:
+            vd_system = st.selectbox(
+                "System model",
+                ["Single-phase (2-wire) — k-value form", "Three-phase (balanced) — k-value form"],
+                index=0,
+                key="cond_vd_system",
+            )
+        with vd2:
+            V_nom = st.number_input("Nominal voltage (V)", min_value=1.0, value=600.0, step=1.0, key="cond_vd_vnom")
+        with vd3:
+            pct_allow = st.number_input("Max voltage drop (%)", min_value=0.1, value=5.0, step=0.1, key="cond_vd_pct")
+
+        vd4, vd5 = st.columns([1, 1], gap="large")
+        with vd4:
+            I_vd = st.number_input("Design current (A)", min_value=0.0, value=125.0, step=1.0, key="cond_vd_I")
+        with vd5:
+            L_km = st.number_input("One-way length (km)", min_value=0.0, value=1.5, step=0.1, key="cond_vd_Lkm")
+
+        dV_allow = V_nom * (pct_allow / 100.0)
+
+        if L_km <= 0 or I_vd <= 0:
+            st.warning("Enter a non-zero length and current to compute k_max.")
+        else:
+            if vd_system.startswith("Single"):
+                k_max = dV_allow / (2.0 * I_vd * L_km)
+                eq_used = r"k_{max}=\frac{\Delta V_{allow}}{2IL_{km}}"
+            else:
+                k_max = dV_allow / (math.sqrt(3) * I_vd * L_km)
+                eq_used = r"k_{max}=\frac{\Delta V_{allow}}{\sqrt{3}IL_{km}}"
+
+            s1, s2 = st.columns(2, gap="large")
+            s1.metric("Allowed voltage drop (V)", fmt(dV_allow, "V"))
+            s2.metric("Maximum allowable k-value", fmt(k_max, "Ω/km"))
+
+            st.markdown("### Equation used")
+            eq(eq_used)
+            st.caption(
+                "Compare k_max to manufacturer k-values (Ω/km). Select a conductor with k ≤ k_max to meet the voltage-drop target."
+            )
+
+        with st.expander("Show the Knowledge File’s worked example results (Tasks 1–5)", expanded=False):
+            st.markdown(
+                """
+- Task 1 result: **500 MCM**  
+- Task 2 results: **No. 6 AWG**, **No. 2 AWG**, **No. 3/0 AWG**  
+- Task 3 results: **No. 2/0 AWG**, **350 MCM**  
+- Task 4 results: **No. 4/0 AWG**, **No. 3 AWG**  
+- Task 5 result: **k_max = 0.08 Ω/km** → **1000 MCM**
+"""
+            )
 
 # End of app
