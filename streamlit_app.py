@@ -1,7 +1,15 @@
 import math
+from pathlib import Path
+
 import streamlit as st
 
-from lib.theory import render_md
+# --- Keep your import, but prevent the whole app from crashing if packaging is wrong ---
+try:
+    from lib.theory import render_md
+    _THEORY_IMPORT_ERROR = None
+except Exception as e:
+    render_md = None
+    _THEORY_IMPORT_ERROR = e
 
 # ----------------------------
 # Page config
@@ -55,6 +63,42 @@ def show_code_note(selected_code: str):
 def eq(latex: str):
     """Render a LaTeX equation in a consistent display style."""
     st.latex(latex)
+
+
+# ----------------------------
+# Content paths (reliable on Streamlit Cloud)
+# ----------------------------
+APP_DIR = Path(__file__).parent
+CONTENT_DIR = APP_DIR / "content"
+
+
+def render_md_safe(rel_path: str):
+    """
+    Render markdown from /content safely.
+    - Uses lib.theory.render_md if available
+    - Otherwise shows a friendly error instead of crashing the app
+    """
+    md_path = CONTENT_DIR / rel_path
+
+    if render_md is None:
+        st.error(
+            "Theory renderer failed to import. This usually means the `lib/` package is missing in your repo. "
+            "Make sure you have:\n\n"
+            "- `lib/__init__.py`\n"
+            "- `lib/theory.py`\n"
+        )
+        if _THEORY_IMPORT_ERROR is not None:
+            with st.expander("Import error details"):
+                st.exception(_THEORY_IMPORT_ERROR)
+        st.info(f"Expected markdown path: `{md_path}`")
+        if md_path.exists():
+            st.warning("Markdown file exists, but renderer is unavailable due to the import error above.")
+        else:
+            st.warning("Markdown file not found at the expected path.")
+        return
+
+    # renderer exists
+    render_md(str(md_path))
 
 
 # Standard device rating helpers
@@ -138,9 +182,9 @@ if page == "Transformer Protection":
         show_code_note(code_mode)
 
         if code_mode == "OESC":
-            render_md("content/transformer_protection_oesc.md")
+            render_md_safe("transformer_protection_oesc.md")
         else:
-            render_md("content/transformer_protection_nec.md")
+            render_md_safe("transformer_protection_nec.md")
 
     # ----------------------------
     # Calculator tab for Transformer Protection
@@ -438,7 +482,7 @@ elif page == "Transformer Feeders":
     with theory_tab:
         header("Transformer Feeders — Theory")
         show_code_note(code_mode)
-        render_md("content/transformer_feeders.md")
+        render_md_safe("transformer_feeders.md")
 
     with calc_tab:
         header("Transformer Feeder Calculator", "Compute secondary FLA and a simple ampacity target.")
@@ -468,7 +512,7 @@ elif page == "Grounding/Bonding Conductor Sizing":
     with theory_tab:
         header("Grounding & Bonding — Theory")
         show_code_note(code_mode)
-        render_md("content/grounding_bonding.md")
+        render_md_safe("grounding_bonding.md")
 
     with calc_tab:
         header("Grounding/Bonding Helper", "Simple placeholder — replace with real NEC/OESC table logic.")
@@ -499,7 +543,7 @@ elif page == "Motor Protection":
     with theory_tab:
         header("Motor Protection — Theory")
         show_code_note(code_mode)
-        render_md("content/motor_protection.md")
+        render_md_safe("motor_protection.md")
 
     with calc_tab:
         header("Motor Protection Calculator", "Estimate overload and short-circuit device settings.")
@@ -528,7 +572,7 @@ elif page == "Motor Feeder":
     with theory_tab:
         header("Motor Feeder — Theory")
         show_code_note(code_mode)
-        render_md("content/motor_feeder.md")
+        render_md_safe("motor_feeder.md")
 
     with calc_tab:
         header("Motor Feeder Calculator", "Single-motor conductor ampacity target (template).")
@@ -550,7 +594,7 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
     with theory_tab:
         header("Cable Tray Size, Fill & Bend Radius — Theory")
         show_code_note(code_mode)
-        render_md("content/cable_tray_fill.md")
+        render_md_safe("cable_tray_fill.md")
 
     with calc_tab:
         header("Tray Fill & Bend Radius Calculator", "Estimate cable area + bend radius.")
@@ -582,7 +626,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
     with theory_tab:
         header("Conduit Size, Fill & Bend Radius — Theory")
         show_code_note(code_mode)
-        render_md("content/conduit_fill.md")
+        render_md_safe("conduit_fill.md")
 
     with calc_tab:
         header("Conduit Fill Calculator", "Compute fill % and a bend-radius placeholder.")
@@ -616,7 +660,7 @@ elif page == "Cable Tray Ampacity":
     with theory_tab:
         header("Cable Tray Ampacity — Theory")
         show_code_note(code_mode)
-        render_md("content/cable_tray_ampacity.md")
+        render_md_safe("cable_tray_ampacity.md")
 
     with calc_tab:
         header("Ampacity Derating Calculator", "Apply base ampacity and derating factors.")
@@ -640,7 +684,7 @@ elif page == "Demand Load":
     with theory_tab:
         header("Demand Load — Theory")
         show_code_note(code_mode)
-        render_md("content/demand_load.md")
+        render_md_safe("demand_load.md")
 
     with calc_tab:
         header("Demand Load Calculator", "Compute demand load from connected load and factor.")
@@ -662,7 +706,7 @@ elif page == "Voltage Drop":
     with theory_tab:
         header("Voltage Drop — Theory")
         show_code_note(code_mode)
-        render_md("content/voltage_drop.md")
+        render_md_safe("voltage_drop.md")
 
     with calc_tab:
         header("Voltage Drop Calculator", "Estimate voltage drop (resistive model).")
@@ -710,7 +754,7 @@ elif page == "Conductors":
     with theory_tab:
         header("Conductors — Theory", "OESC Section 4 (Rule 4-004) workflow + worked example case study.")
         show_code_note(code_mode)
-        render_md("content/conductors.md")
+        render_md_safe("conductors.md")
 
     with calc_tab:
         header("Conductors — Calculator", "Workflow helper: design current, table selection, correction-factor math, and k-value voltage drop check.")
