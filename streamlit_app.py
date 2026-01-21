@@ -697,10 +697,8 @@ elif page == "Demand Load":
 
         st.markdown("### Equation used")
         eq(r"P_{demand}=P_{connected}\cdot f_{demand}")
-
-
 # ============================
-# 10) Voltage Drop
+# 10) Voltage Drop  (REPLACED BLOCK — full Table D3, UI + lookup + displays)
 # ============================
 elif page == "Voltage Drop":
     with theory_tab:
@@ -709,43 +707,292 @@ elif page == "Voltage Drop":
         render_md_safe("voltage_drop.md")
 
     with calc_tab:
-        header("Voltage Drop Calculator", "Estimate voltage drop (resistive model).")
+        header("Voltage Drop Calculator — Table D3 (OESC) + k-value helper")
         show_code_note(code_mode)
 
-        system = st.radio("System", ["Single-phase (2-wire)", "Three-phase (balanced)"], horizontal=True)
-        col1, col2, col3 = st.columns(3, gap="large")
-        with col1:
-            I = st.number_input("Load current (A)", min_value=0.0, value=50.0, step=0.1)
-        with col2:
-            L = st.number_input("One-way length (m)", min_value=0.0, value=80.0, step=1.0)
-        with col3:
-            R_per_m = st.number_input(
-                "Conductor resistance (Ω/m)",
-                min_value=0.0,
-                value=0.0004,
-                step=0.00005,
-                format="%.6f",
+        st.markdown(
+            "This calculator looks up an **exact k-value** from Table D3 (embedded) "
+            "or accepts a manual k-value. It uses the OESC table formula:\n\n"
+            r"$$V_D = \frac{k \cdot f \cdot I \cdot L}{1000}$$"
+            "\n\nWhere:\n- \(k\) is the table voltage-drop factor (Ω per circuit kilometre)\n- \(f\) is the system/connection factor\n- \(I\) is the load current (A)\n- \(L\) is the one-way length (m)\n"
+        )
+
+        # --------------------------
+        # Exact Table D3 embedded (from supplied images)
+        # Keys are strings that match the UI choices below.
+        # --------------------------
+        TABLE_D3 = {
+            "Copper": {
+                "14":  {"DC":10.2,"Cable 100%":10.2,"Cable 90%":9.92,"Cable 80%":9.67,"Raceway 90%":10.0,"Raceway 80%":9.67},
+                "12":  {"DC":6.38,"Cable 100%":6.38,"Cable 90%":6.25,"Cable 80%":6.10,"Raceway 90%":6.26,"Raceway 80%":6.11},
+                "10":  {"DC":4.03,"Cable 100%":4.03,"Cable 90%":3.96,"Cable 80%":3.87,"Raceway 90%":3.96,"Raceway 80%":3.87},
+                "8":   {"DC":2.54,"Cable 100%":2.54,"Cable 90%":2.50,"Cable 80%":2.45,"Raceway 90%":2.51,"Raceway 80%":2.45},
+                "6":   {"DC":1.59,"Cable 100%":1.59,"Cable 90%":1.58,"Cable 80%":1.55,"Raceway 90%":1.58,"Raceway 80%":1.55},
+                "4":   {"DC":1.01,"Cable 100%":1.01,"Cable 90%":1.01,"Cable 80%":0.987,"Raceway 90%":1.01,"Raceway 80%":1.00},
+                "3":   {"DC":0.792,"Cable 100%":0.792,"Cable 90%":0.797,"Cable 80%":0.787,"Raceway 90%":0.801,"Raceway 80%":0.792},
+                "2":   {"DC":0.626,"Cable 100%":0.627,"Cable 90%":0.636,"Cable 80%":0.629,"Raceway 90%":0.639,"Raceway 80%":0.635},
+                "1":   {"DC":0.50,"Cable 100%":0.50,"Cable 90%":0.512,"Cable 80%":0.509,"Raceway 90%":0.516,"Raceway 80%":0.515},
+                "1/0": {"DC":0.395,"Cable 100%":0.396,"Cable 90%":0.410,"Cable 80%":0.409,"Raceway 90%":0.414,"Raceway 80%":0.415},
+                "2/0": {"DC":0.314,"Cable 100%":0.316,"Cable 90%":0.331,"Cable 80%":0.332,"Raceway 90%":0.335,"Raceway 80%":0.338},
+                "3/0": {"DC":0.249,"Cable 100%":0.251,"Cable 90%":0.267,"Cable 80%":0.270,"Raceway 90%":0.271,"Raceway 80%":0.275},
+                "4/0": {"DC":0.197,"Cable 100%":0.200,"Cable 90%":0.217,"Cable 80%":0.221,"Raceway 90%":0.221,"Raceway 80%":0.226},
+                "250": {"DC":0.167,"Cable 100%":0.171,"Cable 90%":0.188,"Cable 80%":0.193,"Raceway 90%":0.192,"Raceway 80%":0.198},
+                "300": {"DC":0.140,"Cable 100%":0.144,"Cable 90%":0.162,"Cable 80%":0.167,"Raceway 90%":0.166,"Raceway 80%":0.172},
+                "350": {"DC":0.120,"Cable 100%":0.125,"Cable 90%":0.143,"Cable 80%":0.148,"Raceway 90%":0.147,"Raceway 80%":0.154},
+                "400": {"DC":0.105,"Cable 100%":0.111,"Cable 90%":0.129,"Cable 80%":0.135,"Raceway 90%":0.133,"Raceway 80%":0.140},
+                "500": {"DC":0.0836,"Cable 100%":0.0912,"Cable 90%":0.110,"Cable 80%":0.116,"Raceway 90%":0.114,"Raceway 80%":0.121},
+                "600": {"DC":0.0697,"Cable 100%":0.0785,"Cable 90%":0.0969,"Cable 80%":0.104,"Raceway 90%":0.101,"Raceway 80%":0.109},
+                "750": {"DC":0.0558,"Cable 100%":0.0668,"Cable 90%":0.0850,"Cable 80%":0.0915,"Raceway 90%":0.0889,"Raceway 80%":0.097},
+                "1000":{"DC":0.0417,"Cable 100%":0.0558,"Cable 90%":0.0739,"Cable 80%":0.0805,"Raceway 90%":0.0778,"Raceway 80%":0.086},
+            },
+            "Aluminum": {
+                "12":  {"DC":10.5,"Cable 100%":10.5,"Cable 90%":10.3,"Cable 80%":10.0,"Raceway 90%":10.3,"Raceway 80%":9.99},
+                "10":  {"DC":6.58,"Cable 100%":6.58,"Cable 90%":6.44,"Cable 80%":6.28,"Raceway 90%":6.45,"Raceway 80%":6.29},
+                "8":   {"DC":4.14,"Cable 100%":4.14,"Cable 90%":4.07,"Cable 80%":3.97,"Raceway 90%":4.07,"Raceway 80%":3.98},
+                "6":   {"DC":2.62,"Cable 100%":2.62,"Cable 90%":2.58,"Cable 80%":2.52,"Raceway 90%":2.58,"Raceway 80%":2.53},
+                "4":   {"DC":1.65,"Cable 100%":1.65,"Cable 90%":1.63,"Cable 80%":1.60,"Raceway 90%":1.64,"Raceway 80%":1.61},
+                "3":   {"DC":1.31,"Cable 100%":1.31,"Cable 90%":1.30,"Cable 80%":1.27,"Raceway 90%":1.30,"Raceway 80%":1.28},
+                "2":   {"DC":1.04,"Cable 100%":1.04,"Cable 90%":1.04,"Cable 80%":1.02,"Raceway 90%":1.04,"Raceway 80%":1.03},
+                "1":   {"DC":0.82,"Cable 100%":0.82,"Cable 90%":0.823,"Cable 80%":0.812,"Raceway 90%":0.827,"Raceway 80%":0.818},
+                "1/0": {"DC":0.651,"Cable 100%":0.652,"Cable 90%":0.659,"Cable 80%":0.652,"Raceway 90%":0.663,"Raceway 80%":0.657},
+                "2/0": {"DC":0.516,"Cable 100%":0.517,"Cable 90%":0.526,"Cable 80%":0.522,"Raceway 90%":0.530,"Raceway 80%":0.528},
+                "3/0": {"DC":0.408,"Cable 100%":0.409,"Cable 90%":0.420,"Cable 80%":0.419,"Raceway 90%":0.424,"Raceway 80%":0.425},
+                "4/0": {"DC":0.326,"Cable 100%":0.327,"Cable 90%":0.341,"Cable 80%":0.341,"Raceway 90%":0.345,"Raceway 80%":0.347},
+                "250": {"DC":0.275,"Cable 100%":0.277,"Cable 90%":0.291,"Cable 80%":0.293,"Raceway 90%":0.295,"Raceway 80%":0.299},
+                "300": {"DC":0.229,"Cable 100%":0.231,"Cable 90%":0.247,"Cable 80%":0.249,"Raceway 90%":0.250,"Raceway 80%":0.255},
+                "350": {"DC":0.196,"Cable 100%":0.199,"Cable 90%":0.215,"Cable 80%":0.218,"Raceway 90%":0.219,"Raceway 80%":0.224},
+                "400": {"DC":0.172,"Cable 100%":0.175,"Cable 90%":0.191,"Cable 80%":0.195,"Raceway 90%":0.195,"Raceway 80%":0.201},
+                "500": {"DC":0.138,"Cable 100%":0.141,"Cable 90%":0.158,"Cable 80%":0.163,"Raceway 90%":0.162,"Raceway 80%":0.168},
+                "600": {"DC":0.115,"Cable 100%":0.119,"Cable 90%":0.136,"Cable 80%":0.142,"Raceway 90%":0.140,"Raceway 80%":0.147},
+                "750": {"DC":0.0916,"Cable 100%":0.0968,"Cable 90%":0.115,"Cable 80%":0.121,"Raceway 90%":0.119,"Raceway 80%":0.126},
+                "1000":{"DC":0.0686,"Cable 100%":0.0758,"Cable 90%":0.0933,"Cable 80%":0.0994,"Raceway 90%":0.0973,"Raceway 80%":0.105},
+            },
+        }
+
+        # ---------------- Inputs (layout like the preferred block)
+        mat = st.selectbox("Conductor material (table to use)", ["Copper", "Aluminum"], index=0, key="vd_mat")
+        use_table = st.checkbox("Lookup k-value from Table D3 (recommended)", value=True, key="vd_use_table")
+
+        c1, c2, c3 = st.columns([1,1,1], gap="large")
+        with c1:
+            I = st.number_input("Load current (A)", min_value=0.0, value=50.0, step=0.1, key="vd_I")
+        with c2:
+            L_m = st.number_input("One-way length (m)", min_value=0.0, value=80.0, step=1.0, key="vd_Lm")
+        with c3:
+            V_nom = st.number_input("Nominal voltage (V)", min_value=1.0, value=600.0, step=1.0, key="vd_Vnom")
+        # choose cable vs raceway and pf columns
+        location = st.selectbox("Installation (table column family)", ["Cable", "Raceway", "DC"], index=0, key="vd_location")
+        pf_choice = st.selectbox("Power-factor column (for Cable only)", ["100% pf", "90% pf", "80% pf"], index=0, key="vd_pf")
+
+        # --------------------------
+        # System factor f choices — full list from OESC table (all circuit types)
+        # --------------------------
+        f_options = [
+            # DC group
+            ("DC — 2-wire, positive-to-negative (VD line-to-line)", 2.0),
+            ("DC — 2-wire, positive-to-ground (VD line-to-ground)", 2.0),
+            ("DC — 2-wire, negative-to-ground (VD line-to-ground)", 2.0),
+            ("DC — 3-wire, line-to-line with grounded conductor (VD line-to-line)", 2.0),
+
+            # 1-phase AC group
+            ("1-φ AC — 2-wire, line-to-grounded conductor (VD line-to-ground)", 2.0),
+            ("1-φ AC — 2-wire, line-to-line (VD line-to-line)", 2.0),
+            ("1-φ AC — 3-wire, line-to-line, with grounded conductor (VD line-to-line)", 2.0),
+
+            # 3-phase AC group (many entries map to 2.0, some to √3 per table note)
+            ("3-φ AC — 2-wire, line-to-grounded conductor (VD line-to-ground)", 2.0),
+            ("3-φ AC — 2-wire, line-to-line, no grounded conductor (VD line-to-line)", 2.0),
+            ("3-φ AC — 3-wire, line-to-line, with grounded conductor (VD line-to-line)", 2.0),
+            ("3-φ AC — 3-wire, line-to-grounded conductor (VD line-to-ground)", 2.0),
+
+            # The entries that use ≈1.73 per the table note
+            ("3-φ AC — 3-wire, line-to-line, no grounded conductor (VD line-to-line)", math.sqrt(3)),
+            ("3-φ AC — 4-wire, line-to-line, with grounded conductor (VD line-to-line)", math.sqrt(3)),
+        ]
+
+        # Present grouped/friendly label while storing numeric f
+        f_choice = st.selectbox(
+            "Voltage-drop factor (f) — select circuit type (table entries)",
+            f_options,
+            format_func=lambda x: x[0],
+            index=4,
+            key="vd_f_choice_full",
+        )
+        # f_choice is a tuple (label, numeric)
+        f = float(f_choice[1])
+        f_label = f_choice[0]
+
+        # Small helpful note showing exactly which item is selected and the numeric factor
+        st.caption(f"Selected circuit type: **{f_label}** → f = **{f:.6g}** (used in formula \(V_D = k f I L / 1000\)).")
+
+        # Lookup or manual k
+        k_used = None
+        selected_col_suffix = None
+        if use_table:
+            sizes = sorted(TABLE_D3[mat].keys(), key=lambda s: (len(s), s))  # stable ordering
+            size = st.selectbox("Select conductor size (Table D3)", sizes, index=10 if mat=="Copper" and "1000" in sizes else 0, key="vd_size")
+
+            # Normalize pf_choice -> match table keys (which use "100%", "90%", "80%")
+            # pf_choice examples: "100% pf" -> "100%", "90% pf" -> "90%"
+            pf_short = pf_choice.split()[0] if isinstance(pf_choice, str) else str(pf_choice)
+
+            # determine column name candidates
+            if location == "DC":
+                candidates = ["DC"]
+            else:
+                # primary candidate like "Cable 100%" or "Raceway 90%"
+                primary = f"{location} {pf_short}"
+                # also accept "Cable 100% pf" in case, and variants without the '%' just in case
+                alt1 = f"{location} {pf_short} pf"
+                alt2 = f"{location} {pf_short.replace('%','')}"
+                candidates = [primary, alt1, alt2]
+
+            # attempt exact/key lookup, then tolerant contains-match
+            table_entry = TABLE_D3[mat].get(size, {})
+            k_found = None
+            found_key = None
+
+            for c in candidates:
+                if c in table_entry:
+                    k_found = table_entry[c]
+                    found_key = c
+                    break
+
+            if k_found is None:
+                # tolerant search: find any key that contains both location and the numeric pf (e.g., "100" or "90")
+                pf_numeric = pf_short.replace('%','')
+                for colname in table_entry.keys():
+                    low = colname.lower()
+                    if location.lower() in low and pf_numeric in low:
+                        k_found = table_entry[colname]
+                        found_key = colname
+                        break
+
+            if k_found is None:
+                available = ", ".join(list(table_entry.keys()))
+                st.error(
+                    f"Table value not found for {mat} {size} / {location} {pf_short}. "
+                    f"Available columns for this size: {available}"
+                )
+                k_used = None
+            else:
+                k_used = float(k_found)
+                selected_col_suffix = found_key
+                st.caption(f"Table D3 k-value selected for {mat} {size} ({selected_col_suffix}): **{k_used} Ω/km**")
+
+            allow_override = st.checkbox("Override the k-value manually", value=False, key="vd_override_k")
+            if allow_override:
+                k_used = st.number_input("Manual k-value (Ω/km)", min_value=0.0, value=float(k_used) if k_used is not None else 0.10, step=0.0001, format="%.6f", key="vd_k_manual")
+        else:
+            k_used = st.number_input("Manual k-value (Ω/km)", min_value=0.0, value=0.10, step=0.00001, format="%.6f", key="vd_k_manual_only")
+            selected_col_suffix = "Manual"
+
+        # ---------------- Calculation using the table formula
+        if I <= 0 or L_m <= 0 or V_nom <= 0 or k_used is None:
+            st.warning("Enter positive values and ensure a k-value is selected to compute voltage drop.")
+        else:
+            Vd = (k_used * f * I * L_m) / 1000.0
+            pct = (Vd / V_nom) * 100.0
+
+            m1, m2 = st.columns(2)
+            m1.metric("Estimated voltage drop", fmt(Vd, "V"))
+            m2.metric("Voltage drop (%)", fmt(pct, "%"))
+
+            st.markdown("### Parameters used")
+            st.write(f"- k-value: **{k_used} Ω/km** (source: Table D3, column **{selected_col_suffix}**)")
+            st.write(f"- factor f: **{f:.6g}** (selected: {f_label})")
+            st.write(f"- I = **{fmt(I, 'A')}**, L = **{fmt(L_m, 'm')}**, V_nom = **{fmt(V_nom, 'V')}**")
+
+            st.markdown("### Equation used")
+            eq(r"V_D=\frac{k\cdot f\cdot I\cdot L}{1000}")
+            eq(r"\%\Delta V = 100\cdot\frac{V_D}{V_{nom}}")
+
+        st.caption(
+            "Notes: Table D3 values are transcribed exactly from the supplied images (cable vs raceway and pf columns). "
+            "Ensure you pick the correct installation column (Cable 100%/90%/80% pf or Raceway 90%/80% pf) or use DC where appropriate."
+        )
+
+        # -------------------------------------------------
+        # Display exact Table D3 data used by the calculator
+        # -------------------------------------------------
+        with st.expander("📋 Show Table D3 values used in this calculator", expanded=False):
+            st.markdown("### Copper Conductors — Table D3 (Ω/km)")
+            cu_rows = []
+            for size, cols in TABLE_D3["Copper"].items():
+                row = {"Size": size}
+                row.update(cols)
+                cu_rows.append(row)
+
+            st.dataframe(
+                cu_rows,
+                use_container_width=True,
+                hide_index=True,
             )
 
-        V_nom = st.number_input("Nominal voltage (V)", min_value=1.0, value=400.0, step=1.0)
+            st.markdown("### Aluminum Conductors — Table D3 (Ω/km)")
+            al_rows = []
+            for size, cols in TABLE_D3["Aluminum"].items():
+                row = {"Size": size}
+                row.update(cols)
+                al_rows.append(row)
 
-        if system.startswith("Single"):
-            Vd = 2.0 * I * R_per_m * L
-            eq_used = r"\Delta V \approx 2\,I\,R\,L"
-        else:
-            Vd = math.sqrt(3) * I * R_per_m * L
-            eq_used = r"\Delta V \approx \sqrt{3}\,I\,R\,L"
+            st.dataframe(
+                al_rows,
+                use_container_width=True,
+                hide_index=True,
+            )
 
-        pct = (Vd / V_nom) * 100.0 if V_nom > 0 else 0.0
+            st.caption(
+                "These tables are transcribed **exactly** from OESC Appendix D – Table D3 "
+                "(75 °C conductors). Values are in Ω per circuit kilometre and are the "
+                "same values used internally by the calculator above."
+            )
+        # -------------------------------------------------
+        # Display the F-factor lookup table used by the calculator
+        # -------------------------------------------------
+        with st.expander("📐 Show system factor (f) table used in calculations", expanded=False):
+            # Build a small table that exactly matches the picture / formula usage
+            f_table_rows = [
+                {"System / Connection": "DC — 2-wire (positive-to-negative)", "f (used in formula)": 2.0, "Voltage reference": "Positive-to-negative"},
+                {"System / Connection": "DC — 2-wire (positive-to-ground)", "f (used in formula)": 2.0, "Voltage reference": "Positive-to-ground"},
+                {"System / Connection": "DC — 2-wire (negative-to-ground)", "f (used in formula)": 2.0, "Voltage reference": "Negative-to-ground"},
+                {"System / Connection": "DC — 3-wire, line-to-line with grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
 
-        c1, c2 = st.columns(2)
-        c1.metric("Estimated voltage drop", fmt(Vd, "V"))
-        c2.metric("Voltage drop (%)", fmt(pct, "%"))
+                {"System / Connection": "1-φ AC — 2-wire, line-to-grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-ground"},
+                {"System / Connection": "1-φ AC — 2-wire, line-to-line", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
+                {"System / Connection": "1-φ AC — 3-wire, line-to-line, with grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
 
-        st.markdown("### Equations used")
-        eq(eq_used)
-        eq(r"\%\Delta V = 100\cdot\frac{\Delta V}{V_{nom}}")
+                {"System / Connection": "3-φ AC — 2-wire, line-to-grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-ground"},
+                {"System / Connection": "3-φ AC — 2-wire, line-to-line, no grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
+                {"System / Connection": "3-φ AC — 3-wire, line-to-line, with grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
+                {"System / Connection": "3-φ AC — 3-wire, line-to-grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-ground"},
+                {"System / Connection": "3-φ AC — 3-wire, line-to-line, no grounded conductor", "f (used in formula)": math.sqrt(3), "Voltage reference": "Line-to-line"},
+                {"System / Connection": "3-φ AC — 4-wire, line-to-line, with grounded conductor", "f (used in formula)": math.sqrt(3), "Voltage reference": "Line-to-line"},
+            ]
 
+            try:
+                import pandas as pd
+
+                df_f = pd.DataFrame(f_table_rows)
+                st.markdown("### System factor (f) — reference table (from Appendix D)")
+                st.dataframe(df_f, use_container_width=True, hide_index=True)
+
+                # Show which row is currently active
+                try:
+                    current_label = f_choice[0] if isinstance(f_choice, tuple) else str(f_choice)
+                    current_f = f_choice[1] if isinstance(f_choice, tuple) else float(f_choice)
+                    st.markdown(f"**Current selection:** `{current_label}` → f = **{current_f:.6g}**")
+                except Exception:
+                    st.info("Current f selection shown in the calculator inputs above.")
+
+                st.caption(
+                    "Notes: The 'Voltage reference' column shows whether the VD is line-to-line or line-to-ground for that circuit type."
+                )
+            except Exception:
+                st.markdown("### System factor (f) — reference (plain)")
+                for r in f_table_rows:
+                    st.write(f"- **{r['System / Connection']}** — f = {r['f (used in formula)']} — {r['Voltage reference']}")
+                st.caption("Pandas not available; shown as plaintext.")
 
 # ============================
 # 11) Conductors
