@@ -803,7 +803,7 @@ elif page == "Voltage Drop":
                 pf_choice = "100% pf"
                 st.caption("Power-factor selection hidden for DC — DC uses the 'DC' column in Table D3.")
 
-            # ✅ UPDATED: keep conductor sizes in the same order as Table D3 (dict insertion order)
+            # ✅ keep conductor sizes in the same order as Table D3 (dict insertion order)
             sizes = list(TABLE_D3[mat].keys())
 
             # pick a stable default index (prefer 1000 if present for Copper, else first entry)
@@ -880,8 +880,18 @@ elif page == "Voltage Drop":
                 selected_col_suffix = found_key
                 st.caption(f"Table D3 k-value selected for {mat} {size} ({selected_col_suffix}): **{k_used} Ω/km**")
 
+        # --------------------------
+        # f-factor options (used in both table + manual modes)
+        # NOTE: filter to DC-only list ONLY when installation is DC.
+        # --------------------------
+        # When manual k-value mode is active, "location" is None, so we show the full list (as before).
         if I <= 0 or L_m <= 0 or V_nom <= 0 or k_used is None:
             st.warning("Enter positive values and ensure a k-value is selected to compute voltage drop.")
+            f_choice = None
+            f = None
+            f_label = None
+            Vd = None
+            pct = None
         else:
             if location == "DC":
                 f_options = [
@@ -928,7 +938,7 @@ elif page == "Voltage Drop":
             m2.metric("Voltage drop (%)", fmt(pct, "%"))
 
             st.markdown("### Parameters used")
-            st.write(f"- k-value: **{k_used} Ω/km** (source: Table D3, column **{selected_col_suffix}**)") 
+            st.write(f"- k-value: **{k_used} Ω/km** (source: Table D3, column **{selected_col_suffix}**)")
             st.write(f"- factor f: **{f:.6g}** (selected: {f_label})")
             st.write(f"- I = **{fmt(I, 'A')}**, L = **{fmt(L_m, 'm')}**, V_nom = **{fmt(V_nom, 'V')}**")
 
@@ -938,7 +948,401 @@ elif page == "Voltage Drop":
 
         st.caption(
             "Notes: Table D3 values are transcribed exactly from the supplied images (cable vs raceway and pf columns). "
-            "When using Manual k-value mode the table controls are hidden and k is used exactly as entered."
+            "When using Manual k-value mode the table lookup controls are hidden and k is used exactly as entered."
+        )
+
+        # -------------------------------------------------
+        # NEW FEATURE: Download a Word report or Excel report
+        # Includes: equations, assumptions, variables, constants, selected inputs, results, and full used tables.
+        # -------------------------------------------------
+        st.markdown("### 📄 Export calculation report")
+
+        assumptions = [
+            "Uses OESC Appendix D Table D3 k-values in Ω per circuit kilometre (Ω/km) when Table mode is selected.",
+            "Uses voltage-drop factor f from the Appendix D system factor list.",
+            "Uses one-way length L (m) directly in the formula; table equation divides by 1000 to convert m → km.",
+            "Percent voltage drop is computed against nominal voltage V_nom.",
+        ]
+
+        constants = [
+            {"Name": "1000", "Meaning": "m per km (unit conversion for L)", "Value": 1000},
+            {"Name": "√3", "Meaning": "Three-phase factor for specific circuit types per table note", "Value": float(math.sqrt(3))},
+        ]
+
+        variables = [
+            {"Symbol": "k", "Description": "Voltage-drop factor from Table D3 (Ω/km) or manual entry", "Value": k_used},
+            {"Symbol": "f", "Description": "System/connection factor from Appendix D", "Value": f},
+            {"Symbol": "I", "Description": "Load current (A)", "Value": I},
+            {"Symbol": "L", "Description": "One-way length (m)", "Value": L_m},
+            {"Symbol": "V_nom", "Description": "Nominal voltage (V)", "Value": V_nom},
+            {"Symbol": "V_D", "Description": "Estimated voltage drop (V)", "Value": Vd},
+            {"Symbol": "%ΔV", "Description": "Voltage drop percent (%)", "Value": pct},
+        ]
+
+        equations_text = [
+            ("Voltage drop", r"V_D=\frac{k\cdot f\cdot I\cdot L}{1000}"),
+            ("Percent drop", r"\%\Delta V = 100\cdot\frac{V_D}{V_{nom}}"),
+        ]
+
+        # f-factor reference (full) used in expander below; also exported
+        f_table_rows = [
+            {"System / Connection": "DC — 2-wire (positive-to-negative)", "f (used in formula)": 2.0, "Voltage reference": "Positive-to-negative"},
+            {"System / Connection": "DC — 2-wire (positive-to-ground)", "f (used in formula)": 2.0, "Voltage reference": "Positive-to-ground"},
+            {"System / Connection": "DC — 2-wire (negative-to-ground)", "f (used in formula)": 2.0, "Voltage reference": "Negative-to-ground"},
+            {"System / Connection": "DC — 3-wire, line-to-line with grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
+            {"System / Connection": "1-φ AC — 2-wire, line-to-grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-ground"},
+            {"System / Connection": "1-φ AC — 2-wire, line-to-line", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
+            {"System / Connection": "1-φ AC — 3-wire, line-to-line, with grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
+            {"System / Connection": "3-φ AC — 2-wire, line-to-grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-ground"},
+            {"System / Connection": "3-φ AC — 2-wire, line-to-line, no grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
+            {"System / Connection": "3-φ AC — 3-wire, line-to-line with grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
+            {"System / Connection": "3-φ AC — 3-wire, line-to-grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-ground"},
+            {"System / Connection": "3-φ AC — 3-wire, line-to-line, no grounded conductor", "f (used in formula)": math.sqrt(3), "Voltage reference": "Line-to-line"},
+            {"System / Connection": "3-φ AC — 4-wire, line-to-line, with grounded conductor", "f (used in formula)": math.sqrt(3), "Voltage reference": "Line-to-line"},
+        ]
+
+        # Build the DataFrame-ish rows for export (same columns you display)
+        display_cols = [
+            "Size",
+            "DC",
+            "Cable 100%",
+            "Cable 90%",
+            "Cable 80%",
+            "Raceway 100%",
+            "Raceway 90%",
+            "Raceway 80%",
+        ]
+        cu_rows = []
+        for size_key, cols in TABLE_D3["Copper"].items():
+            cu_rows.append({
+                "Size": size_key,
+                "DC": cols.get("DC", None),
+                "Cable 100%": cols.get("Cable 100%", None),
+                "Cable 90%": cols.get("Cable 90%", None),
+                "Cable 80%": cols.get("Cable 80%", None),
+                "Raceway 100%": cols.get("Raceway 100%", None),
+                "Raceway 90%": cols.get("Raceway 90%", None),
+                "Raceway 80%": cols.get("Raceway 80%", None),
+            })
+        al_rows = []
+        for size_key, cols in TABLE_D3["Aluminum"].items():
+            al_rows.append({
+                "Size": size_key,
+                "DC": cols.get("DC", None),
+                "Cable 100%": cols.get("Cable 100%", None),
+                "Cable 90%": cols.get("Cable 90%", None),
+                "Cable 80%": cols.get("Cable 80%", None),
+                "Raceway 100%": cols.get("Raceway 100%", None),
+                "Raceway 90%": cols.get("Raceway 90%", None),
+                "Raceway 80%": cols.get("Raceway 80%", None),
+            })
+
+        # Create report bytes (Word / Excel) on demand
+        import io
+        from datetime import datetime
+
+        def _safe_float(x):
+            try:
+                return None if x is None else float(x)
+            except Exception:
+                return None
+
+        # ✅ FIX: safe formatter for Word tables (prevents "Unknown format code 'g' for object of type 'str'")
+        def _cell_text(val):
+            """Safe text for Word/Excel cells: format numbers, otherwise stringify."""
+            if val is None:
+                return "—"
+            if isinstance(val, (int, float)):
+                return f"{val:g}"
+            # try numeric conversion for numeric-looking strings
+            try:
+                fval = float(val)
+                return f"{fval:g}"
+            except Exception:
+                return str(val)
+
+        def build_word_report_bytes():
+            from docx import Document
+            from docx.shared import Pt
+
+            doc = Document()
+            doc.add_heading("Voltage Drop Calculation Report", level=1)
+
+            meta = doc.add_paragraph()
+            meta.add_run(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n").bold = True
+            meta.add_run(f"k-mode: {k_mode}\n")
+            if use_table:
+                meta.add_run(f"Material: {mat}\n")
+                meta.add_run(f"Installation: {location}\n")
+                if location != "DC":
+                    meta.add_run(f"Power factor column: {pf_choice}\n")
+                meta.add_run(f"Conductor size: {size}\n")
+                meta.add_run(f"Selected Table D3 column: {selected_col_suffix}\n")
+            else:
+                meta.add_run("Material/Installation/Size selection: (not used; manual k-value mode)\n")
+                meta.add_run("k source: Manual entry\n")
+
+            doc.add_heading("Equations", level=2)
+            for title, latex in equations_text:
+                p = doc.add_paragraph()
+                p.add_run(f"{title}: ").bold = True
+                # Word doesn't render LaTeX natively; we include readable LaTeX + plain-text form
+                p.add_run(latex)
+
+            doc.add_heading("Assumptions", level=2)
+            for a in assumptions:
+                doc.add_paragraph(a, style="List Bullet")
+
+            doc.add_heading("Variables (inputs and results)", level=2)
+            t = doc.add_table(rows=1, cols=3)
+            hdr = t.rows[0].cells
+            hdr[0].text = "Symbol"
+            hdr[1].text = "Description"
+            hdr[2].text = "Value"
+            for v in variables:
+                row = t.add_row().cells
+                row[0].text = str(v["Symbol"])
+                row[1].text = str(v["Description"])
+                val = v["Value"]
+                try:
+                    row[2].text = "—" if val is None else f"{float(val):.6g}"
+                except Exception:
+                    row[2].text = "—" if val is None else str(val)
+
+            doc.add_heading("Constants", level=2)
+            tc = doc.add_table(rows=1, cols=3)
+            hdr = tc.rows[0].cells
+            hdr[0].text = "Name"
+            hdr[1].text = "Meaning"
+            hdr[2].text = "Value"
+            for c in constants:
+                row = tc.add_row().cells
+                row[0].text = str(c["Name"])
+                row[1].text = str(c["Meaning"])
+                try:
+                    row[2].text = f'{float(c["Value"]):.6g}'
+                except Exception:
+                    row[2].text = str(c["Value"])
+
+            doc.add_heading("System factor (f) reference (Appendix D)", level=2)
+            tf = doc.add_table(rows=1, cols=3)
+            hdr = tf.rows[0].cells
+            hdr[0].text = "System / Connection"
+            hdr[1].text = "f (used in formula)"
+            hdr[2].text = "Voltage reference"
+            for r in f_table_rows:
+                row = tf.add_row().cells
+                row[0].text = r["System / Connection"]
+                row[1].text = f'{float(r["f (used in formula)"]):.6g}'
+                row[2].text = r["Voltage reference"]
+
+            doc.add_heading("Table D3 (Copper) — Ω/km", level=2)
+            tcu = doc.add_table(rows=1, cols=len(display_cols))
+            for j, col in enumerate(display_cols):
+                tcu.rows[0].cells[j].text = col
+            for r in cu_rows:
+                rr = tcu.add_row().cells
+                for j, col in enumerate(display_cols):
+                    val = r.get(col, None)
+                    rr[j].text = _cell_text(val)  # ✅ FIXED
+
+            doc.add_heading("Table D3 (Aluminum) — Ω/km", level=2)
+            tal = doc.add_table(rows=1, cols=len(display_cols))
+            for j, col in enumerate(display_cols):
+                tal.rows[0].cells[j].text = col
+            for r in al_rows:
+                rr = tal.add_row().cells
+                for j, col in enumerate(display_cols):
+                    val = r.get(col, None)
+                    rr[j].text = _cell_text(val)  # ✅ FIXED
+
+            # basic style tweak
+            style = doc.styles["Normal"]
+            style.font.name = "Calibri"
+            style.font.size = Pt(11)
+
+            bio = io.BytesIO()
+            doc.save(bio)
+            return bio.getvalue()
+
+        def build_excel_report_bytes():
+            from openpyxl import Workbook
+            from openpyxl.utils import get_column_letter
+            from openpyxl.styles import Font, Alignment
+
+            wb = Workbook()
+
+            def autosize(ws):
+                for col in ws.columns:
+                    max_len = 0
+                    col_letter = get_column_letter(col[0].column)
+                    for cell in col:
+                        try:
+                            v = "" if cell.value is None else str(cell.value)
+                            max_len = max(max_len, len(v))
+                        except Exception:
+                            pass
+                    ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
+
+            # --- Summary
+            ws = wb.active
+            ws.title = "Summary"
+            ws["A1"] = "Voltage Drop Calculation Report"
+            ws["A1"].font = Font(bold=True, size=14)
+            ws["A3"] = "Generated"
+            ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            ws["A4"] = "k-mode"
+            ws["B4"] = k_mode
+
+            row = 6
+            if use_table:
+                summary_pairs = [
+                    ("Material", mat),
+                    ("Installation", location),
+                    ("Power factor column", pf_choice if location != "DC" else "(N/A — DC)"),
+                    ("Conductor size", size),
+                    ("Selected Table D3 column", selected_col_suffix),
+                ]
+            else:
+                summary_pairs = [
+                    ("Material", "(N/A — manual k)"),
+                    ("Installation", "(N/A — manual k)"),
+                    ("Power factor column", "(N/A — manual k)"),
+                    ("Conductor size", "(N/A — manual k)"),
+                    ("k source", "Manual entry"),
+                ]
+
+            for kname, kval in summary_pairs:
+                ws[f"A{row}"] = kname
+                ws[f"B{row}"] = "" if kval is None else str(kval)
+                row += 1
+
+            row += 1
+            ws[f"A{row}"] = "Results"
+            ws[f"A{row}"].font = Font(bold=True)
+            row += 1
+            ws[f"A{row}"] = "V_D (V)"
+            ws[f"B{row}"] = _safe_float(Vd)
+            row += 1
+            ws[f"A{row}"] = "%ΔV (%)"
+            ws[f"B{row}"] = _safe_float(pct)
+            autosize(ws)
+
+            # --- Variables
+            ws = wb.create_sheet("Variables")
+            ws.append(["Symbol", "Description", "Value"])
+            for cell in ws[1]:
+                cell.font = Font(bold=True)
+            for v in variables:
+                val = v["Value"]
+                ws.append([v["Symbol"], v["Description"], None if val is None else float(val)])
+            autosize(ws)
+
+            # --- Assumptions
+            ws = wb.create_sheet("Assumptions")
+            ws.append(["Assumptions"])
+            ws["A1"].font = Font(bold=True)
+            for a in assumptions:
+                ws.append([a])
+            ws.column_dimensions["A"].width = 110
+            for r in range(2, 2 + len(assumptions)):
+                ws[f"A{r}"].alignment = Alignment(wrap_text=True, vertical="top")
+
+            # --- Equations
+            ws = wb.create_sheet("Equations")
+            ws.append(["Name", "Equation (LaTeX)"])
+            for cell in ws[1]:
+                cell.font = Font(bold=True)
+            for title, latex in equations_text:
+                ws.append([title, latex])
+            ws.column_dimensions["A"].width = 22
+            ws.column_dimensions["B"].width = 70
+
+            # --- Constants
+            ws = wb.create_sheet("Constants")
+            ws.append(["Name", "Meaning", "Value"])
+            for cell in ws[1]:
+                cell.font = Font(bold=True)
+            for c in constants:
+                ws.append([c["Name"], c["Meaning"], c["Value"]])
+            autosize(ws)
+
+            # --- Table D3 Copper
+            ws = wb.create_sheet("Table D3 - Copper")
+            ws.append(display_cols)
+            for cell in ws[1]:
+                cell.font = Font(bold=True)
+            for r in cu_rows:
+                ws.append([r.get(col, None) for col in display_cols])
+            autosize(ws)
+
+            # --- Table D3 Aluminum
+            ws = wb.create_sheet("Table D3 - Aluminum")
+            ws.append(display_cols)
+            for cell in ws[1]:
+                cell.font = Font(bold=True)
+            for r in al_rows:
+                ws.append([r.get(col, None) for col in display_cols])
+            autosize(ws)
+
+            # --- f-factor reference
+            ws = wb.create_sheet("f-factor reference")
+            ws.append(["System / Connection", "f (used in formula)", "Voltage reference"])
+            for cell in ws[1]:
+                cell.font = Font(bold=True)
+            for r in f_table_rows:
+                ws.append([r["System / Connection"], float(r["f (used in formula)"]), r["Voltage reference"]])
+            ws.column_dimensions["A"].width = 75
+            ws.column_dimensions["B"].width = 18
+            ws.column_dimensions["C"].width = 25
+
+            bio = io.BytesIO()
+            wb.save(bio)
+            return bio.getvalue()
+
+        # Only enable downloads when we have enough info to populate the report meaningfully
+        can_export = (k_used is not None) and (I is not None) and (L_m is not None) and (V_nom is not None)
+
+        exp_c1, exp_c2 = st.columns([1, 1], gap="large")
+        with exp_c1:
+            if st.button("Prepare Word report (.docx)", key="vd_build_docx"):
+                try:
+                    st.session_state["vd_docx_bytes"] = build_word_report_bytes()
+                    st.success("Word report prepared. Use the download button below.")
+                except Exception as e:
+                    st.error(f"Failed to build Word report: {e}")
+
+            docx_bytes = st.session_state.get("vd_docx_bytes", None)
+            st.download_button(
+                "⬇️ Download Word report (.docx)",
+                data=docx_bytes if docx_bytes else b"",
+                file_name="Voltage_Drop_Report.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                disabled=(not can_export) or (docx_bytes is None),
+                key="vd_download_docx",
+            )
+
+        with exp_c2:
+            if st.button("Prepare Excel report (.xlsx)", key="vd_build_xlsx"):
+                try:
+                    st.session_state["vd_xlsx_bytes"] = build_excel_report_bytes()
+                    st.success("Excel report prepared. Use the download button below.")
+                except Exception as e:
+                    st.error(f"Failed to build Excel report: {e}")
+
+            xlsx_bytes = st.session_state.get("vd_xlsx_bytes", None)
+            st.download_button(
+                "⬇️ Download Excel report (.xlsx)",
+                data=xlsx_bytes if xlsx_bytes else b"",
+                file_name="Voltage_Drop_Report.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                disabled=(not can_export) or (xlsx_bytes is None),
+                key="vd_download_xlsx",
+            )
+
+        st.caption(
+            "Export includes: equations (LaTeX), assumptions, variables/inputs/results, constants, the full Table D3 (Cu/Al), "
+            "and the full system factor (f) reference table. (Word stores equations as LaTeX text; Excel stores them as text.)"
         )
 
         # -------------------------------------------------
@@ -962,10 +1366,10 @@ elif page == "Voltage Drop":
                 "Raceway 80%",
             ]
 
-            cu_rows = []
-            for size, cols in TABLE_D3["Copper"].items():
+            cu_rows_display = []
+            for size_key, cols in TABLE_D3["Copper"].items():
                 row = {
-                    "Size": size,
+                    "Size": size_key,
                     "DC": cols.get("DC", None),
                     "Cable 100%": cols.get("Cable 100%", None),
                     "Cable 90%": cols.get("Cable 90%", None),
@@ -974,20 +1378,20 @@ elif page == "Voltage Drop":
                     "Raceway 90%": cols.get("Raceway 90%", None),
                     "Raceway 80%": cols.get("Raceway 80%", None),
                 }
-                cu_rows.append(row)
+                cu_rows_display.append(row)
 
             try:
                 import pandas as pd
-                df_cu = pd.DataFrame(cu_rows, columns=display_cols)
+                df_cu = pd.DataFrame(cu_rows_display, columns=display_cols)
                 st.dataframe(df_cu, use_container_width=True, hide_index=True)
             except Exception:
-                st.dataframe(cu_rows, use_container_width=True, hide_index=True)
+                st.dataframe(cu_rows_display, use_container_width=True, hide_index=True)
 
             st.markdown("### Aluminum Conductors — Table D3 (Ω/km)")
-            al_rows = []
-            for size, cols in TABLE_D3["Aluminum"].items():
+            al_rows_display = []
+            for size_key, cols in TABLE_D3["Aluminum"].items():
                 row = {
-                    "Size": size,
+                    "Size": size_key,
                     "DC": cols.get("DC", None),
                     "Cable 100%": cols.get("Cable 100%", None),
                     "Cable 90%": cols.get("Cable 90%", None),
@@ -996,13 +1400,13 @@ elif page == "Voltage Drop":
                     "Raceway 90%": cols.get("Raceway 90%", None),
                     "Raceway 80%": cols.get("Raceway 80%", None),
                 }
-                al_rows.append(row)
+                al_rows_display.append(row)
 
             try:
-                df_al = pd.DataFrame(al_rows, columns=display_cols)
+                df_al = pd.DataFrame(al_rows_display, columns=display_cols)
                 st.dataframe(df_al, use_container_width=True, hide_index=True)
             except Exception:
-                st.dataframe(al_rows, use_container_width=True, hide_index=True)
+                st.dataframe(al_rows_display, use_container_width=True, hide_index=True)
 
             st.caption(
                 "These tables are transcribed **exactly** from OESC Appendix D – Table D3 "
@@ -1014,22 +1418,6 @@ elif page == "Voltage Drop":
         # Display the F-factor lookup table used by the calculator
         # -------------------------------------------------
         with st.expander("📐 Show system factor (f) table used in calculations", expanded=False):
-            f_table_rows = [
-                {"System / Connection": "DC — 2-wire (positive-to-negative)", "f (used in formula)": 2.0, "Voltage reference": "Positive-to-negative"},
-                {"System / Connection": "DC — 2-wire (positive-to-ground)", "f (used in formula)": 2.0, "Voltage reference": "Positive-to-ground"},
-                {"System / Connection": "DC — 2-wire (negative-to-ground)", "f (used in formula)": 2.0, "Voltage reference": "Negative-to-ground"},
-                {"System / Connection": "DC — 3-wire, line-to-line with grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
-                {"System / Connection": "1-φ AC — 2-wire, line-to-grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-ground"},
-                {"System / Connection": "1-φ AC — 2-wire, line-to-line", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
-                {"System / Connection": "1-φ AC — 3-wire, line-to-line, with grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
-                {"System / Connection": "3-φ AC — 2-wire, line-to-grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-ground"},
-                {"System / Connection": "3-φ AC — 2-wire, line-to-line, no grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
-                {"System / Connection": "3-φ AC — 3-wire, line-to-line, with grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
-                {"System / Connection": "3-φ AC — 3-wire, line-to-grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-ground"},
-                {"System / Connection": "3-φ AC — 3-wire, line-to-line, no grounded conductor", "f (used in formula)": math.sqrt(3), "Voltage reference": "Line-to-line"},
-                {"System / Connection": "3-φ AC — 4-wire, line-to-line, with grounded conductor", "f (used in formula)": math.sqrt(3), "Voltage reference": "Line-to-line"},
-            ]
-
             try:
                 import pandas as pd
 
