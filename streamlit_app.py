@@ -1,5 +1,6 @@
 import math
 from pathlib import Path
+import re
 
 import streamlit as st
 
@@ -34,6 +35,35 @@ st.caption("Theory • Examples • Calculators")
 # ----------------------------
 # Helpers
 # ----------------------------
+# ----------------------------
+# Conduit fill rule selector (CEC / OESC Table 9 logic)
+# ----------------------------
+def select_table9_fill_rule(num_cables: int):
+    """
+    Returns which Table 9 group to use based on number of cables.
+    1 cable  -> 53% (Tables C/D)
+    2 cables -> 31% (Tables E/F)
+    >=3      -> 40% (Tables G/H)
+    """
+    if num_cables <= 1:
+        return {
+            "percent": 53,
+            "tables": ["C", "D"],
+            "label": "53% fill (1 cable – Tables C/D)"
+        }
+    elif num_cables == 2:
+        return {
+            "percent": 31,
+            "tables": ["E", "F"],
+            "label": "31% fill (2 cables – Tables E/F)"
+        }
+    else:
+        return {
+            "percent": 40,
+            "tables": ["G", "H"],
+            "label": "40% fill (3+ cables – Tables G/H)"
+        }
+
 def fmt(x, unit=""):
     if x is None:
         return "—"
@@ -636,6 +666,7 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
 # ============================
 # 7) Conduit Size & Fill & Bend Radius
 # ============================
+
 elif page == "Conduit Size & Fill & Bend Radius":
     with theory_tab:
         header("Conduit Size, Fill & Bend Radius — Theory")
@@ -643,32 +674,670 @@ elif page == "Conduit Size & Fill & Bend Radius":
         render_md_safe("conduit_fill.md")
 
     with calc_tab:
-        header("Conduit Fill Calculator", "Compute fill % and a bend-radius placeholder.")
+        header("Conduit Fill Calculator — OESC Table 6 + Table 9 (dynamic cables)", "Select a conduit, add any number of cable groups, and the app computes conduit fill.")
         show_code_note(code_mode)
 
-        col1, col2 = st.columns(2, gap="large")
-        with col1:
-            conduit_area = st.number_input("Conduit internal area (mm²)", min_value=1.0, value=500.0, step=10.0)
-        with col2:
-            wire_area = st.number_input("Total conductor area (mm²)", min_value=0.0, value=150.0, step=5.0)
+        st.markdown(
+            "This tool is designed to behave like common conduit-fill calculators:\n"
+            "- Pick a **conduit type** and **trade size** (Table 9)\n"
+            "- Add one or more **cable groups** (Table 6)\n"
+            "- The calculator totals cable areas and compares against **Table 9 allowable fill**\n\n"
+            "If the embedded OESC Table Library is unavailable in your deployment, a **manual fallback** is provided."
+        )
 
-        fill = safe_div(wire_area, conduit_area)
-        if fill is None:
-            st.warning("Conduit area must be > 0.")
+        # ----------------------------
+        # Table helpers (Table 6 + Table 9)
+        # ----------------------------
+        try:
+            import pandas as pd  # type: ignore
+        except Exception:
+            pd = None  # type: ignore
+
+        def _norm(s):
+            return str(s).strip()
+
+        def _lower(s):
+            return _norm(s).lower()
+
+        def _to_float(x):
+            try:
+                if x is None:
+                    return None
+                if isinstance(x, (int, float)):
+                    return float(x)
+                s = str(x).strip()
+                if s in ("", "—", "-", "–", "None"):
+                    return None
+                # remove commas
+                s = s.replace(",", "")
+                return float(s)
+            except Exception:
+                return None
+
+        def _best_col(cols, include=(), exclude=()):
+            """Return first column name that contains ALL include tokens and NONE of exclude tokens (case-insensitive)."""
+            for c in cols:
+                lc = _lower(c)
+                ok = True
+                for t in include:
+                    if t not in lc:
+                        ok = False
+                        break
+                if not ok:
+                    continue
+                for t in exclude:
+                    if t in lc:
+                        ok = False
+                        break
+                if ok:
+                    return c
+            return None
+
+        @st.cache_data(show_spinner=False)
+        def _load_table_df(table_id: str):
+            if oesc_tables is None:
+                return None
+            try:
+                return oesc_tables.get_table_dataframe(table_id)
+            except Exception:
+                return None
+
+        def _table6_to_maps(df):
+            """
+            Convert Table 6 into:
+              - types: list[str]
+              - sizes_by_type: dict[type -> list[size]]
+              - area_lookup: dict[type -> dict[size -> area_mm2]]
+            Works with both "wide" and "long" table layouts.
+            """
+            if df is None:
+                return [], {}, {}
+
+            # Normalize to DataFrame if possible
+            if pd is not None and not isinstance(df, pd.DataFrame):
+                try:
+                    df = pd.DataFrame(df)
+                except Exception:
+                    return [], {}, {}
+
+            if pd is None or not hasattr(df, "columns"):
+                return [], {}, {}
+
+            cols = list(df.columns)
+
+            # Guess a "size" column
+            size_col = _best_col(cols, include=("size",)) or cols[0]
+
+            # LONG format candidates: has columns like Type/Insulation, Size, Area
+            type_col = _best_col(cols, include=("type",)) or _best_col(cols, include=("cable",)) or _best_col(cols, include=("insul",))
+            area_col = _best_col(cols, include=("area",)) or _best_col(cols, include=("mm",)) or _best_col(cols, include=("mm2",)) or _best_col(cols, include=("mm²",))
+
+            # If we can confidently interpret as long format, do it
+            if type_col and area_col:
+                area_lookup = {}
+                for _, r in df.iterrows():
+                    t = _norm(r.get(type_col, ""))
+                    s = _norm(r.get(size_col, ""))
+                    a = _to_float(r.get(area_col, None))
+                    if not t or not s or a is None:
+                        continue
+                    area_lookup.setdefault(t, {})[s] = a
+                types = sorted(area_lookup.keys())
+                sizes_by_type = {t: list(area_lookup[t].keys()) for t in types}
+                # Keep a stable (human-ish) order if possible
+                for t in types:
+                    sizes_by_type[t] = sorted(sizes_by_type[t], key=lambda x: (len(x), x))
+                return types, sizes_by_type, area_lookup
+
+            # Otherwise, treat as WIDE:
+            # - First column is size, other columns are cable types holding areas
+            other_cols = [c for c in cols if c != size_col]
+            area_lookup = {}
+            for c in other_cols:
+                t = _norm(c)
+                for _, r in df.iterrows():
+                    s = _norm(r.get(size_col, ""))
+                    a = _to_float(r.get(c, None))
+                    if not s or a is None:
+                        continue
+                    area_lookup.setdefault(t, {})[s] = a
+            types = [t for t in other_cols if t in area_lookup]
+            sizes_by_type = {t: list(area_lookup[t].keys()) for t in types}
+            for t in types:
+                sizes_by_type[t] = sorted(sizes_by_type[t], key=lambda x: (len(x), x))
+            return types, sizes_by_type, area_lookup
+
+        def _table9_to_index(df):
+            """
+            Convert Table 9 into a normalized index:
+              rows[(conduit_type, trade_size)] = dict of the original row values
+            Attempts to find the conduit type and size columns.
+            """
+            if df is None:
+                return None, None, {}
+
+            if pd is not None and not isinstance(df, pd.DataFrame):
+                try:
+                    df = pd.DataFrame(df)
+                except Exception:
+                    return None, None, {}
+
+            cols = list(df.columns) if hasattr(df, "columns") else []
+            if not cols:
+                return None, None, {}
+
+            type_col = (
+                _best_col(cols, include=("type",), exclude=("cable",))
+                or _best_col(cols, include=("conduit",), exclude=("area", "id", "internal"))
+                or cols[0]
+            )
+            size_col = (
+                _best_col(cols, include=("trade", "size"))
+                or _best_col(cols, include=("size",), exclude=("internal", "area", "mm"))
+                or (cols[1] if len(cols) > 1 else cols[0])
+            )
+
+            idx = {}
+            try:
+                for _, r in df.iterrows():
+                    t = _norm(r.get(type_col, ""))
+                    s = _norm(r.get(size_col, ""))
+                    if not t or not s:
+                        continue
+                    idx[(t, s)] = {c: r.get(c, None) for c in cols}
+            except Exception:
+                pass
+
+            return type_col, size_col, idx
+
+        def _infer_internal_area(row_dict):
+            """Try to find an internal area field (mm²)."""
+            cols = list(row_dict.keys())
+            # Strong signals first
+            c = _best_col(cols, include=("internal", "area")) or _best_col(cols, include=("area",), exclude=("allow", "max", "fill", "cable", "cond"))
+            if c:
+                return _to_float(row_dict.get(c))
+            # Next: any numeric-looking column with 'mm' and '2'
+            for cc in cols:
+                lc = _lower(cc)
+                if ("mm" in lc and ("2" in lc or "²" in lc)) and ("allow" not in lc and "fill" not in lc and "max" not in lc):
+                    v = _to_float(row_dict.get(cc))
+                    if v:
+                        return v
+            return None
+
+        def _infer_allowed_area_and_pct(row_dict, n_cables_total, internal_area):
+            """
+            Try to infer allowed area and allowed percent from Table 9 row.
+            Returns (allowed_area_mm2, allowed_pct_fraction, source_label)
+            """
+            cols = list(row_dict.keys())
+
+            # Candidate columns by count bucket
+            if n_cables_total <= 1:
+                tokens = ("1",)
+            elif n_cables_total == 2:
+                tokens = ("2",)
+            else:
+                tokens = ("3",)  # could be "3+", "3 or more"
+            # Area-first lookup
+            area_candidates = []
+            for c in cols:
+                lc = _lower(c)
+                if all(t in lc for t in tokens) and ("area" in lc or "mm" in lc or "mm2" in lc or "mm²" in lc) and ("%" not in lc):
+                    area_candidates.append(c)
+            # Also accept "3+" written forms
+            if n_cables_total >= 3:
+                for c in cols:
+                    lc = _lower(c)
+                    if (("3+" in lc) or ("3 or" in lc) or ("3 or more" in lc) or ("more" in lc)) and ("area" in lc or "mm" in lc) and ("%" not in lc):
+                        if c not in area_candidates:
+                            area_candidates.append(c)
+
+            for c in area_candidates:
+                a = _to_float(row_dict.get(c))
+                if a is not None:
+                    pct = (a / internal_area) if (a is not None and internal_area) else None
+                    return a, pct, f"Table 9 column: {c}"
+
+            # Percent columns (if table stores % directly)
+            pct_candidates = []
+            for c in cols:
+                lc = _lower(c)
+                if all(t in lc for t in tokens) and ("%" in lc or "percent" in lc or "fill" in lc or "max" in lc):
+                    pct_candidates.append(c)
+            if n_cables_total >= 3:
+                for c in cols:
+                    lc = _lower(c)
+                    if (("3+" in lc) or ("3 or" in lc) or ("more" in lc)) and ("%" in lc or "percent" in lc or "fill" in lc or "max" in lc):
+                        if c not in pct_candidates:
+                            pct_candidates.append(c)
+
+            for c in pct_candidates:
+                p = _to_float(row_dict.get(c))
+                if p is None:
+                    continue
+                # If stored like 40 (meaning %), convert to fraction
+                pct_fraction = p / 100.0 if p > 1.0 else p
+                a = internal_area * pct_fraction if internal_area else None
+                return a, pct_fraction, f"Table 9 column: {c}"
+
+            # Fallback: standard conduit-fill rules (common convention)
+            if internal_area:
+                if n_cables_total <= 1:
+                    pct_fraction = 0.53
+                elif n_cables_total == 2:
+                    pct_fraction = 0.31
+                else:
+                    pct_fraction = 0.40
+                return internal_area * pct_fraction, pct_fraction, "Fallback: 53%/31%/40% rule (no Table 9 match found)"
+
+            return None, None, "No allowable fill available"
+
+        # ----------------------------
+        # Load tables (best effort)
+        # ----------------------------
+        t6_df = None
+        t9_df = None
+        if _TABLES_IMPORT_ERROR:
+            st.warning(f"Embedded table library unavailable: `{_TABLES_IMPORT_ERROR}`")
         else:
-            st.metric("Fill (%)", fmt(fill * 100.0, "%"))
+            # Table IDs are typically "6" and "9" in the library; if your library uses variants like "6A"/"9H",
+            # the manual fallback below still works and you can adjust IDs in lib/oesc_tables.py later.
+            t6_df = _load_table_df("6")
+            t9_df = _load_table_df("9")
 
-        conduit_id_mm = st.number_input("Conduit ID (mm)", min_value=0.0, value=25.0, step=1.0)
-        br = 6.0 * conduit_id_mm
-        st.success(f"Rule-of-thumb bend radius: **{fmt(br, 'mm')}**")
+        t6_types, t6_sizes_by_type, t6_area = _table6_to_maps(t6_df)
+        t9_type_col, t9_size_col, t9_index = _table9_to_index(t9_df)
 
-        st.markdown("### Equations used")
-        eq(r"\text{Fill}=\frac{A_{wires}}{A_{conduit}}")
-        eq(r"R_{min}=6\cdot D_{ID}")
+        # ----------------------------
+        # Conduit selection (Table 9 or manual fallback)
+        # ----------------------------
+        st.markdown("## 1) Conduit selection (Table 9)")
+
+        use_manual_conduit = st.checkbox(
+            "Use manual conduit data (if Table 9 is missing or you want to override it)",
+            value=False if t9_index else True,
+            key="cf_use_manual_conduit",
+        )
+
+        conduit_internal_area = None
+        conduit_allowed_area = None
+        conduit_allowed_pct = None
+        allowed_source = "—"
+
+        if use_manual_conduit:
+            c1, c2, c3 = st.columns([1, 1, 1], gap="large")
+            with c1:
+                conduit_type = st.text_input("Conduit type (label)", value="(Manual)", key="cf_manual_type")
+            with c2:
+                conduit_trade = st.text_input("Trade size (label)", value="(Manual)", key="cf_manual_size")
+            with c3:
+                conduit_internal_area = st.number_input("Conduit internal area (mm²)", min_value=0.01, value=500.0, step=10.0, key="cf_manual_area")
+
+            st.caption("Manual mode: allowable fill uses 53%/31%/40% convention (unless you override below).")
+            n_cables_dummy = st.number_input("Cables in raceway (for allowable fill selection)", min_value=1, value=3, step=1, key="cf_manual_n_cables")
+            conduit_allowed_area, conduit_allowed_pct, allowed_source = _infer_allowed_area_and_pct(
+                {}, int(n_cables_dummy), conduit_internal_area
+            )
+        else:
+            # Prefer using the combined Table 9 dataframe column headers as conduit-type labels when available.
+            # ======= OESC Table 9 column -> OESC trimmed header mapping =======
+            # This mapping maps the dataframe column headers (as produced by _df_table9)
+            # to the human-friendly OESC Table header strings (trimmed of the leading
+            # "Internal diameter and cross-sectional areas of"). The display names are
+            # what the user will see in the dropdown; the code will still use the
+            # dataframe column keys for lookups.
+            OESC_COLUMN_TO_HEADER = {
+                "Rigid Metal": "Rigid metal conduit",
+                "Flexible Metal": "Flexible metal conduit",
+                "Rigid Pvc": "Rigid PVC conduit",
+                "Rigid Pvc Db2 Es2": "Rigid Type EB1/DB2/ES2 PVC conduit",
+                "Metallic Liquid Tight Flex": "metallic liquid-tight flexible conduit",
+                "Nonmetallic Liquid Tight Flex": "non-metallic liquid-tight flexible conduit",
+                "Emt": "electrical metallic tubing",
+                "Ent": "electrical non-metallic tubing",
+                "Rtrc Ips": "rigid RTRC conduit marked IPS",
+                "Rtrc Id": "rigid RTRC conduit marked ID",
+                "Hdpe Sch40": "HDPE conduit Schedule 40",
+                "Hdpe Sch80": "HDPE conduit Schedule 80",
+                "Hdpe Dr9": "HDPE DR9 conduit",
+                "Hdpe Dr11": "HDPE DR11 conduit",
+                "Hdpe Dr13 5": "HDPE DR13.5 conduit",
+                "Hdpe Dr15 5": "HDPE DR15.5 conduit",
+            }
+
+            # Build conduit type display list (and reverse map) when t9_df is present.
+            if t9_df is not None and hasattr(t9_df, "columns") and len(t9_df.columns) > 0:
+                # t9_df.columns contain names like "Hdpe Dr9 ID (mm)", "Hdpe Dr9 Area (mm²)".
+                # We need to extract the base column token (e.g., "Hdpe Dr9") to map to OESC header.
+                available_cols = list(t9_df.columns)
+                # extract base tokens (strip trailing " ID (mm)" or " Area (mm²)")
+                base_tokens = []
+                col_to_base = {}
+                for col in available_cols:
+                    token = col
+                    # remove trailing parts
+                    token = re.sub(r"\s+ID\s*\(mm\)$", "", token)
+                    token = re.sub(r"\s+Area\s*\(mm²\)$", "", token)
+                    token = token.strip()
+                    col_to_base[col] = token
+                    base_tokens.append(token)
+
+                # unique base tokens preserving order
+                seen = set()
+                base_order = []
+                for b in base_tokens:
+                    if b not in seen:
+                        seen.add(b)
+                        base_order.append(b)
+
+                # Filter out non-conduit header tokens such as 'Subtable' or 'Trade size'
+                filtered_base_order = [x for x in base_order if not re.search(r"subtable|trade\s*size", x, flags=re.IGNORECASE)]
+
+                # Build display names and reverse mapping
+                conduit_display_names = []
+                display_to_colbase = {}
+                for base in filtered_base_order:
+                    display = OESC_COLUMN_TO_HEADER.get(base, base)
+                    conduit_display_names.append(display)
+                    display_to_colbase[display] = base
+
+                # We also need a mapping from display name back to the actual dataframe column
+                # For lookups we will prefer the "ID (mm)" column for diameter and the "Area (mm²)"
+                # for area values. We'll construct helpers when the user selects the display value.
+            else:
+                conduit_display_names = None
+                display_to_colbase = {}
+            conduit_types = sorted({k[0] for k in t9_index.keys()}) if t9_index else []
+            if not conduit_types:
+                st.error("Table 9 could not be loaded/parsed. Enable manual conduit mode above.")
+                conduit_type = "(Unknown)"
+                conduit_trade = "(Unknown)"
+            else:
+                c1, c2 = st.columns([1, 1], gap="large")
+                with c1:
+                        
+                    # Present the human-friendly OESC header names to the user when available.
+                    if conduit_display_names:
+                        sel_idx = 0
+                        conduit_choice_display = st.selectbox("Conduit type", conduit_display_names, index=sel_idx, key="cf_conduit_type")
+                        # map the chosen display back to the dataframe base token (e.g., "Hdpe Dr9")
+                        chosen_base = display_to_colbase.get(conduit_choice_display)
+                        # build the corresponding dataframe column names we'll use for ID and Area lookups
+                        chosen_id_col = None
+                        chosen_area_col = None
+                        if chosen_base:
+                            # prefer exact matches for "ID (mm)" and "Area (mm²)"
+                            possible_id = f"{chosen_base} ID (mm)"
+                            possible_area = f"{chosen_base} Area (mm²)"
+                            if possible_id in t9_df.columns:
+                                chosen_id_col = possible_id
+                            if possible_area in t9_df.columns:
+                                chosen_area_col = possible_area
+                        # fallback: pick the first matching column that contains the base token
+                        if chosen_id_col is None or chosen_area_col is None:
+                            for c in t9_df.columns:
+                                if chosen_base and chosen_base in c:
+                                    if "ID" in c and chosen_id_col is None:
+                                        chosen_id_col = c
+                                    if "Area" in c and chosen_area_col is None:
+                                        chosen_area_col = c
+                        conduit_type = chosen_base if chosen_base else conduit_choice_display
+                    else:
+                        conduit_type = st.selectbox("Conduit type", conduit_types, index=0, key="cf_conduit_type")
+                        chosen_id_col = None
+                        chosen_area_col = None
+                    # Build trade-size options for the selected conduit type.
+                    sizes_for_type = []
+                    try:
+                        if t9_df is not None and hasattr(t9_df, 'columns') and 't9_size_col' in globals() and t9_size_col:
+                            # If we have a chosen_base (from display mapping), try to find ID/Area columns for it
+                            if 'chosen_base' in locals() and chosen_base:
+                                possible_id = f"{chosen_base} ID (mm)"
+                                possible_area = f"{chosen_base} Area (mm²)"
+                                chosen_area_col_local = possible_area if possible_area in t9_df.columns else (possible_id if possible_id in t9_df.columns else None)
+                                if chosen_area_col_local:
+                                    try:
+                                        sizes_for_type = sorted([str(x) for x in pd.Series(t9_df.loc[t9_df[chosen_area_col_local].notna(), t9_size_col]).dropna().astype(str).unique()])
+                                    except Exception:
+                                        sizes_for_type = []
+                                else:
+                                    # No explicit ID/Area column for base token; fallback to scanning rows where any column contains the base token
+                                    try:
+                                        mask = t9_df.apply(lambda r: any((str(v) is not None and str(v).strip() != '') for v in [r.get(possible_id, None), r.get(possible_area, None)]), axis=1)
+                                        if mask.any():
+                                            sizes_for_type = sorted([str(x) for x in pd.Series(t9_df.loc[mask, t9_size_col]).dropna().astype(str).unique()])
+                                    except Exception:
+                                        sizes_for_type = []
+                        # final fallback to t9_index keys matching chosen_base or conduit_type
+                        if not sizes_for_type:
+                            key_token = chosen_base if ('chosen_base' in locals() and chosen_base) else conduit_type
+                            sizes_for_type = sorted({k[1] for k in t9_index.keys() if key_token and key_token in k[0]})
+                            if not sizes_for_type:
+                                sizes_for_type = sorted({k[1] for k in t9_index.keys() if k[0] == conduit_type})
+                    except Exception:
+                        sizes_for_type = sorted({k[1] for k in t9_index.keys() if k[0] == conduit_type})
+                    with c2:
+                        conduit_trade = st.selectbox("Conduit trade size", sizes_for_type, index=0, key="cf_conduit_size")
+
+                    # Attempt to find the Table 9 row using the combined dataframe when available
+                    row = {}
+                    if t9_df is not None and hasattr(t9_df, 'columns') and 't9_size_col' in globals() and t9_size_col:
+                        try:
+                            mask = t9_df[t9_size_col].astype(str).str.strip() == str(conduit_trade).strip()
+                            df_rows = t9_df.loc[mask]
+                            if not df_rows.empty:
+                                sel = None
+                                if 'chosen_area_col' in locals() and chosen_area_col in t9_df.columns:
+                                    for _, r in df_rows.iterrows():
+                                        if pd.notna(r.get(chosen_area_col)):
+                                            sel = r
+                                            break
+                                if sel is None:
+                                    sel = df_rows.iloc[0]
+                                try:
+                                    row = {c: sel.get(c, None) for c in list(t9_df.columns)}
+                                except Exception:
+                                    row = {c: sel[c] if c in sel.index else None for c in list(t9_df.columns)}
+                        except Exception:
+                            row = {}
+                    if not row:
+                        row = t9_index.get((conduit_type, conduit_trade), {})
+
+                    conduit_internal_area = _infer_internal_area(row)
+
+                    if conduit_internal_area is None:
+                        st.warning("Could not infer internal area from Table 9 row — using manual entry for internal area.")
+                        conduit_internal_area = st.number_input("Conduit internal area override (mm²)", min_value=0.01, value=500.0, step=10.0, key="cf_area_override")
+
+        # ----------------------------
+        # Cable groups (Table 6)
+        # ----------------------------
+        st.markdown("## 2) Cable groups (Table 6)")
+
+        if not t6_types:
+            st.warning("Table 6 could not be loaded/parsed. You can still proceed by entering areas manually per group.")
+            default_rows = [
+                {"Cable type": "(Manual)", "Conductor size": "(Manual)", "Conductors per cable": 3, "Qty (cables)": 1, "Area per conductor (mm²)": 50.0},
+            ]
+        else:
+            default_rows = [
+                {"Cable type": t6_types[0], "Conductor size": (t6_sizes_by_type.get(t6_types[0]) or [""])[0], "Conductors per cable": 3, "Qty (cables)": 1, "Area per conductor (mm²)": None},
+            ]
+
+        if pd is None:
+            st.error("pandas is required for the dynamic cable table UI. Please add pandas to your environment.")
+            st.stop()
+
+        if "cf_cable_df" not in st.session_state:
+            st.session_state["cf_cable_df"] = pd.DataFrame(default_rows)
+
+        df_in = st.session_state["cf_cable_df"].copy()
+
+        # Pre-fill areas where possible
+        def _lookup_area(row):
+            t = _norm(row.get("Cable type", ""))
+            s = _norm(row.get("Conductor size", ""))
+            if t in t6_area and s in t6_area[t]:
+                return float(t6_area[t][s])
+            return row.get("Area per conductor (mm²)", None)
+
+        try:
+            df_in["Area per conductor (mm²)"] = df_in.apply(_lookup_area, axis=1)
+        except Exception:
+            pass
+
+        type_options = t6_types if t6_types else ["(Manual)"]
+        # Use union of sizes to keep editor simple; on calculation we still attempt per-type lookup
+        all_sizes = sorted({s for t in t6_sizes_by_type.values() for s in t} ) if t6_sizes_by_type else ["(Manual)"]
+
+        edited = st.data_editor(
+            df_in,
+            num_rows="dynamic",
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "Cable type": st.column_config.SelectboxColumn("Cable type", options=type_options, required=True),
+                "Conductor size": st.column_config.SelectboxColumn("Conductor size", options=all_sizes, required=True),
+                "Conductors per cable": st.column_config.NumberColumn("Conductors per cable", min_value=1, step=1, required=True),
+                "Qty (cables)": st.column_config.NumberColumn("Qty (cables)", min_value=1, step=1, required=True),
+                "Area per conductor (mm²)": st.column_config.NumberColumn("Area per conductor (mm²)", min_value=0.0, step=0.01, help="Auto-filled from Table 6 when possible; editable."),
+            },
+            key="cf_cable_editor",
+        )
+
+        st.session_state["cf_cable_df"] = edited
+
+        # ----------------------------
+        # Calculations
+        # ----------------------------
+        st.markdown("## 3) Results")
+
+        # total # of cables (for Table 9 allowable selection)
+        try:
+            n_cables_total = int(pd.to_numeric(edited["Qty (cables)"], errors="coerce").fillna(0).sum())
+        except Exception:
+            n_cables_total = 0
+
+        # total conductor area
+        def _row_total_area(r):
+            ncond = _to_float(r.get("Conductors per cable"))
+            qty = _to_float(r.get("Qty (cables)"))
+            area_per = _to_float(r.get("Area per conductor (mm²)"))
+
+            # Attempt a lookup if area_per missing
+            if (area_per is None) and t6_area:
+                t = _norm(r.get("Cable type", ""))
+                s = _norm(r.get("Conductor size", ""))
+                area_per = _to_float(t6_area.get(t, {}).get(s, None))
+
+            if ncond is None or qty is None or area_per is None:
+                return 0.0
+            return float(ncond) * float(qty) * float(area_per)
+
+        try:
+            total_cable_area = float(edited.apply(_row_total_area, axis=1).sum())
+        except Exception:
+            total_cable_area = 0.0
+
+        # Determine allowable based on conduit selection + n_cables_total
+        if not use_manual_conduit and t9_index:
+            row = t9_index.get((conduit_type, conduit_trade), {})
+            conduit_allowed_area, conduit_allowed_pct, allowed_source = _infer_allowed_area_and_pct(
+                row, max(1, n_cables_total), conduit_internal_area
+            )
+        else:
+            # manual conduit mode already handled earlier
+            if conduit_allowed_area is None and conduit_internal_area:
+                conduit_allowed_area, conduit_allowed_pct, allowed_source = _infer_allowed_area_and_pct(
+                    {}, max(1, n_cables_total), conduit_internal_area
+                )
+
+        fill_pct = safe_div(total_cable_area, conduit_internal_area) if conduit_internal_area else None
+
+        m1, m2, m3 = st.columns([1, 1, 1], gap="large")
+        m1.metric("Total cables in raceway", fmt(n_cables_total, ""))
+        m2.metric("Total cable area", fmt(total_cable_area, "mm²"))
+        m3.metric("Conduit internal area", fmt(conduit_internal_area, "mm²") if conduit_internal_area else "—")
+
+        if fill_pct is None:
+            st.warning("Provide a conduit internal area to compute fill.")
+        else:
+            st.metric("Actual fill (%)", fmt(fill_pct * 100.0, "%"))
+
+        if conduit_allowed_area is not None and conduit_internal_area:
+            allowed_pct_disp = (conduit_allowed_area / conduit_internal_area) * 100.0
+            st.info(f"Allowable fill: **{fmt(allowed_pct_disp, '%')}**  (allowable area: **{fmt(conduit_allowed_area, 'mm²')}**)  — {allowed_source}")
+            ok = total_cable_area <= conduit_allowed_area + 1e-9
+            if ok:
+                st.success("✅ Fill is within the allowable limit for the selected conduit.")
+            else:
+                st.error("❌ Fill exceeds the allowable limit for the selected conduit.")
+
+            # Suggest next trade size (same type) if we have Table 9
+            if (not use_manual_conduit) and t9_index and not ok:
+                # Build candidate sizes for same type and pick smallest allowed_area >= total_cable_area
+                candidates = []
+                for (t, s), r in t9_index.items():
+                    if t != conduit_type:
+                        continue
+                    ia = _infer_internal_area(r)
+                    if ia is None:
+                        continue
+                    a_allow, _, _ = _infer_allowed_area_and_pct(r, max(1, n_cables_total), ia)
+                    if a_allow is None:
+                        continue
+                    candidates.append((s, a_allow, ia))
+                # sort candidates by allowed area, then label
+                candidates.sort(key=lambda x: (x[1], x[0]))
+                suggestion = None
+                for s, a_allow, ia in candidates:
+                    if a_allow >= total_cable_area - 1e-9:
+                        suggestion = (s, a_allow, ia)
+                        break
+                if suggestion:
+                    s, a_allow, ia = suggestion
+                    st.success(
+                        f"Suggested next size (same conduit type) that meets fill: **{conduit_type} — {s}** "
+                        f"(allowable area ≈ {fmt(a_allow,'mm²')}, internal area ≈ {fmt(ia,'mm²')})."
+                    )
+                else:
+                    st.warning("No larger trade size found in Table 9 that meets fill (based on parsed data).")
+
+        else:
+            st.warning("Allowable fill could not be determined (Table 9 not available or columns not recognized).")
+
+        st.divider()
+        st.markdown("### Equation used")
+        eq(r"\text{Fill}=\frac{\sum\left(A_{cond}\cdot N_{cond/cable}\cdot N_{cables}\right)}{A_{conduit}}")
+
+        with st.expander("Show calculation details", expanded=False):
+            st.write(f"- Conduit: **{conduit_type}** — **{conduit_trade}**")
+            st.write(f"- Conduit internal area: **{fmt(conduit_internal_area, 'mm²')}**")
+            st.write(f"- Total cables: **{n_cables_total}**")
+            st.write(f"- Total cable area: **{fmt(total_cable_area, 'mm²')}**")
+            if conduit_allowed_area is not None:
+                st.write(f"- Allowable area: **{fmt(conduit_allowed_area, 'mm²')}**  ({allowed_source})")
+
+            st.markdown("#### Cable group breakdown")
+            try:
+                show_df = edited.copy()
+                show_df["Area per conductor (mm²) (used)"] = show_df.apply(lambda r: _to_float(r.get("Area per conductor (mm²)")) or _to_float(t6_area.get(_norm(r.get("Cable type","")), {}).get(_norm(r.get("Conductor size","")), None)) or None, axis=1)
+                show_df["Total group area (mm²)"] = show_df.apply(_row_total_area, axis=1)
+                st.dataframe(show_df, use_container_width=True, hide_index=True)
+            except Exception:
+                st.write("(Unable to render breakdown table in this environment.)")
+
+        st.caption(
+            "Important: Always verify Table 6/Table 9 interpretations against the current OESC edition and project specs. "
+            "Different table layouts may exist depending on how the table library is encoded."
+        )
 
 
 # ============================
 # 8) Cable Tray Ampacity
+
 # ============================
 elif page == "Cable Tray Ampacity":
     with theory_tab:
