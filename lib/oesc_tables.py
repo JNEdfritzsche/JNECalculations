@@ -33,6 +33,34 @@ from __future__ import annotations
 
 from typing import Dict, Any, Optional
 
+# ----------------------------
+# Friendly title overrides
+# (Some legacy tables are stored in "raw" structures, so their titles are not embedded in the object.)
+# ----------------------------
+TITLE_OVERRIDES: Dict[str, str] = {
+    "6A": "Table 6A — Dimensions of single Class B R90XLPE, RW75XLPE, RW90XLPE, and RPV90 unjacketed 600 V insulated conductors for calculating conduit and tubing fill",
+    "6B": "Table 6B — Dimensions of single Class B R90XLPE, RW75XLPE, RW90XLPE, and RPV90 unjacketed 1000 V insulated conductors for calculating conduit and tubing fill",
+    "6C": "Table 6C — Dimensions of single Class B R90XLPE, RW75XLPE, R90EP, RW75EP, RW90XLPE, RW90EP, and RPV90 jacketed 600 V insulated conductors for calculating conduit and tubing fill",
+    "6D": "Table 6D — Dimensions of single Class B TWU, TWU75, RWU90XLPE unjacketed, and RPVU90 jacketed 1000 V cables for calculating conduit and tubing fill",
+    "6E": "Table 6E — Dimensions of single Class B RPVU90 unjacketed 1000 V and 2000 V cables for calculating conduit and tubing fill",
+    "6F": "Table 6F — Dimensions of single Class B RPVU90 jacketed 1000 V and 2000 V cables for calculating conduit and tubing fill",
+    "6G": "Table 6G — Dimensions of single Class B RPV90 unjacketed 2000 V insulated conductors for calculating conduit and tubing fill",
+    "6H": "Table 6H — Dimensions of single Class B RPV90 jacketed 1000 V insulated conductors for calculating conduit and tubing fill",
+    "6I": "Table 6I — Dimensions of single Class B RPV90 jacketed 2000 V insulated conductors for calculating conduit and tubing fill",
+    "6J": "Table 6J — Dimensions of single Class B TW, TW75 insulated conductors for calculating conduit and tubing fill",
+    "6K": "Table 6K — Dimensions of single Class C TWN75, T90 NYLON insulated conductors for calculating conduit and tubing fill",
+
+    "9A": "Table 9A — Internal diameter and cross-sectional areas of various trade conduit and tubing",
+    "9B": "Table 9B — Internal diameter and cross-sectional areas of various trade conduit and tubing",
+    "9C": "Table 9C — Internal diameter and maximum conductor cross-sectional areas allowable fill at 53% for various trade conduit and tubing used for one conductor or multi-conductor cable (not lead-sheathed)",
+    "9D": "Table 9D — Internal diameter and maximum conductor cross-sectional areas allowable fill at 53% for various trade conduit and tubing used for one conductor or multi-conductor cable (not lead-sheathed)",
+    "9E": "Table 9E — Internal diameter and maximum conductor cross-sectional areas allowable fill at 31% for various trade conduit and tubing used for two conductors or multi-conductor cables (not lead-sheathed)",
+    "9F": "Table 9F — Internal diameter and maximum conductor cross-sectional areas allowable fill at 31% for various trade conduit and tubing used for two conductors or multi-conductor cables (not lead-sheathed)",
+    "9G": "Table 9G — Internal diameter and maximum conductor cross-sectional areas allowable fill at 40% for various trade conduit and tubing used for three or more conductors or multi-conductor cables (not lead-sheathed)",
+    "9H": "Table 9H — Internal diameter and maximum conductor cross-sectional areas allowable fill at 40% for various trade conduit and tubing used for three or more conductors or multi-conductor cables (not lead-sheathed)",
+}
+
+
 
 # --------------------------------------------------------------------------------------
 # Table 6A (600 V, unjacketed) — extracted from provided images
@@ -2043,10 +2071,12 @@ def _build_registry() -> Dict[str, Dict[str, Any]]:
                 title = f"Table {key}"
                 rows = None
 
+            effective_title = TITLE_OVERRIDES.get(key, title or f"Table {key}")
+
             reg[key] = {
                 "id": key,
                 "var_name": k,
-                "title": title or f"Table {key}",
+                "title": effective_title,
                 "units": units,
                 "columns": columns,
                 "rows": rows,
