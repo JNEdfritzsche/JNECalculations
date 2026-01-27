@@ -98,6 +98,36 @@ def show_code_note(selected_code: str):
     )
 
 
+def _numeric_sort_key(s):
+    """
+    Generate a sort key that handles numeric strings properly.
+    Converts strings like '12', '103', '1/0' to sortable tuples.
+    '1/0' and fractions are treated as having a fractional part for sorting.
+    """
+    s = str(s).strip()
+    try:
+        # Try simple float conversion first (handles "12", "103", etc.)
+        return (0, float(s))
+    except ValueError:
+        # Handle fractions like "1/0", "2/0", etc.
+        if "/" in s:
+            try:
+                parts = s.split("/")
+                numerator = float(parts[0])
+                denominator = float(parts[1])
+                value = numerator / denominator
+                return (0, value)
+            except Exception:
+                pass
+        # Fallback to string sort for non-numeric values
+        return (1, s)
+
+
+def _numeric_sort(items):
+    """Sort items numerically, handling strings with fractions and regular numbers."""
+    return sorted(items, key=_numeric_sort_key)
+
+
 def eq(latex: str):
     """Render a LaTeX equation in a consistent display style."""
     st.latex(latex)
@@ -1099,7 +1129,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
                                 chosen_area_col_local = possible_area if possible_area in t9_df.columns else (possible_id if possible_id in t9_df.columns else None)
                                 if chosen_area_col_local:
                                     try:
-                                        sizes_for_type = sorted([str(x) for x in pd.Series(t9_df.loc[t9_df[chosen_area_col_local].notna(), t9_size_col]).dropna().astype(str).unique()])
+                                        sizes_for_type = _numeric_sort([str(x) for x in pd.Series(t9_df.loc[t9_df[chosen_area_col_local].notna(), t9_size_col]).dropna().astype(str).unique()])
                                     except Exception:
                                         sizes_for_type = []
                                 else:
@@ -1107,17 +1137,17 @@ elif page == "Conduit Size & Fill & Bend Radius":
                                     try:
                                         mask = t9_df.apply(lambda r: any((str(v) is not None and str(v).strip() != '') for v in [r.get(possible_id, None), r.get(possible_area, None)]), axis=1)
                                         if mask.any():
-                                            sizes_for_type = sorted([str(x) for x in pd.Series(t9_df.loc[mask, t9_size_col]).dropna().astype(str).unique()])
+                                            sizes_for_type = _numeric_sort([str(x) for x in pd.Series(t9_df.loc[mask, t9_size_col]).dropna().astype(str).unique()])
                                     except Exception:
                                         sizes_for_type = []
                         # final fallback to t9_index keys matching chosen_base or conduit_type
                         if not sizes_for_type:
                             key_token = chosen_base if ('chosen_base' in locals() and chosen_base) else conduit_type
-                            sizes_for_type = sorted({k[1] for k in t9_index.keys() if key_token and key_token in k[0]})
+                            sizes_for_type = _numeric_sort({k[1] for k in t9_index.keys() if key_token and key_token in k[0]})
                             if not sizes_for_type:
-                                sizes_for_type = sorted({k[1] for k in t9_index.keys() if k[0] == conduit_type})
+                                sizes_for_type = _numeric_sort({k[1] for k in t9_index.keys() if k[0] == conduit_type})
                     except Exception:
-                        sizes_for_type = sorted({k[1] for k in t9_index.keys() if k[0] == conduit_type})
+                        sizes_for_type = _numeric_sort({k[1] for k in t9_index.keys() if k[0] == conduit_type})
                     with c2:
                         conduit_trade = st.selectbox("Conduit trade size", sizes_for_type, index=0, key="cf_conduit_size")
 
@@ -1156,63 +1186,300 @@ elif page == "Conduit Size & Fill & Bend Radius":
         # ----------------------------
         st.markdown("## 2) Cable groups (Table 6)")
 
-        if not t6_types:
-            st.warning("Table 6 could not be loaded/parsed. You can still proceed by entering areas manually per group.")
-            default_rows = [
-                {"Cable type": "(Manual)", "Conductor size": "(Manual)", "Conductors per cable": 3, "Qty (cables)": 1, "Area per conductor (mm²)": 50.0},
-            ]
-        else:
-            default_rows = [
-                {"Cable type": t6_types[0], "Conductor size": (t6_sizes_by_type.get(t6_types[0]) or [""])[0], "Conductors per cable": 3, "Qty (cables)": 1, "Area per conductor (mm²)": None},
-            ]
-
         if pd is None:
             st.error("pandas is required for the dynamic cable table UI. Please add pandas to your environment.")
             st.stop()
+
+        # Build cable table mapping with Table 6A-K structure
+        # Maps: table_key -> (title, table_data_dict)
+        cable_tables = {
+            "6A": ("Table 6A — 600V unjacketed (R90XLPE, RW75XLPE, RW90XLPE, RPV90)", oesc_tables.TABLE_6A if hasattr(oesc_tables, 'TABLE_6A') else None),
+            "6B": ("Table 6B — 1000V unjacketed (R90XLPE, RW75XLPE, RW90XLPE, RPV90)", oesc_tables.TABLE_6B if hasattr(oesc_tables, 'TABLE_6B') else None),
+            "6C": ("Table 6C — 600V jacketed (R90XLPE, RW75XLPE, R90EP, RW75EP, RW90XLPE, RW90EP, RPV90)", oesc_tables.TABLE_6C if hasattr(oesc_tables, 'TABLE_6C') else None),
+            "6D": ("Table 6D — 1000V cables (TWU, TWU75, RWU90XLPE, RPVU90)", oesc_tables.TABLE_6D if hasattr(oesc_tables, 'TABLE_6D') else None),
+            "6E": ("Table 6E — 1000V/2000V cables (RPVU90 unjacketed)", oesc_tables.TABLE_6E if hasattr(oesc_tables, 'TABLE_6E') else None),
+            "6F": ("Table 6F — 1000V/2000V cables (RPVU90 jacketed)", oesc_tables.TABLE_6F if hasattr(oesc_tables, 'TABLE_6F') else None),
+            "6G": ("Table 6G — 2000V unjacketed (RPV90)", oesc_tables.TABLE_6G if hasattr(oesc_tables, 'TABLE_6G') else None),
+            "6H": ("Table 6H — 1000V jacketed (RPV90)", oesc_tables.TABLE_6H if hasattr(oesc_tables, 'TABLE_6H') else None),
+            "6I": ("Table 6I — 2000V jacketed (RPV90)", oesc_tables.TABLE_6I if hasattr(oesc_tables, 'TABLE_6I') else None),
+            "6J": ("Table 6J — TW, TW75 insulated conductors", oesc_tables.TABLE_6J if hasattr(oesc_tables, 'TABLE_6J') else None),
+            "6K": ("Table 6K — TWN75, T90 NYLON insulated conductors", oesc_tables.TABLE_6K if hasattr(oesc_tables, 'TABLE_6K') else None),
+        }
+        # Filter to only tables with data
+        cable_tables = {k: v for k, v in cable_tables.items() if v[1] is not None}
+
+        # Base row template
+        if not cable_tables:
+            st.warning("Table 6 could not be loaded/parsed. You can still proceed by entering cable area manually per cable.")
+            default_rows = [
+                {"Cable description": "(Manual)", "Conductors per cable": 3, "Qty (cables)": 1, "Area per cable (mm²)": 150.0},
+            ]
+        else:
+            # Initialize with first table, first construction type, first size
+            first_table_key = list(cable_tables.keys())[0]
+            first_table = cable_tables[first_table_key][1]
+            first_construction = list(first_table.keys())[0] if first_table else "stranded"
+            first_size = list(first_table.get(first_construction, {}).keys())[0] if first_table else ""
+            default_rows = [
+                {
+                    "Table": first_table_key,
+                    "Construction": first_construction,
+                    "Conductor size": first_size,
+                    "Conductors per cable": 1,
+                    "Qty (cables)": 1
+                },
+            ]
 
         if "cf_cable_df" not in st.session_state:
             st.session_state["cf_cable_df"] = pd.DataFrame(default_rows)
 
         df_in = st.session_state["cf_cable_df"].copy()
 
-        # Pre-fill areas where possible
-        def _lookup_area(row):
-            t = _norm(row.get("Cable type", ""))
-            s = _norm(row.get("Conductor size", ""))
-            if t in t6_area and s in t6_area[t]:
-                return float(t6_area[t][s])
-            return row.get("Area per conductor (mm²)", None)
+        # Helper function to get area per conductor from table
+        def _get_area_for_cable(table_key, construction, cond_size, n_conductors):
+            """Get area for a specific cable configuration"""
+            if table_key not in cable_tables or cable_tables[table_key][1] is None:
+                return None
+            table_data = cable_tables[table_key][1]
+            if construction not in table_data:
+                return None
+            size_data = table_data.get(construction, {}).get(cond_size, {})
+            if not size_data:
+                return None
+            areas_by_count = size_data.get("areas_by_count", {})
+            return areas_by_count.get(int(n_conductors), None)
 
-        try:
-            df_in["Area per conductor (mm²)"] = df_in.apply(_lookup_area, axis=1)
-        except Exception:
-            pass
+        # Initialize edited list to track changes
+        edited_list = []
 
-        type_options = t6_types if t6_types else ["(Manual)"]
-        # Use union of sizes to keep editor simple; on calculation we still attempt per-type lookup
-        all_sizes = sorted({s for t in t6_sizes_by_type.values() for s in t} ) if t6_sizes_by_type else ["(Manual)"]
+        if cable_tables:
+            # Table 6 mode: use hierarchical dropdown selections
+            for idx, row in df_in.iterrows():
+                table_key = row.get("Table", list(cable_tables.keys())[0])
+                construction = row.get("Construction", "stranded")
+                cond_size = row.get("Conductor size", "")
+                n_cond = row.get("Conductors per cable", 1)
+                qty = row.get("Qty (cables)", 1)
+                
+                # Get available options for dropdowns
+                table_data = cable_tables.get(table_key, (None, {}))[1] or {}
+                available_constructions = list(table_data.keys())
+                if construction not in available_constructions and available_constructions:
+                    construction = available_constructions[0]
+                
+                available_sizes = list(table_data.get(construction, {}).keys()) if construction in table_data else []
+                if cond_size not in available_sizes and available_sizes:
+                    cond_size = available_sizes[0]
+                
+                # Get available conductor counts
+                size_data = table_data.get(construction, {}).get(cond_size, {})
+                available_counts = sorted(size_data.get("areas_by_count", {}).keys()) if size_data else []
+                if int(n_cond) not in available_counts and available_counts:
+                    n_cond = available_counts[0]
+                
+                # Calculate area per cable
+                area_per_cable = _get_area_for_cable(table_key, construction, cond_size, int(n_cond))
+                
+                # Create row container with label
+                row_container = st.container(border=True)
+                with row_container:
+                    col1, col2 = st.columns([0.05, 0.95], gap="small")
+                    
+                    # Row number label
+                    with col1:
+                        st.markdown(f"**{idx + 1}**")
+                    
+                    # Cable selection controls - vertical stack
+                    with col2:
+                        # Row 1: Cable Type
+                        st.selectbox(
+                            "Cable type",
+                            options=list(cable_tables.keys()),
+                            index=list(cable_tables.keys()).index(table_key) if table_key in cable_tables else 0,
+                            key=f"cf_cable_table_{idx}",
+                            format_func=lambda k: cable_tables[k][0]
+                        )
+                        table_key = st.session_state[f"cf_cable_table_{idx}"]
+                        table_data = cable_tables.get(table_key, (None, {}))[1] or {}
+                        available_constructions = list(table_data.keys())
+                        
+                        # Row 2: Construction (if multiple available)
+                        if len(available_constructions) > 1:
+                            construction = st.selectbox(
+                                "Construction",
+                                options=available_constructions,
+                                index=available_constructions.index(construction) if construction in available_constructions else 0,
+                                key=f"cf_cable_construction_{idx}"
+                            )
+                        else:
+                            construction = available_constructions[0] if available_constructions else "stranded"
+                            st.write(f"**Construction:** {construction}")
+                        
+                        # Row 3: Conductor Size
+                        available_sizes = list(table_data.get(construction, {}).keys()) if construction in table_data else []
+                        cond_size = st.selectbox(
+                            "Conductor size",
+                            options=available_sizes,
+                            index=available_sizes.index(cond_size) if cond_size in available_sizes else 0,
+                            key=f"cf_cable_size_{idx}"
+                        )
+                        
+                        # Row 4: Number of Conductors
+                        size_data = table_data.get(construction, {}).get(cond_size, {})
+                        available_counts = sorted(size_data.get("areas_by_count", {}).keys()) if size_data else []
+                        n_cond = st.selectbox(
+                            "Number of conductors in cable",
+                            options=available_counts,
+                            index=available_counts.index(int(n_cond)) if int(n_cond) in available_counts else 0,
+                            key=f"cf_cable_ncond_{idx}"
+                        )
+                        
+                        # Row 5: Quantity of Cables (with +/- buttons)
+                        qty_col1, qty_col2, qty_col3, qty_col4 = st.columns([2, 1, 1, 1], gap="small")
+                        with qty_col1:
+                            qty = st.number_input(
+                                "Qty (cables)",
+                                min_value=1,
+                                value=int(qty) if qty else 1,
+                                step=1,
+                                key=f"cf_cable_qty_{idx}"
+                            )
+                        
+                        # Plus button
+                        with qty_col3:
+                            if st.button("➕", key=f"cf_cable_plus_{idx}", help="Add new cable group"):
+                                first_table_key = list(cable_tables.keys())[0]
+                                first_table = cable_tables[first_table_key][1]
+                                first_construction = list(first_table.keys())[0] if first_table else "stranded"
+                                first_size = list(first_table.get(first_construction, {}).keys())[0] if first_table else ""
+                                new_row = {
+                                    "Table": first_table_key,
+                                    "Construction": first_construction,
+                                    "Conductor size": first_size,
+                                    "Conductors per cable": 1,
+                                    "Qty (cables)": 1
+                                }
+                                new_df = pd.concat([st.session_state["cf_cable_df"], pd.DataFrame([new_row])], ignore_index=True)
+                                st.session_state["cf_cable_df"] = new_df
+                                st.rerun()
+                        
+                        # Minus button
+                        with qty_col4:
+                            if st.button("➖", key=f"cf_cable_minus_{idx}", help="Remove this cable group"):
+                                st.session_state["cf_cable_df"] = st.session_state["cf_cable_df"].drop(idx).reset_index(drop=True)
+                                st.rerun()
+                    
+                    # Display area information
+                    area_per_cable = _get_area_for_cable(table_key, construction, cond_size, int(n_cond))
+                    if area_per_cable:
+                        area_display_col1, area_display_col2 = st.columns([1, 1])
+                        with area_display_col1:
+                            st.caption(f"Area per cable: {area_per_cable:.2f} mm²")
+                        with area_display_col2:
+                            total_area = area_per_cable * qty
+                            st.caption(f"Total area: {total_area:.2f} mm²")
+                
+                # Append to edited list
+                edited_list.append({
+                    "Table": table_key,
+                    "Construction": construction,
+                    "Conductor size": cond_size,
+                    "Conductors per cable": int(n_cond),
+                    "Qty (cables)": int(qty),
+                    "Area per cable (mm²)": area_per_cable
+                })
+            
+            # Convert edited list back to dataframe for downstream calculations
+            edited = pd.DataFrame(edited_list)
 
-        edited = st.data_editor(
-            df_in,
-            num_rows="dynamic",
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "Cable type": st.column_config.SelectboxColumn("Cable type", options=type_options, required=True),
-                "Conductor size": st.column_config.SelectboxColumn("Conductor size", options=all_sizes, required=True),
-                "Conductors per cable": st.column_config.NumberColumn("Conductors per cable", min_value=1, step=1, required=True),
-                "Qty (cables)": st.column_config.NumberColumn("Qty (cables)", min_value=1, step=1, required=True),
-                "Area per conductor (mm²)": st.column_config.NumberColumn("Area per conductor (mm²)", min_value=0.0, step=0.01, help="Auto-filled from Table 6 when possible; editable."),
-            },
-            key="cf_cable_editor",
-        )
-
-        st.session_state["cf_cable_df"] = edited
+        else:
+            # Manual mode: allow entering area per cable directly
+            for idx, row in df_in.iterrows():
+                cable_desc = row.get("Cable description", "(Manual)")
+                n_cond = row.get("Conductors per cable", 3)
+                qty = row.get("Qty (cables)", 1)
+                area_per_cable = row.get("Area per cable (mm²)", 150.0)
+                
+                # Create row container with label
+                row_container = st.container(border=True)
+                with row_container:
+                    col1, col2 = st.columns([0.05, 0.95], gap="small")
+                    
+                    # Row number label
+                    with col1:
+                        st.markdown(f"**{idx + 1}**")
+                    
+                    # Cable entry controls
+                    with col2:
+                        cable_desc = st.text_input(
+                            "Cable description",
+                            value=cable_desc,
+                            key=f"cf_cable_desc_{idx}"
+                        )
+                        
+                        n_cond = st.number_input(
+                            "Conductors per cable",
+                            min_value=1,
+                            value=int(n_cond) if n_cond else 3,
+                            step=1,
+                            key=f"cf_cable_ncond_{idx}"
+                        )
+                        
+                        qty_col1, qty_col2, qty_col3 = st.columns([2, 1, 1], gap="small")
+                        with qty_col1:
+                            qty = st.number_input(
+                                "Qty (cables)",
+                                min_value=1,
+                                value=int(qty) if qty else 1,
+                                step=1,
+                                key=f"cf_cable_qty_{idx}"
+                            )
+                        
+                        with qty_col2:
+                            if st.button("➕", key=f"cf_cable_plus_{idx}", help="Add new cable group"):
+                                new_row = {
+                                    "Cable description": "(Manual)",
+                                    "Conductors per cable": 3,
+                                    "Qty (cables)": 1,
+                                    "Area per cable (mm²)": 150.0
+                                }
+                                new_df = pd.concat([st.session_state["cf_cable_df"], pd.DataFrame([new_row])], ignore_index=True)
+                                st.session_state["cf_cable_df"] = new_df
+                                st.rerun()
+                        
+                        with qty_col3:
+                            if st.button("➖", key=f"cf_cable_minus_{idx}", help="Remove this cable group"):
+                                st.session_state["cf_cable_df"] = st.session_state["cf_cable_df"].drop(idx).reset_index(drop=True)
+                                st.rerun()
+                        
+                        area_per_cable = st.number_input(
+                            "Area per cable (mm²)",
+                            min_value=0.0,
+                            value=float(area_per_cable) if area_per_cable else 150.0,
+                            step=0.01,
+                            key=f"cf_cable_area_{idx}"
+                        )
+                    
+                    # Display total area
+                    total_area = area_per_cable * qty if area_per_cable and qty else None
+                    st.caption(f"Total area: {fmt(total_area, 'mm²')}")
+                
+                # Append to edited list
+                edited_list.append({
+                    "Cable description": cable_desc,
+                    "Conductors per cable": n_cond,
+                    "Qty (cables)": qty,
+                    "Area per cable (mm²)": area_per_cable
+                })
+            
+            # Convert edited list back to dataframe for downstream calculations
+            edited = pd.DataFrame(edited_list)
 
         # ----------------------------
         # Calculations
         # ----------------------------
         st.markdown("## 3) Results")
+
 
         # total # of cables (for Table 9 allowable selection)
         try:
@@ -1222,19 +1489,24 @@ elif page == "Conduit Size & Fill & Bend Radius":
 
         # total conductor area
         def _row_total_area(r):
-            ncond = _to_float(r.get("Conductors per cable"))
             qty = _to_float(r.get("Qty (cables)"))
-            area_per = _to_float(r.get("Area per conductor (mm²)"))
 
-            # Attempt a lookup if area_per missing
-            if (area_per is None) and t6_area:
+            # Preferred: use Area per cable (mm²) if present (auto-filled or manual)
+            area_per_cable = _to_float(r.get("Area per cable (mm²)"))
+
+            # If not present (or blank), attempt to compute from Table 6:
+            # area_per_conductor × conductors_per_cable
+            if area_per_cable is None and t6_area:
+                ncond = _to_float(r.get("Conductors per cable"))
                 t = _norm(r.get("Cable type", ""))
                 s = _norm(r.get("Conductor size", ""))
-                area_per = _to_float(t6_area.get(t, {}).get(s, None))
+                a_cond = _to_float(t6_area.get(t, {}).get(s, None))
+                if (ncond is not None) and (a_cond is not None):
+                    area_per_cable = float(ncond) * float(a_cond)
 
-            if ncond is None or qty is None or area_per is None:
+            if qty is None or area_per_cable is None:
                 return 0.0
-            return float(ncond) * float(qty) * float(area_per)
+            return float(qty) * float(area_per_cable)
 
         try:
             total_cable_area = float(edited.apply(_row_total_area, axis=1).sum())
@@ -1256,15 +1528,26 @@ elif page == "Conduit Size & Fill & Bend Radius":
 
         fill_pct = safe_div(total_cable_area, conduit_internal_area) if conduit_internal_area else None
 
-        m1, m2, m3 = st.columns([1, 1, 1], gap="large")
+        m1, m2, m3, m4, m5 = st.columns([1, 1, 1, 1, 1], gap="large")
         m1.metric("Total cables in raceway", fmt(n_cables_total, ""))
         m2.metric("Total cable area", fmt(total_cable_area, "mm²"))
-        m3.metric("Conduit internal area", fmt(conduit_internal_area, "mm²") if conduit_internal_area else "—")
+        # Format conduit internal area in full form without scientific notation
+        if conduit_internal_area:
+            m3.metric("Conduit internal area", f"{conduit_internal_area:,.2f} mm²")
+        else:
+            m3.metric("Conduit internal area", "—")
+
+        total_allowable_area = conduit_allowed_area if conduit_allowed_area is not None else None
+        remaining_allowable_area = (conduit_allowed_area - total_cable_area) if (conduit_allowed_area is not None) else None
+
+        m4.metric("Total allowable area", fmt(total_allowable_area, "mm²"))
+        m5.metric("Remaining allowable area", fmt(remaining_allowable_area, "mm²"))
 
         if fill_pct is None:
             st.warning("Provide a conduit internal area to compute fill.")
         else:
-            st.metric("Actual fill (%)", fmt(fill_pct * 100.0, "%"))
+            # Format fill percentage to 4 decimals
+            st.metric("Actual fill (%)", f"{fill_pct * 100.0:.4f}%")
 
         if conduit_allowed_area is not None and conduit_internal_area:
             allowed_pct_disp = (conduit_allowed_area / conduit_internal_area) * 100.0
@@ -1323,8 +1606,27 @@ elif page == "Conduit Size & Fill & Bend Radius":
             st.markdown("#### Cable group breakdown")
             try:
                 show_df = edited.copy()
-                show_df["Area per conductor (mm²) (used)"] = show_df.apply(lambda r: _to_float(r.get("Area per conductor (mm²)")) or _to_float(t6_area.get(_norm(r.get("Cable type","")), {}).get(_norm(r.get("Conductor size","")), None)) or None, axis=1)
+                show_df["Area per conductor (mm²) (used)"] = show_df.apply(
+                    lambda r: _to_float(t6_area.get(_norm(r.get("Cable type","")), {}).get(_norm(r.get("Conductor size","")), None)) if t6_area else None,
+                    axis=1,
+                )
+
+                # Compute/attach Area per cable used
+                if "Area per cable (mm²)" not in show_df.columns:
+                    show_df["Area per cable (mm²) (used)"] = show_df.apply(
+                        lambda r: (
+                            (_to_float(r.get("Conductors per cable")) or 0.0)
+                            * (_to_float(t6_area.get(_norm(r.get("Cable type","")), {}).get(_norm(r.get("Conductor size","")), None)) or 0.0)
+                        )
+                        if t6_area
+                        else None,
+                        axis=1,
+                    )
+                else:
+                    show_df["Area per cable (mm²) (used)"] = show_df["Area per cable (mm²)"].apply(_to_float)
+
                 show_df["Total group area (mm²)"] = show_df.apply(_row_total_area, axis=1)
+
                 st.dataframe(show_df, use_container_width=True, hide_index=True)
             except Exception:
                 st.write("(Unable to render breakdown table in this environment.)")
