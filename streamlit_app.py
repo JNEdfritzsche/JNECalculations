@@ -5,11 +5,19 @@ import streamlit as st
 
 # --- Keep your import, but prevent the whole app from crashing if packaging is wrong ---
 try:
-    from lib.theory import render_md
+    from lib.theory import render_md  # type: ignore
     _THEORY_IMPORT_ERROR = None
 except Exception as e:
-    render_md = None
-    _THEORY_IMPORT_ERROR = e
+    render_md = None  # type: ignore
+    _THEORY_IMPORT_ERROR = str(e)
+
+# Optional: OESC table library (for Table Library page)
+try:
+    from lib import oesc_tables  # type: ignore
+    _TABLES_IMPORT_ERROR = None
+except Exception as e:
+    oesc_tables = None  # type: ignore
+    _TABLES_IMPORT_ERROR = str(e)
 
 # ----------------------------
 # Page config
@@ -154,6 +162,7 @@ PAGES = [
     "Demand Load",
     "Voltage Drop",
     "Conductors",
+    "Table Library",
 ]
 
 with st.sidebar:
@@ -169,8 +178,13 @@ with st.sidebar:
 
 # ----------------------------
 # Page shell with Theory/Calculator tabs
+# (Tabs are disabled ONLY on Table Library)
 # ----------------------------
-theory_tab, calc_tab = st.tabs(["📚 Theory", "🧮 Calculator"])
+if page != "Table Library":
+    theory_tab, calc_tab = st.tabs(["📚 Theory", "🧮 Calculator"])
+else:
+    theory_tab = None
+    calc_tab = None
 
 
 # ============================
@@ -700,6 +714,97 @@ elif page == "Demand Load":
 # ============================
 # 10) Voltage Drop  (FULL BLOCK — Table D3 expander always shown; f-list filtered for DC; size order matches Table D3)
 # ============================
+
+# ============================
+# Table Library (browse/search embedded OESC tables)
+# ============================
+elif page == "Table Library":
+
+    # ---- NO TABS ON THIS PAGE ----
+    header("Table Library — OESC Tables")
+    show_code_note(code_mode)
+
+    st.markdown(
+        "Browse and search the embedded OESC tables included with this app. "
+        "Tables are stored in **lib/oesc_tables.py** and exposed through a small registry API."
+    )
+    st.markdown(
+        "- Use the search box to quickly filter by table number (e.g., `5A`) or keywords (e.g., `ampacity`, `conduit`).\n"
+        "- A dash/blank entry in the source tables is shown as `—` (stored internally as `None`)."
+    )
+
+    st.divider()
+
+    header("Table Lookup")
+
+    if _TABLES_IMPORT_ERROR:
+        st.error(
+            "Table library failed to import. Confirm your repo has `lib/oesc_tables.py` and `lib/__init__.py`.\n\n"
+            f"Import error: `{_TABLES_IMPORT_ERROR}`"
+        )
+    else:
+        q = st.text_input(
+            "Search tables",
+            value="",
+            placeholder="Examples: 1, 2, 5A, 9H, ampacity, conduit fill …",
+        )
+
+        table_ids = oesc_tables.search_tables(q)
+
+        if not table_ids:
+            st.warning("No tables match your search.")
+        else:
+            def _label(tid: str) -> str:
+                meta = oesc_tables.get_table_meta(tid)
+                title = meta.get("title") if meta else ""
+                if title and title.lower().startswith("table"):
+                    return title
+                return f"Table {tid} — {title}" if title else f"Table {tid}"
+
+            selected = st.selectbox(
+                "Select a table",
+                table_ids,
+                format_func=_label,
+            )
+
+            meta = oesc_tables.get_table_meta(selected) or {}
+            st.markdown(f"### {_label(selected)}")
+
+            if meta.get("units"):
+                st.caption(f"Units: **{meta['units']}**")
+
+            df = oesc_tables.get_table_dataframe(selected)
+
+            if df is None:
+                st.info(
+                    "This table is available in the library, but it is stored in a specialized structure "
+                    "(raw format). Showing the raw object below."
+                )
+                st.json(meta.get("raw", {}))
+            else:
+                try:
+                    st.dataframe(df, use_container_width=True, hide_index=True)
+                except TypeError:
+                    st.dataframe(df, use_container_width=True)
+
+                # Download CSV
+                try:
+                    import pandas as _pd
+                    if isinstance(df, _pd.DataFrame):
+                        csv_bytes = df.to_csv(index=False).encode("utf-8")
+                    else:
+                        csv_bytes = _pd.DataFrame(df).to_csv(index=False).encode("utf-8")
+
+                    st.download_button(
+                        "Download table as CSV",
+                        data=csv_bytes,
+                        file_name=f"oesc_table_{str(selected).lower()}.csv",
+                        mime="text/csv",
+                    )
+                except Exception:
+                    st.caption("CSV download unavailable in this environment.")
+
+
 elif page == "Voltage Drop":
     with theory_tab:
         header("Voltage Drop — Theory")
