@@ -2120,16 +2120,128 @@ elif page == "Voltage Drop":
         show_code_note(code_mode)
         render_md_safe("voltage_drop.md")
 
+        # -------------------------------------------------
+        # Display Table D3 reference tables
+        # -------------------------------------------------
+        with st.expander("📋 Show Table D3 reference values", expanded=False):
+            st.markdown("### Copper Conductors — Table D3 (Ω/km)")
+
+            display_cols = [
+                "Size",
+                "DC",
+                "Cable 100%",
+                "Cable 90%",
+                "Cable 80%",
+                "Raceway 100%",
+                "Raceway 90%",
+                "Raceway 80%",
+            ]
+
+            # Import from lib.oesc_tables
+            from lib.oesc_tables import get_table_meta
+            table_d3_meta = get_table_meta("D3")
+            
+            cu_rows_display = []
+            al_rows_display = []
+            
+            if table_d3_meta:
+                for row in table_d3_meta.get("rows", []):
+                    size = row.get("size_awg_kcmil")
+                    if size and size not in ["14"]:  # Skip non-copper sizes initially
+                        cu_row = {
+                            "Size": size,
+                            "DC": row.get("copper_dc"),
+                            "Cable 100%": row.get("copper_cable_100pf"),
+                            "Cable 90%": row.get("copper_cable_90pf"),
+                            "Cable 80%": row.get("copper_cable_80pf"),
+                            "Raceway 100%": row.get("copper_raceway_100pf"),
+                            "Raceway 90%": row.get("copper_raceway_90pf"),
+                            "Raceway 80%": row.get("copper_raceway_80pf"),
+                        }
+                        cu_rows_display.append(cu_row)
+                        
+                        al_row = {
+                            "Size": size,
+                            "DC": row.get("aluminum_dc"),
+                            "Cable 100%": row.get("aluminum_cable_100pf"),
+                            "Cable 90%": row.get("aluminum_cable_90pf"),
+                            "Cable 80%": row.get("aluminum_cable_80pf"),
+                            "Raceway 100%": row.get("aluminum_raceway_100pf"),
+                            "Raceway 90%": row.get("aluminum_raceway_90pf"),
+                            "Raceway 80%": row.get("aluminum_raceway_80pf"),
+                        }
+                        al_rows_display.append(al_row)
+                    elif size == "14":  # Don't add non-aluminum row
+                        cu_row = {
+                            "Size": size,
+                            "DC": row.get("copper_dc"),
+                            "Cable 100%": row.get("copper_cable_100pf"),
+                            "Cable 90%": row.get("copper_cable_90pf"),
+                            "Cable 80%": row.get("copper_cable_80pf"),
+                            "Raceway 100%": row.get("copper_raceway_100pf"),
+                            "Raceway 90%": row.get("copper_raceway_90pf"),
+                            "Raceway 80%": row.get("copper_raceway_80pf"),
+                        }
+                        cu_rows_display.append(cu_row)
+
+            try:
+                import pandas as pd
+                df_cu = pd.DataFrame(cu_rows_display, columns=display_cols)
+                st.dataframe(df_cu, use_container_width=True, hide_index=True)
+            except Exception:
+                st.dataframe(cu_rows_display, use_container_width=True, hide_index=True)
+
+            st.markdown("### Aluminum Conductors — Table D3 (Ω/km)")
+            
+            try:
+                df_al = pd.DataFrame(al_rows_display, columns=display_cols)
+                st.dataframe(df_al, use_container_width=True, hide_index=True)
+            except Exception:
+                st.dataframe(al_rows_display, use_container_width=True, hide_index=True)
+
+            st.caption(
+                "These tables are from OESC Appendix D – Table D3 "
+                "(75 °C conductors). Values are in Ω per circuit kilometre."
+            )
+
+        # -------------------------------------------------
+        # Display the System Factor (f) lookup table
+        # -------------------------------------------------
+        with st.expander("📐 Show system factor (f) reference table", expanded=False):
+            st.markdown("### System factor (f) — reference table (from Appendix D)")
+            
+            system_factor_data = [
+                {"System / Connection": "DC — 2-wire (positive-to-negative)", "f (used in formula)": 2.0, "Voltage reference": "Positive-to-negative"},
+                {"System / Connection": "DC — 2-wire (positive-to-ground)", "f (used in formula)": 2.0, "Voltage reference": "Positive-to-ground"},
+                {"System / Connection": "DC — 2-wire (negative-to-ground)", "f (used in formula)": 2.0, "Voltage reference": "Negative-to-ground"},
+                {"System / Connection": "DC — 3-wire, line-to-line with grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
+                {"System / Connection": "1-φ AC — 2-wire, line-to-grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-ground"},
+                {"System / Connection": "1-φ AC — 2-wire, line-to-line", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
+                {"System / Connection": "1-φ AC — 3-wire, line-to-line, with grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
+                {"System / Connection": "3-φ AC — 2-wire, line-to-grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-ground"},
+                {"System / Connection": "3-φ AC — 2-wire, line-to-line, no grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
+                {"System / Connection": "3-φ AC — 3-wire, line-to-line with grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
+                {"System / Connection": "3-φ AC — 3-wire, line-to-grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-ground"},
+                {"System / Connection": "3-φ AC — 3-wire, line-to-line, no grounded conductor", "f (used in formula)": f"{math.sqrt(3):.4g}", "Voltage reference": "Line-to-line"},
+                {"System / Connection": "3-φ AC — 4-wire, line-to-line, with grounded conductor", "f (used in formula)": f"{math.sqrt(3):.4g}", "Voltage reference": "Line-to-line"},
+            ]
+            
+            try:
+                import pandas as pd
+                df_f = pd.DataFrame(system_factor_data)
+                st.dataframe(df_f, use_container_width=True, hide_index=True)
+            except Exception:
+                for r in system_factor_data:
+                    st.write(f"- **{r['System / Connection']}** — f = {r['f (used in formula)']} — {r['Voltage reference']}")
+
+            st.caption(
+                "Notes: The 'Voltage reference' column shows whether the VD is line-to-line or line-to-ground for that circuit type. "
+                "f = √3 ≈ 1.732 for 3-phase line-to-line measurements."
+            )
+
     with calc_tab:
         header("Voltage Drop Calculator — Table D3 (OESC) + k-value helper")
         show_code_note(code_mode)
-
-        st.markdown(
-            "This calculator looks up an **exact k-value** from Table D3 (embedded) "
-            "or accepts a manual k-value. It uses the OESC table formula:\n\n"
-            r"$$V_D = \frac{k \cdot f \cdot I \cdot L}{1000}$$"
-            "\n\nWhere:\n- \(k\) is the table voltage-drop factor (Ω per circuit kilometre)\n- \(f\) is the system/connection factor\n- \(I\) is the load current (A)\n- \(L\) is the one-way length (m)\n"
-        )
 
         # --------------------------
         # Exact Table D3 embedded (from supplied images)

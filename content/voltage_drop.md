@@ -5,9 +5,9 @@ In Ontario, the limit is 3% for feeder or branch circuits and 5% from the custom
 
 To accommodate this, conductor sizing must be large enough for the given distance, since voltage loss is proportional to conductor impedance and length.
 
-For the following calculations, **Table D3 and Table F** are referenced.
+For the following calculations, **Table D3 and System Factor (f)** are referenced.
 
-> _Insert Table D3 & F here_
+<!-- Tables will be dynamically inserted via Streamlit in the app -->
 
 ---
 
