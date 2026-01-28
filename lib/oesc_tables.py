@@ -58,6 +58,9 @@ TITLE_OVERRIDES: Dict[str, str] = {
     "9F": "Table 9F — Internal diameter and maximum conductor cross-sectional areas allowable fill at 31% for various trade conduit and tubing used for two conductors or multi-conductor cables (not lead-sheathed)",
     "9G": "Table 9G — Internal diameter and maximum conductor cross-sectional areas allowable fill at 40% for various trade conduit and tubing used for three or more conductors or multi-conductor cables (not lead-sheathed)",
     "9H": "Table 9H — Internal diameter and maximum conductor cross-sectional areas allowable fill at 40% for various trade conduit and tubing used for three or more conductors or multi-conductor cables (not lead-sheathed)",
+    "37": "Table 37 — Motor supply conductor insulation minimum temperature rating, °C (based on an ambient temperature of 30 °C)",
+    "44": "Table 44 — Three-phase ac motors (AC motor full load current, A)",
+    "45": "Table 45 — Single-phase ac motors (Single-phase ac motors full load current, A)",
 }
 
 
@@ -2034,6 +2037,71 @@ TABLE_8 = {
     "rows": [
         {"Cable type": "Insulated conductors or multi-conductor cables (not lead-sheathed)", "1": 53, "2": 31, "3": 40, "4": 40, "Over 4": 40},
         {"Cable type": "Lead-sheathed single conductor cables or multi-conductor cables", "1": 55, "2": 30, "3": 40, "4": 38, "Over 4": 35},
+    ],
+}
+
+TABLE_37 = {
+    "title": "Table 37 — Motor supply conductor insulation minimum temperature rating, °C (based on an ambient temperature of 30 °C)",
+    "units": "°C",
+    "columns": ["Motor enclosure", "A", "B", "F", "H"],
+    "rows": [
+        {"Motor enclosure": "All except totally enclosed non-ventilated", "A": 75, "B": 75, "F": 90, "H": 110},
+        {"Motor enclosure": "Totally enclosed non-ventilated", "A": 75, "B": 90, "F": 110, "H": 110},
+    ],
+}
+
+TABLE_44 = {
+    "title": "Table 44 — Three-phase ac motors (AC motor full load current, A)",
+    "units": "A",
+    "columns": ["Motor rating (hp)", "Induction 115V", "Induction 200V", "Induction 208V", "Induction 230V", "Induction 460V", "Induction 575V", "Induction 2300V", "Synchronous 200V", "Synchronous 230V", "Synchronous 460V", "Synchronous 575V", "Synchronous 2300V"],
+    "rows": [
+        {"Motor rating (hp)": "1/2", "Induction 115V": 4.4, "Induction 200V": 2.5, "Induction 208V": 2.4, "Induction 230V": 2.2, "Induction 460V": 1.0, "Induction 575V": 0.9, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "3/4", "Induction 115V": 6.4, "Induction 200V": 3.7, "Induction 208V": 3.5, "Induction 230V": 3.2, "Induction 460V": 1.4, "Induction 575V": 1.3, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "1", "Induction 115V": 8.4, "Induction 200V": 4.8, "Induction 208V": 4.6, "Induction 230V": 4.2, "Induction 460V": 1.8, "Induction 575V": 1.7, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "1-1/2", "Induction 115V": 12.0, "Induction 200V": 6.9, "Induction 208V": 6.6, "Induction 230V": 6.0, "Induction 460V": 2.6, "Induction 575V": 2.4, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "2", "Induction 115V": 13.6, "Induction 200V": 7.8, "Induction 208V": 7.5, "Induction 230V": 6.8, "Induction 460V": 3.4, "Induction 575V": 2.7, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "3", "Induction 115V": 19.2, "Induction 200V": 11.0, "Induction 208V": 10.6, "Induction 230V": 9.6, "Induction 460V": 4.8, "Induction 575V": 3.9, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "5", "Induction 115V": 30.4, "Induction 200V": 17.5, "Induction 208V": 16.7, "Induction 230V": 15.2, "Induction 460V": 7.6, "Induction 575V": 6.1, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "7-1/2", "Induction 115V": 44.0, "Induction 200V": 25.3, "Induction 208V": 24.2, "Induction 230V": 22.0, "Induction 460V": 11.0, "Induction 575V": 9.0, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "10", "Induction 115V": 56.0, "Induction 200V": 32.2, "Induction 208V": 30.8, "Induction 230V": 28.0, "Induction 460V": 14.0, "Induction 575V": 11.0, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "15", "Induction 115V": 84.0, "Induction 200V": 48.3, "Induction 208V": 46.2, "Induction 230V": 42.0, "Induction 460V": 21.0, "Induction 575V": 17.0, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "20", "Induction 115V": 108.0, "Induction 200V": 62.1, "Induction 208V": 59.4, "Induction 230V": 54.0, "Induction 460V": 27.0, "Induction 575V": 22.0, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "25", "Induction 115V": 136.0, "Induction 200V": 78.2, "Induction 208V": 74.8, "Induction 230V": 68.0, "Induction 460V": 34.0, "Induction 575V": 27.0, "Induction 2300V": None, "Synchronous 200V": 62.0, "Synchronous 230V": 54.0, "Synchronous 460V": 27.0, "Synchronous 575V": 22.0, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "30", "Induction 115V": 160.0, "Induction 200V": 92.0, "Induction 208V": 88.0, "Induction 230V": 80.0, "Induction 460V": 40.0, "Induction 575V": 32.0, "Induction 2300V": None, "Synchronous 200V": 75.0, "Synchronous 230V": 65.0, "Synchronous 460V": 33.0, "Synchronous 575V": 26.0, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "40", "Induction 115V": 208.0, "Induction 200V": 120.0, "Induction 208V": 114.0, "Induction 230V": 104.0, "Induction 460V": 52.0, "Induction 575V": 41.0, "Induction 2300V": None, "Synchronous 200V": 99.0, "Synchronous 230V": 86.0, "Synchronous 460V": 43.0, "Synchronous 575V": 35.0, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "50", "Induction 115V": 260.0, "Induction 200V": 150.0, "Induction 208V": 143.0, "Induction 230V": 130.0, "Induction 460V": 65.0, "Induction 575V": 52.0, "Induction 2300V": None, "Synchronous 200V": 124.0, "Synchronous 230V": 108.0, "Synchronous 460V": 54.0, "Synchronous 575V": 44.0, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "60", "Induction 115V": None, "Induction 200V": 177.0, "Induction 208V": 169.0, "Induction 230V": 154.0, "Induction 460V": 77.0, "Induction 575V": 62.0, "Induction 2300V": 16.0, "Synchronous 200V": 147.0, "Synchronous 230V": 128.0, "Synchronous 460V": 64.0, "Synchronous 575V": 51.0, "Synchronous 2300V": 12.0},
+        {"Motor rating (hp)": "75", "Induction 115V": None, "Induction 200V": 221.0, "Induction 208V": 211.0, "Induction 230V": 192.0, "Induction 460V": 96.0, "Induction 575V": 77.0, "Induction 2300V": 20.0, "Synchronous 200V": 185.0, "Synchronous 230V": 161.0, "Synchronous 460V": 81.0, "Synchronous 575V": 65.0, "Synchronous 2300V": 15.0},
+        {"Motor rating (hp)": "100", "Induction 115V": None, "Induction 200V": 285.0, "Induction 208V": 273.0, "Induction 230V": 248.0, "Induction 460V": 124.0, "Induction 575V": 99.0, "Induction 2300V": 26.0, "Synchronous 200V": 243.0, "Synchronous 230V": 211.0, "Synchronous 460V": 106.0, "Synchronous 575V": 85.0, "Synchronous 2300V": 20.0},
+        {"Motor rating (hp)": "125", "Induction 115V": None, "Induction 200V": 359.0, "Induction 208V": 343.0, "Induction 230V": 312.0, "Induction 460V": 156.0, "Induction 575V": 125.0, "Induction 2300V": 31.0, "Synchronous 200V": 304.0, "Synchronous 230V": 264.0, "Synchronous 460V": 132.0, "Synchronous 575V": 106.0, "Synchronous 2300V": 25.0},
+        {"Motor rating (hp)": "150", "Induction 115V": None, "Induction 200V": 414.0, "Induction 208V": 396.0, "Induction 230V": 360.0, "Induction 460V": 180.0, "Induction 575V": 144.0, "Induction 2300V": 37.0, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": 158.0, "Synchronous 575V": 127.0, "Synchronous 2300V": 30.0},
+        {"Motor rating (hp)": "200", "Induction 115V": None, "Induction 200V": 552.0, "Induction 208V": 528.0, "Induction 230V": 480.0, "Induction 460V": 240.0, "Induction 575V": 192.0, "Induction 2300V": 49.0, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": 210.0, "Synchronous 575V": 168.0, "Synchronous 2300V": 40.0},
+        {"Motor rating (hp)": "250", "Induction 115V": None, "Induction 200V": None, "Induction 208V": None, "Induction 230V": 604.0, "Induction 460V": 302.0, "Induction 575V": 242.0, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "300", "Induction 115V": None, "Induction 200V": None, "Induction 208V": None, "Induction 230V": 722.0, "Induction 460V": 361.0, "Induction 575V": 289.0, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "350", "Induction 115V": None, "Induction 200V": None, "Induction 208V": None, "Induction 230V": 828.0, "Induction 460V": 414.0, "Induction 575V": 336.0, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "400", "Induction 115V": None, "Induction 200V": None, "Induction 208V": None, "Induction 230V": 954.0, "Induction 460V": 477.0, "Induction 575V": 382.0, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "450", "Induction 115V": None, "Induction 200V": None, "Induction 208V": None, "Induction 230V": 1030.0, "Induction 460V": 515.0, "Induction 575V": 412.0, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+        {"Motor rating (hp)": "500", "Induction 115V": None, "Induction 200V": None, "Induction 208V": None, "Induction 230V": 1180.0, "Induction 460V": 590.0, "Induction 575V": 472.0, "Induction 2300V": None, "Synchronous 200V": None, "Synchronous 230V": None, "Synchronous 460V": None, "Synchronous 575V": None, "Synchronous 2300V": None},
+    ],
+}
+
+TABLE_45 = {
+    "title": "Table 45 — Single-phase ac motors (Single-phase ac motors full load current, A)",
+    "units": "A",
+    "columns": ["hp rating", "115 V", "230 V"],
+    "rows": [
+        {"hp rating": "1/6", "115 V": 4.4, "230 V": 2.2},
+        {"hp rating": "1/4", "115 V": 5.8, "230 V": 2.9},
+        {"hp rating": "1/3", "115 V": 7.2, "230 V": 3.6},
+        {"hp rating": "1/2", "115 V": 9.8, "230 V": 4.9},
+        {"hp rating": "3/4", "115 V": 13.8, "230 V": 6.9},
+        {"hp rating": "1", "115 V": 16.0, "230 V": 8.0},
+        {"hp rating": "1-1/2", "115 V": 20.0, "230 V": 10.0},
+        {"hp rating": "2", "115 V": 24.0, "230 V": 12.0},
+        {"hp rating": "3", "115 V": 34.0, "230 V": 17.0},
+        {"hp rating": "5", "115 V": 56.0, "230 V": 28.0},
+        {"hp rating": "7-1/2", "115 V": 80.0, "230 V": 40.0},
+        {"hp rating": "10", "115 V": 100.0, "230 V": 50.0},
     ],
 }
 
