@@ -1,13 +1,63 @@
-Use resistive or full impedance models; the resistive approximations shown below are quick checks.
+# Voltage Drop
 
-Single-phase (2-wire) resistive estimate:
-$$ \Delta V \approx 2\,I\,R\,L $$
+## Overview
 
-Three-phase balanced resistive estimate:
-$$ \Delta V \approx \sqrt{3}\,I\,R\,L $$
+Voltage drop must be taken into consideration, especially for long runs.  
+In Ontario, the limit is 3% for feeder or branch circuits and 5% from the customer’s point of utilization, according to **OESC Rule 8-102**.
 
-Percent voltage drop:
-$$ \%\Delta V = 100\cdot\frac{\Delta V}{V_{nom}} $$
+To accommodate this, conductor sizing must be large enough for the given distance, since voltage loss is proportional to conductor impedance and length.
 
-### Notes
-For accurate results include conductor reactance, power factor, and tabulated conductor resistance/impedance per length.
+For the following calculations, **Table D3 and Table F** are referenced.
+
+> _Insert Table D3 & F here_
+
+---
+
+## Finding Voltage Drop
+
+Voltage drop is typically expressed as a percentage.
+
+$$
+\Delta V = \frac{V_D}{V_{nom}} * 100 [\%]
+$$
+
+The voltage drop value is calculated using the following equation:
+### Formula
+
+$$
+V_D = \frac{k * f * I * L}{1000} [V]
+$$
+
+##### Where
+
+- **k** = Table D3 voltage drop factor \[Ω/km\] 
+- **f** = system/connection factor  
+- **I** = load current \[A\]  
+- **L** = one‑way length \[m\]  
+
+This equation assumes you already selected a conductor size and are verifying that the resulting voltage drop meets code limits.
+
+---
+
+## Finding Conductor Size and/or Length
+
+If determining the required conductor size or maximum allowable length for a specified voltage drop, rearranged as needed:
+
+### Conductor sizing (solve for k)
+
+$$
+k \leq \frac{V_D * 1000}{I * L * f}
+$$
+
+### Maximum length (solve for L)
+
+$$
+L \leq \frac{V_D * 1000}{I * K * f}
+$$
+
+---
+
+## References
+
+- [Design Basis – Calculations: Motor Feeder](file://jnecon.jnepeng.com/data/Common/Electrical/Electrical%20Calculations/REV%20B/)
+- [Knowledge File – OESC: Section 4 Conductors](file:///H:/Electrical/OESC%20Introduction%20Manual/SECTION%204%20-%20CONDUCTORS%20-%20Nikola/)
