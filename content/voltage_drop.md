@@ -1,5 +1,3 @@
-# Voltage Drop
-
 ## Overview
 
 Voltage drop must be taken into consideration, especially for long runs.  
@@ -18,22 +16,22 @@ For the following calculations, **Table D3 and Table F** are referenced.
 Voltage drop is typically expressed as a percentage.
 
 $$
-\Delta V = \frac{V_D}{V_{nom}} * 100 [\%]
+\Delta V \% = \frac{V_D}{V_{nom}} \cdot 100
 $$
 
 The voltage drop value is calculated using the following equation:
 ### Formula
 
 $$
-V_D = \frac{k * f * I * L}{1000} [V]
+V_D = \frac{k \cdot f \cdot I \cdot L}{1000} 
 $$
 
 ##### Where
 
-- **k** = Table D3 voltage drop factor \[Ω/km\] 
+- **k** = Table D3 voltage drop factor, Ω/km 
 - **f** = system/connection factor  
-- **I** = load current \[A\]  
-- **L** = one‑way length \[m\]  
+- **I** = load current, A 
+- **L** = one‑way length, m
 
 This equation assumes you already selected a conductor size and are verifying that the resulting voltage drop meets code limits.
 
@@ -46,13 +44,13 @@ If determining the required conductor size or maximum allowable length for a spe
 ### Conductor sizing (solve for k)
 
 $$
-k \leq \frac{V_D * 1000}{I * L * f}
+k \leq \frac{V_D \cdot 1000}{I \cdot L \cdot f}
 $$
 
 ### Maximum length (solve for L)
 
 $$
-L \leq \frac{V_D * 1000}{I * K * f}
+L \leq \frac{V_D \cdot 1000}{I \cdot K \cdot f}
 $$
 
 ---
