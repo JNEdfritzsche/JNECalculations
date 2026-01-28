@@ -62,6 +62,7 @@ TITLE_OVERRIDES: Dict[str, str] = {
     "44": "Table 44 — Three-phase ac motors (AC motor full load current, A)",
     "45": "Table 45 — Single-phase ac motors (Single-phase ac motors full load current, A)",
     "D3": "Table D3 — K values for calculating voltage drop in an installation of 2, 3, or 4 insulated conductors in a cable or raceway based on a conductor operating temperature of 75 °C",
+    "D-System-Factor": "Table D — System factor (f) for voltage drop calculations in various AC and DC electrical systems and connection types",
 }
 
 
@@ -2103,6 +2104,32 @@ TABLE_45 = {
         {"hp rating": "5", "115 V": 56.0, "230 V": 28.0},
         {"hp rating": "7-1/2", "115 V": 80.0, "230 V": 40.0},
         {"hp rating": "10", "115 V": 100.0, "230 V": 50.0},
+    ],
+}
+
+# --------------------------------------------------------------------------------------
+# Table D — System Factor (f) for voltage drop calculations
+# --------------------------------------------------------------------------------------
+# Based on various AC and DC electrical systems and connection types
+# Used in formula: VD(%) = (k × f × I × L) / 1000
+TABLE_D_SYSTEM_FACTOR = {
+    "title": "Table D — System factor (f) for voltage drop calculations in various AC and DC electrical systems and connection types",
+    "units": "dimensionless",
+    "columns": ["system_connection", "f_value", "voltage_reference"],
+    "rows": [
+        {"system_connection": "DC — 2-wire (positive-to-negative)", "f_value": 2.0, "voltage_reference": "Positive-to-negative"},
+        {"system_connection": "DC — 2-wire (positive-to-ground)", "f_value": 2.0, "voltage_reference": "Positive-to-ground"},
+        {"system_connection": "DC — 2-wire (negative-to-ground)", "f_value": 2.0, "voltage_reference": "Negative-to-ground"},
+        {"system_connection": "DC — 3-wire, line-to-line with grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-line"},
+        {"system_connection": "1-φ AC — 2-wire, line-to-grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-ground"},
+        {"system_connection": "1-φ AC — 2-wire, line-to-line", "f_value": 2.0, "voltage_reference": "Line-to-line"},
+        {"system_connection": "1-φ AC — 3-wire, line-to-line, with grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-line"},
+        {"system_connection": "3-φ AC — 2-wire, line-to-grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-ground"},
+        {"system_connection": "3-φ AC — 2-wire, line-to-line, no grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-line"},
+        {"system_connection": "3-φ AC — 3-wire, line-to-line with grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-line"},
+        {"system_connection": "3-φ AC — 3-wire, line-to-grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-ground"},
+        {"system_connection": "3-φ AC — 3-wire, line-to-line, no grounded conductor", "f_value": 1.732, "voltage_reference": "Line-to-line"},
+        {"system_connection": "3-φ AC — 4-wire, line-to-line, with grounded conductor", "f_value": 1.732, "voltage_reference": "Line-to-line"},
     ],
 }
 
