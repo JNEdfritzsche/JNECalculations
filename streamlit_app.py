@@ -1753,6 +1753,227 @@ elif page == "Conduit Size & Fill & Bend Radius":
             "Different table layouts may exist depending on how the table library is encoded."
         )
 
+        # =====================================================================
+        # Export Conduit Fill Report
+        # =====================================================================
+        st.divider()
+        st.markdown("### 📄 Export calculation report")
+
+        def build_conduit_word_report():
+            import io
+            from docx import Document
+            from docx.shared import Pt
+            from datetime import datetime
+
+            doc = Document()
+            doc.add_heading("Conduit Fill Calculation Report", level=1)
+
+            meta = doc.add_paragraph()
+            meta.add_run(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n").bold = True
+            meta.add_run(f"Conduit type: {conduit_type}\n")
+            meta.add_run(f"Trade size: {conduit_trade}\n")
+
+            doc.add_heading("Equations", level=2)
+            p = doc.add_paragraph()
+            p.add_run("Conduit fill calculation: ").bold = True
+            p.add_run(r"Fill = Σ(A_cond × N_cond/cable × N_cables) / A_conduit")
+
+            doc.add_heading("Assumptions", level=2)
+            assumptions_cf = [
+                "Conduit internal area retrieved from OESC Table 9 or manually entered.",
+                "Cable areas calculated from Table 6 data based on conductor size and count.",
+                "Custom cable groups with custom conductor counts and areas are entered manually.",
+                "Fill percentage is calculated as total cable area divided by conduit internal area.",
+                "Allowable fill follows the OESC standard for the selected number of cables.",
+            ]
+            for a in assumptions_cf:
+                doc.add_paragraph(a, style="List Bullet")
+
+            doc.add_heading("Input Summary", level=2)
+            summary_data = [
+                ("Conduit Type", conduit_type),
+                ("Trade Size", conduit_trade),
+                ("Conduit Internal Area (mm²)", fmt(conduit_internal_area, "mm²")),
+                ("Number of Cables", str(n_cables_total)),
+                ("Total Cable Area (mm²)", fmt(total_cable_area, "mm²")),
+                ("Total Allowable Area (mm²)", fmt(conduit_allowed_area, "mm²")),
+                ("Actual Fill (%)", f"{fill_pct * 100.0:.4f}%" if fill_pct else "—"),
+            ]
+            
+            t = doc.add_table(rows=1, cols=2)
+            hdr = t.rows[0].cells
+            hdr[0].text = "Parameter"
+            hdr[1].text = "Value"
+            for param, val in summary_data:
+                row = t.add_row().cells
+                row[0].text = str(param)
+                row[1].text = str(val)
+
+            doc.add_heading("Cable Group Breakdown", level=2)
+            try:
+                show_df = edited.copy()
+                cols_to_show = ["Name", "Table", "Construction", "Conductor size", "Conductors per cable", "Qty (cables)", "Area per cable (mm²)"]
+                available_cols = [c for c in cols_to_show if c in show_df.columns]
+                
+                t_cables = doc.add_table(rows=1, cols=len(available_cols))
+                for j, col in enumerate(available_cols):
+                    t_cables.rows[0].cells[j].text = col
+                
+                for _, row_data in show_df.iterrows():
+                    rr = t_cables.add_row().cells
+                    for j, col in enumerate(available_cols):
+                        val = row_data.get(col, None)
+                        if isinstance(val, float):
+                            rr[j].text = f"{val:.2f}"
+                        else:
+                            rr[j].text = str(val) if val is not None else "—"
+            except Exception as e:
+                doc.add_paragraph(f"(Unable to render cable breakdown: {str(e)})")
+
+            if conduit_allowed_area is not None and conduit_internal_area:
+                doc.add_heading("Compliance Status", level=2)
+                ok = total_cable_area <= conduit_allowed_area + 1e-9
+                status_text = "✓ PASS: Fill is within the allowable limit" if ok else "✗ FAIL: Fill exceeds the allowable limit"
+                doc.add_paragraph(status_text)
+
+            style = doc.styles["Normal"]
+            style.font.name = "Calibri"
+            style.font.size = Pt(11)
+
+            bio = io.BytesIO()
+            doc.save(bio)
+            return bio.getvalue()
+
+        def build_conduit_excel_report():
+            import io
+            from openpyxl import Workbook
+            from openpyxl.utils import get_column_letter
+            from openpyxl.styles import Font, Alignment
+            from datetime import datetime
+
+            def _safe_float(x):
+                try:
+                    return None if x is None else float(x)
+                except Exception:
+                    return None
+
+            wb = Workbook()
+
+            def autosize_ws(ws):
+                for col in ws.columns:
+                    max_len = 0
+                    col_letter = get_column_letter(col[0].column)
+                    for cell in col:
+                        try:
+                            v = "" if cell.value is None else str(cell.value)
+                            max_len = max(max_len, len(v))
+                        except Exception:
+                            pass
+                    ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
+
+            # --- Summary
+            ws = wb.active
+            ws.title = "Summary"
+            ws["A1"] = "Conduit Fill Calculation Report"
+            ws["A1"].font = Font(bold=True, size=14)
+            ws["A3"] = "Generated"
+            ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            row = 5
+            summary_data = [
+                ("Conduit Type", conduit_type),
+                ("Trade Size", conduit_trade),
+                ("Conduit Internal Area (mm²)", _safe_float(conduit_internal_area)),
+                ("Number of Cables", n_cables_total),
+                ("Total Cable Area (mm²)", _safe_float(total_cable_area)),
+                ("Total Allowable Area (mm²)", _safe_float(conduit_allowed_area)),
+                ("Actual Fill (%)", _safe_float(fill_pct * 100.0) if fill_pct else None),
+            ]
+            
+            for param, val in summary_data:
+                ws[f"A{row}"] = param
+                ws[f"B{row}"] = val
+                row += 1
+
+            row += 1
+            ok = total_cable_area <= conduit_allowed_area + 1e-9 if conduit_allowed_area else False
+            ws[f"A{row}"] = "Compliance Status"
+            ws[f"B{row}"] = "PASS: Within allowable fill" if ok else "FAIL: Exceeds allowable fill"
+            autosize_ws(ws)
+
+            # --- Cable Groups
+            ws = wb.create_sheet("Cable Groups")
+            try:
+                show_df = edited.copy()
+                cols_to_show = ["Name", "Table", "Construction", "Conductor size", "Conductors per cable", "Qty (cables)", "Area per cable (mm²)"]
+                available_cols = [c for c in cols_to_show if c in show_df.columns]
+                
+                ws.append(available_cols)
+                for cell in ws[1]:
+                    cell.font = Font(bold=True)
+                
+                for _, row_data in show_df.iterrows():
+                    row_vals = []
+                    for col in available_cols:
+                        val = row_data.get(col, None)
+                        if isinstance(val, float):
+                            row_vals.append(round(val, 2))
+                        else:
+                            row_vals.append(val)
+                    ws.append(row_vals)
+            except Exception:
+                ws["A1"] = "Unable to load cable groups"
+
+            autosize_ws(ws)
+
+            bio = io.BytesIO()
+            wb.save(bio)
+            return bio.getvalue()
+
+        # Export buttons
+        can_export_cf = (
+            conduit_internal_area is not None
+            and total_cable_area is not None
+            and n_cables_total > 0
+        )
+
+        exp_c1, exp_c2 = st.columns([1, 1], gap="large")
+        with exp_c1:
+            if st.button("Prepare Word report (.docx)", key="cf_build_docx"):
+                try:
+                    st.session_state["cf_docx_bytes"] = build_conduit_word_report()
+                    st.success("Word report prepared. Use the download button below.")
+                except Exception as e:
+                    st.error(f"Failed to build Word report: {e}")
+
+            docx_bytes_cf = st.session_state.get("cf_docx_bytes", None)
+            st.download_button(
+                "⬇️ Download Word report (.docx)",
+                data=docx_bytes_cf if docx_bytes_cf else b"",
+                file_name="Conduit_Fill_Report.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                disabled=(not can_export_cf) or (docx_bytes_cf is None),
+                key="cf_download_docx",
+            )
+
+        with exp_c2:
+            if st.button("Prepare Excel report (.xlsx)", key="cf_build_xlsx"):
+                try:
+                    st.session_state["cf_xlsx_bytes"] = build_conduit_excel_report()
+                    st.success("Excel report prepared. Use the download button below.")
+                except Exception as e:
+                    st.error(f"Failed to build Excel report: {e}")
+
+            xlsx_bytes_cf = st.session_state.get("cf_xlsx_bytes", None)
+            st.download_button(
+                "⬇️ Download Excel report (.xlsx)",
+                data=xlsx_bytes_cf if xlsx_bytes_cf else b"",
+                file_name="Conduit_Fill_Report.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                disabled=(not can_export_cf) or (xlsx_bytes_cf is None),
+                key="cf_download_xlsx",
+            )
+
 
 # ============================
 # 8) Cable Tray Ampacity
