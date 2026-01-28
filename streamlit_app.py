@@ -1227,7 +1227,10 @@ elif page == "Conduit Size & Fill & Bend Radius":
                     "Construction": first_construction,
                     "Conductor size": first_size,
                     "Conductors per cable": 1,
-                    "Qty (cables)": 1
+                    "Qty (cables)": 1,
+                    "Use custom conductors": False,
+                    "Custom conductors": None,
+                    "Custom area per cable": None
                 },
             ]
 
@@ -1247,6 +1250,14 @@ elif page == "Conduit Size & Fill & Bend Radius":
         # Ensure each row has a Name column
         if "Name" not in st.session_state["cf_cable_df"].columns:
             st.session_state["cf_cable_df"]["Name"] = ""
+        
+        # Ensure custom conductors columns exist
+        if "Use custom conductors" not in st.session_state["cf_cable_df"].columns:
+            st.session_state["cf_cable_df"]["Use custom conductors"] = False
+        if "Custom conductors" not in st.session_state["cf_cable_df"].columns:
+            st.session_state["cf_cable_df"]["Custom conductors"] = None
+        if "Custom area per cable" not in st.session_state["cf_cable_df"].columns:
+            st.session_state["cf_cable_df"]["Custom area per cable"] = None
         
         df_in = st.session_state["cf_cable_df"].copy()
 
@@ -1274,6 +1285,9 @@ elif page == "Conduit Size & Fill & Bend Radius":
             for display_num, (idx, row) in enumerate(df_in.iterrows(), 1):
                 row_id = row.get("_row_id", idx)  # Get the unique row ID
                 cable_name = row.get("Name", "")
+                use_custom = row.get("Use custom conductors", False)
+                custom_cond_count = row.get("Custom conductors", None)
+                custom_area = row.get("Custom area per cable", None)
                 table_key = row.get("Table", list(cable_tables.keys())[0])
                 construction = row.get("Construction", "stranded")
                 cond_size = row.get("Conductor size", "")
@@ -1357,14 +1371,42 @@ elif page == "Conduit Size & Fill & Bend Radius":
                             )
                             
                             # Row 4: Number of Conductors
-                            size_data = table_data.get(construction, {}).get(cond_size, {})
-                            available_counts = sorted(size_data.get("areas_by_count", {}).keys()) if size_data else []
-                            n_cond = st.selectbox(
-                                "Number of conductors in cable",
-                                options=available_counts,
-                                index=available_counts.index(int(n_cond)) if int(n_cond) in available_counts else 0,
-                                key=f"cf_cable_ncond_{row_id}"
+                            use_custom = st.checkbox(
+                                "Custom conductors",
+                                value=use_custom,
+                                key=f"cf_cable_use_custom_{row_id}"
                             )
+                            
+                            if use_custom:
+                                # Custom mode: input custom conductor count and area
+                                custom_cond_count = st.number_input(
+                                    "Number of conductors",
+                                    min_value=1,
+                                    value=int(custom_cond_count) if custom_cond_count else 1,
+                                    step=1,
+                                    key=f"cf_cable_custom_cond_{row_id}"
+                                )
+                                custom_area = st.number_input(
+                                    "Area per cable (mm²)",
+                                    min_value=0.0,
+                                    value=float(custom_area) if custom_area else 0.0,
+                                    step=0.01,
+                                    format="%.2f",
+                                    key=f"cf_cable_custom_area_{row_id}"
+                                )
+                                n_cond = custom_cond_count
+                                area_per_cable = custom_area
+                            else:
+                                # Table mode: select from available options
+                                size_data = table_data.get(construction, {}).get(cond_size, {})
+                                available_counts = sorted(size_data.get("areas_by_count", {}).keys()) if size_data else []
+                                n_cond = st.selectbox(
+                                    "Number of conductors in cable",
+                                    options=available_counts,
+                                    index=available_counts.index(int(n_cond)) if int(n_cond) in available_counts else 0,
+                                    key=f"cf_cable_ncond_{row_id}"
+                                )
+                                area_per_cable = _get_area_for_cable(table_key, construction, cond_size, int(n_cond))
                             
                             # Row 5: Quantity of Cables
                             qty = st.number_input(
@@ -1376,8 +1418,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
                             )
                         
                         # Display area information
-                        area_per_cable = _get_area_for_cable(table_key, construction, cond_size, int(n_cond))
-                        if area_per_cable:
+                        if area_per_cable is not None:
                             area_display_col1, area_display_col2 = st.columns([1, 1])
                             with area_display_col1:
                                 st.caption(f"Area per cable: {area_per_cable:.2f} mm²")
@@ -1400,7 +1441,10 @@ elif page == "Conduit Size & Fill & Bend Radius":
                     "Conductor size": cond_size,
                     "Conductors per cable": int(n_cond),
                     "Qty (cables)": int(qty),
-                    "Area per cable (mm²)": area_per_cable
+                    "Area per cable (mm²)": area_per_cable,
+                    "Use custom conductors": use_custom,
+                    "Custom conductors": custom_cond_count,
+                    "Custom area per cable": custom_area
                 })
             
             # Plus button after the last cable group
@@ -1422,6 +1466,9 @@ elif page == "Conduit Size & Fill & Bend Radius":
                         "Conductor size": first_size,
                         "Conductors per cable": 1,
                         "Qty (cables)": 1,
+                        "Use custom conductors": False,
+                        "Custom conductors": None,
+                        "Custom area per cable": None,
                         "_row_id": new_row_id
                     }
                     new_df = pd.concat([st.session_state["cf_cable_df"], pd.DataFrame([new_row])], ignore_index=True)
@@ -1452,6 +1499,15 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 # Update Qty
                 if f"cf_cable_qty_{row_id}" in st.session_state:
                     st.session_state["cf_cable_df"].loc[st.session_state["cf_cable_df"]["_row_id"] == row_id, "Qty (cables)"] = st.session_state[f"cf_cable_qty_{row_id}"]
+                # Update Use custom conductors
+                if f"cf_cable_use_custom_{row_id}" in st.session_state:
+                    st.session_state["cf_cable_df"].loc[st.session_state["cf_cable_df"]["_row_id"] == row_id, "Use custom conductors"] = st.session_state[f"cf_cable_use_custom_{row_id}"]
+                # Update Custom conductors
+                if f"cf_cable_custom_cond_{row_id}" in st.session_state:
+                    st.session_state["cf_cable_df"].loc[st.session_state["cf_cable_df"]["_row_id"] == row_id, "Custom conductors"] = st.session_state[f"cf_cable_custom_cond_{row_id}"]
+                # Update Custom area per cable
+                if f"cf_cable_custom_area_{row_id}" in st.session_state:
+                    st.session_state["cf_cable_df"].loc[st.session_state["cf_cable_df"]["_row_id"] == row_id, "Custom area per cable"] = st.session_state[f"cf_cable_custom_area_{row_id}"]
 
         else:
             # Manual mode: allow entering area per cable directly
