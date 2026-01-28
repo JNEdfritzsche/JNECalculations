@@ -1232,7 +1232,17 @@ elif page == "Conduit Size & Fill & Bend Radius":
 
         if "cf_cable_df" not in st.session_state:
             st.session_state["cf_cable_df"] = pd.DataFrame(default_rows)
-
+        
+        # Ensure each row has a unique ID for reliable deletion
+        df_in = st.session_state["cf_cable_df"].copy()
+        if "_row_id" not in df_in.columns:
+            df_in["_row_id"] = range(len(df_in))
+            st.session_state["cf_cable_df"]["_row_id"] = df_in["_row_id"]
+        
+        # Make sure all rows have IDs (in case of dataframe operations)
+        if "_row_id" not in st.session_state["cf_cable_df"].columns:
+            st.session_state["cf_cable_df"]["_row_id"] = range(len(st.session_state["cf_cable_df"]))
+        
         df_in = st.session_state["cf_cable_df"].copy()
 
         # Helper function to get area per conductor from table
@@ -1254,7 +1264,10 @@ elif page == "Conduit Size & Fill & Bend Radius":
 
         if cable_tables:
             # Table 6 mode: use hierarchical dropdown selections
-            for idx, row in df_in.iterrows():
+            num_rows = len(df_in)
+            
+            for display_num, (idx, row) in enumerate(df_in.iterrows(), 1):
+                row_id = row.get("_row_id", idx)  # Get the unique row ID
                 table_key = row.get("Table", list(cable_tables.keys())[0])
                 construction = row.get("Construction", "stranded")
                 cond_size = row.get("Conductor size", "")
@@ -1280,104 +1293,89 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 # Calculate area per cable
                 area_per_cable = _get_area_for_cable(table_key, construction, cond_size, int(n_cond))
                 
-                # Create row container with label
-                row_container = st.container(border=True)
-                with row_container:
-                    col1, col2 = st.columns([0.05, 0.95], gap="small")
-                    
-                    # Row number label
-                    with col1:
-                        st.markdown(f"**{idx + 1}**")
-                    
-                    # Cable selection controls - vertical stack
-                    with col2:
-                        # Row 1: Cable Type
-                        st.selectbox(
-                            "Cable type",
-                            options=list(cable_tables.keys()),
-                            index=list(cable_tables.keys()).index(table_key) if table_key in cable_tables else 0,
-                            key=f"cf_cable_table_{idx}",
-                            format_func=lambda k: cable_tables[k][0]
-                        )
-                        table_key = st.session_state[f"cf_cable_table_{idx}"]
-                        table_data = cable_tables.get(table_key, (None, {}))[1] or {}
-                        available_constructions = list(table_data.keys())
+                # Create columns for row: [container with content] [minus button]
+                box_col, minus_col = st.columns([0.95, 0.05], gap="small")
+                
+                # Cable entry in bordered box
+                with box_col:
+                    row_container = st.container(border=True)
+                    with row_container:
+                        col1, col2 = st.columns([0.05, 0.95], gap="small")
                         
-                        # Row 2: Construction (if multiple available)
-                        if len(available_constructions) > 1:
-                            construction = st.selectbox(
-                                "Construction",
-                                options=available_constructions,
-                                index=available_constructions.index(construction) if construction in available_constructions else 0,
-                                key=f"cf_cable_construction_{idx}"
+                        # Row number label
+                        with col1:
+                            st.markdown(f"**{display_num}**")
+                        
+                        # Cable selection controls - vertical stack
+                        with col2:
+                            # Row 1: Cable Type
+                            st.selectbox(
+                                "Cable type",
+                                options=list(cable_tables.keys()),
+                                index=list(cable_tables.keys()).index(table_key) if table_key in cable_tables else 0,
+                                key=f"cf_cable_table_{row_id}",
+                                format_func=lambda k: cable_tables[k][0]
                             )
-                        else:
-                            construction = available_constructions[0] if available_constructions else "stranded"
-                            st.write(f"**Construction:** {construction}")
-                        
-                        # Row 3: Conductor Size
-                        available_sizes = list(table_data.get(construction, {}).keys()) if construction in table_data else []
-                        cond_size = st.selectbox(
-                            "Conductor size",
-                            options=available_sizes,
-                            index=available_sizes.index(cond_size) if cond_size in available_sizes else 0,
-                            key=f"cf_cable_size_{idx}"
-                        )
-                        
-                        # Row 4: Number of Conductors
-                        size_data = table_data.get(construction, {}).get(cond_size, {})
-                        available_counts = sorted(size_data.get("areas_by_count", {}).keys()) if size_data else []
-                        n_cond = st.selectbox(
-                            "Number of conductors in cable",
-                            options=available_counts,
-                            index=available_counts.index(int(n_cond)) if int(n_cond) in available_counts else 0,
-                            key=f"cf_cable_ncond_{idx}"
-                        )
-                        
-                        # Row 5: Quantity of Cables (with +/- buttons)
-                        qty_col1, qty_col2, qty_col3, qty_col4 = st.columns([2, 1, 1, 1], gap="small")
-                        with qty_col1:
+                            table_key = st.session_state[f"cf_cable_table_{row_id}"]
+                            table_data = cable_tables.get(table_key, (None, {}))[1] or {}
+                            available_constructions = list(table_data.keys())
+                            
+                            # Row 2: Construction (if multiple available)
+                            if len(available_constructions) > 1:
+                                construction = st.selectbox(
+                                    "Construction",
+                                    options=available_constructions,
+                                    index=available_constructions.index(construction) if construction in available_constructions else 0,
+                                    key=f"cf_cable_construction_{row_id}"
+                                )
+                            else:
+                                construction = available_constructions[0] if available_constructions else "stranded"
+                                st.write(f"**Construction:** {construction}")
+                            
+                            # Row 3: Conductor Size
+                            available_sizes = list(table_data.get(construction, {}).keys()) if construction in table_data else []
+                            cond_size = st.selectbox(
+                                "Conductor size",
+                                options=available_sizes,
+                                index=available_sizes.index(cond_size) if cond_size in available_sizes else 0,
+                                key=f"cf_cable_size_{row_id}"
+                            )
+                            
+                            # Row 4: Number of Conductors
+                            size_data = table_data.get(construction, {}).get(cond_size, {})
+                            available_counts = sorted(size_data.get("areas_by_count", {}).keys()) if size_data else []
+                            n_cond = st.selectbox(
+                                "Number of conductors in cable",
+                                options=available_counts,
+                                index=available_counts.index(int(n_cond)) if int(n_cond) in available_counts else 0,
+                                key=f"cf_cable_ncond_{row_id}"
+                            )
+                            
+                            # Row 5: Quantity of Cables
                             qty = st.number_input(
                                 "Qty (cables)",
                                 min_value=1,
                                 value=int(qty) if qty else 1,
                                 step=1,
-                                key=f"cf_cable_qty_{idx}"
+                                key=f"cf_cable_qty_{row_id}"
                             )
                         
-                        # Plus button
-                        with qty_col3:
-                            if st.button("➕", key=f"cf_cable_plus_{idx}", help="Add new cable group"):
-                                first_table_key = list(cable_tables.keys())[0]
-                                first_table = cable_tables[first_table_key][1]
-                                first_construction = list(first_table.keys())[0] if first_table else "stranded"
-                                first_size = list(first_table.get(first_construction, {}).keys())[0] if first_table else ""
-                                new_row = {
-                                    "Table": first_table_key,
-                                    "Construction": first_construction,
-                                    "Conductor size": first_size,
-                                    "Conductors per cable": 1,
-                                    "Qty (cables)": 1
-                                }
-                                new_df = pd.concat([st.session_state["cf_cable_df"], pd.DataFrame([new_row])], ignore_index=True)
-                                st.session_state["cf_cable_df"] = new_df
-                                st.rerun()
-                        
-                        # Minus button
-                        with qty_col4:
-                            if st.button("➖", key=f"cf_cable_minus_{idx}", help="Remove this cable group"):
-                                st.session_state["cf_cable_df"] = st.session_state["cf_cable_df"].drop(idx).reset_index(drop=True)
-                                st.rerun()
-                    
-                    # Display area information
-                    area_per_cable = _get_area_for_cable(table_key, construction, cond_size, int(n_cond))
-                    if area_per_cable:
-                        area_display_col1, area_display_col2 = st.columns([1, 1])
-                        with area_display_col1:
-                            st.caption(f"Area per cable: {area_per_cable:.2f} mm²")
-                        with area_display_col2:
-                            total_area = area_per_cable * qty
-                            st.caption(f"Total area: {total_area:.2f} mm²")
+                        # Display area information
+                        area_per_cable = _get_area_for_cable(table_key, construction, cond_size, int(n_cond))
+                        if area_per_cable:
+                            area_display_col1, area_display_col2 = st.columns([1, 1])
+                            with area_display_col1:
+                                st.caption(f"Area per cable: {area_per_cable:.2f} mm²")
+                            with area_display_col2:
+                                total_area = area_per_cable * qty
+                                st.caption(f"Total area: {total_area:.2f} mm²")
+                
+                # Minus button outside the box (on every row)
+                with minus_col:
+                    st.write("")  # Spacer
+                    if st.button("➖", key=f"cf_cable_minus_{row_id}", help="Remove this cable group", use_container_width=True):
+                        st.session_state["cf_cable_df"] = st.session_state["cf_cable_df"][st.session_state["cf_cable_df"]["_row_id"] != row_id].reset_index(drop=True)
+                        st.rerun()
                 
                 # Append to edited list
                 edited_list.append({
@@ -1388,6 +1386,30 @@ elif page == "Conduit Size & Fill & Bend Radius":
                     "Qty (cables)": int(qty),
                     "Area per cable (mm²)": area_per_cable
                 })
+            
+            # Plus button after the last cable group
+            plus_col1, plus_col2 = st.columns([0.95, 0.05], gap="small")
+            with plus_col2:
+                st.write("")  # Spacer
+                if st.button("➕", key=f"cf_cable_plus_new", help="Add new cable group", use_container_width=True):
+                    first_table_key = list(cable_tables.keys())[0]
+                    first_table = cable_tables[first_table_key][1]
+                    first_construction = list(first_table.keys())[0] if first_table else "stranded"
+                    first_size = list(first_table.get(first_construction, {}).keys())[0] if first_table else ""
+                    # Generate a new unique row ID
+                    max_id = st.session_state["cf_cable_df"]["_row_id"].max() if len(st.session_state["cf_cable_df"]) > 0 else -1
+                    new_row_id = int(max_id) + 1 if max_id >= 0 else 0
+                    new_row = {
+                        "Table": first_table_key,
+                        "Construction": first_construction,
+                        "Conductor size": first_size,
+                        "Conductors per cable": 1,
+                        "Qty (cables)": 1,
+                        "_row_id": new_row_id
+                    }
+                    new_df = pd.concat([st.session_state["cf_cable_df"], pd.DataFrame([new_row])], ignore_index=True)
+                    st.session_state["cf_cable_df"] = new_df
+                    st.rerun()
             
             # Convert edited list back to dataframe for downstream calculations
             edited = pd.DataFrame(edited_list)
