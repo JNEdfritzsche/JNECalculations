@@ -1222,6 +1222,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
             first_size = list(first_table.get(first_construction, {}).keys())[0] if first_table else ""
             default_rows = [
                 {
+                    "Name": "",
                     "Table": first_table_key,
                     "Construction": first_construction,
                     "Conductor size": first_size,
@@ -1242,6 +1243,10 @@ elif page == "Conduit Size & Fill & Bend Radius":
         # Make sure all rows have IDs (in case of dataframe operations)
         if "_row_id" not in st.session_state["cf_cable_df"].columns:
             st.session_state["cf_cable_df"]["_row_id"] = range(len(st.session_state["cf_cable_df"]))
+        
+        # Ensure each row has a Name column
+        if "Name" not in st.session_state["cf_cable_df"].columns:
+            st.session_state["cf_cable_df"]["Name"] = ""
         
         df_in = st.session_state["cf_cable_df"].copy()
 
@@ -1268,6 +1273,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
             
             for display_num, (idx, row) in enumerate(df_in.iterrows(), 1):
                 row_id = row.get("_row_id", idx)  # Get the unique row ID
+                cable_name = row.get("Name", "")
                 table_key = row.get("Table", list(cable_tables.keys())[0])
                 construction = row.get("Construction", "stranded")
                 cond_size = row.get("Conductor size", "")
@@ -1300,14 +1306,23 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 with box_col:
                     row_container = st.container(border=True)
                     with row_container:
-                        col1, col2 = st.columns([0.05, 0.95], gap="small")
+                        col1, col2, col3 = st.columns([0.05, 0.25, 0.70], gap="small")
                         
                         # Row number label
                         with col1:
                             st.markdown(f"**{display_num}**")
                         
-                        # Cable selection controls - vertical stack
+                        # Cable group name
                         with col2:
+                            cable_name = st.text_input(
+                                "Name",
+                                value=cable_name,
+                                placeholder="e.g., 'Main feeder'",
+                                key=f"cf_cable_name_{row_id}"
+                            )
+                        
+                        # Cable selection controls - vertical stack
+                        with col3:
                             # Row 1: Cable Type
                             st.selectbox(
                                 "Cable type",
@@ -1379,6 +1394,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 
                 # Append to edited list
                 edited_list.append({
+                    "Name": cable_name,
                     "Table": table_key,
                     "Construction": construction,
                     "Conductor size": cond_size,
@@ -1400,6 +1416,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
                     max_id = st.session_state["cf_cable_df"]["_row_id"].max() if len(st.session_state["cf_cable_df"]) > 0 else -1
                     new_row_id = int(max_id) + 1 if max_id >= 0 else 0
                     new_row = {
+                        "Name": "",
                         "Table": first_table_key,
                         "Construction": first_construction,
                         "Conductor size": first_size,
@@ -1413,6 +1430,28 @@ elif page == "Conduit Size & Fill & Bend Radius":
             
             # Convert edited list back to dataframe for downstream calculations
             edited = pd.DataFrame(edited_list)
+            
+            # Sync widget states back to session state dataframe
+            for display_num, (idx, row) in enumerate(df_in.iterrows(), 1):
+                row_id = row.get("_row_id", idx)
+                # Update Name if it exists in session state
+                if f"cf_cable_name_{row_id}" in st.session_state:
+                    st.session_state["cf_cable_df"].loc[st.session_state["cf_cable_df"]["_row_id"] == row_id, "Name"] = st.session_state[f"cf_cable_name_{row_id}"]
+                # Update Table
+                if f"cf_cable_table_{row_id}" in st.session_state:
+                    st.session_state["cf_cable_df"].loc[st.session_state["cf_cable_df"]["_row_id"] == row_id, "Table"] = st.session_state[f"cf_cable_table_{row_id}"]
+                # Update Construction
+                if f"cf_cable_construction_{row_id}" in st.session_state:
+                    st.session_state["cf_cable_df"].loc[st.session_state["cf_cable_df"]["_row_id"] == row_id, "Construction"] = st.session_state[f"cf_cable_construction_{row_id}"]
+                # Update Conductor size
+                if f"cf_cable_size_{row_id}" in st.session_state:
+                    st.session_state["cf_cable_df"].loc[st.session_state["cf_cable_df"]["_row_id"] == row_id, "Conductor size"] = st.session_state[f"cf_cable_size_{row_id}"]
+                # Update Conductors per cable
+                if f"cf_cable_ncond_{row_id}" in st.session_state:
+                    st.session_state["cf_cable_df"].loc[st.session_state["cf_cable_df"]["_row_id"] == row_id, "Conductors per cable"] = st.session_state[f"cf_cable_ncond_{row_id}"]
+                # Update Qty
+                if f"cf_cable_qty_{row_id}" in st.session_state:
+                    st.session_state["cf_cable_df"].loc[st.session_state["cf_cable_df"]["_row_id"] == row_id, "Qty (cables)"] = st.session_state[f"cf_cable_qty_{row_id}"]
 
         else:
             # Manual mode: allow entering area per cable directly
