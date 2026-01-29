@@ -3,4 +3,4 @@ Feeder sizing for motors often starts with a multiplier of the motor FLA (common
 $$ I_{target}=1.25\cdot I_{FLA} $$
 
 
-![Plot](TestPicture.jpg)
+![Plot](images/TestPicture.jpg)

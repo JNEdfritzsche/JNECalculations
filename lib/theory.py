@@ -55,12 +55,90 @@ def _inject_css():
     )
 
 
+def _resolve_image_paths(md: str, md_dir: Path) -> str:
+    """
+    Convert relative image paths in markdown to absolute paths.
+    This fixes image rendering in Streamlit by converting:
+      ![alt](image.jpg) -> ![alt](/absolute/path/to/image.jpg)
+    """
+    def replace_image_path(match):
+        alt_text = match.group(1)
+        image_path = match.group(2)
+        
+        # Skip if already absolute or a URL
+        if image_path.startswith(('/', 'http://', 'https://')):
+            return match.group(0)
+        
+        # Resolve relative path
+        resolved_path = (md_dir / image_path).resolve()
+        return f"![{alt_text}]({resolved_path})"
+    
+    # Match ![alt](path) pattern
+    md = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', replace_image_path, md)
+    return md
+
+
+def _extract_and_render_images(md: str, md_dir: Path) -> str:
+    """
+    Extract image markdown syntax and return markdown without images.
+    Images will be rendered separately using st.image().
+    """
+    def replace_with_marker(match):
+        alt_text = match.group(1)
+        image_path = match.group(2)
+        
+        # Skip if already absolute or a URL
+        if not image_path.startswith(('/', 'http://', 'https://')):
+            image_path = str((md_dir / image_path).resolve())
+        
+        # Create a marker to know where images should be placed
+        return f"\n<!-- IMAGE:{image_path}:{alt_text} -->\n"
+    
+    # Match ![alt](path) pattern and replace with markers
+    md = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', replace_with_marker, md)
+    return md
+
+
+def _render_markdown_with_images(md: str, md_dir: Path, wrap: bool = True):
+    """
+    Render markdown with embedded images using st.image() for image display.
+    """
+    # Extract images and get markdown without image syntax
+    md = _extract_and_render_images(md, md_dir)
+    
+    # Split by image markers
+    parts = re.split(r'<!-- IMAGE:([^:]+):([^:]*) -->', md)
+    
+    if wrap:
+        st.markdown("<div class='jne-theory-wrap'>", unsafe_allow_html=True)
+    
+    # Process parts: alternates between markdown and image markers
+    for i, part in enumerate(parts):
+        if i % 3 == 0:
+            # Markdown content
+            if part.strip():
+                st.markdown(part, unsafe_allow_html=True)
+        elif i % 3 == 1:
+            # Image path
+            image_path = part
+            if i + 1 < len(parts):
+                alt_text = parts[i + 1]
+                try:
+                    st.image(image_path, caption=alt_text if alt_text else None)
+                except Exception as e:
+                    st.warning(f"Failed to load image: {image_path}\n\n{e}")
+    
+    if wrap:
+        st.markdown("</div>", unsafe_allow_html=True)
+
+
 def render_md(md_path: str | Path, *, wrap: bool = True):
     """
     Render a markdown file into Streamlit with light CSS + LaTeX normalization.
 
     - Supports $$...$$ blocks and $...$ inline
     - Converts \\[...\\] and \\(...\\) into $$...$$ / $...$
+    - Uses st.image() for image rendering for better compatibility
     """
     p = Path(md_path)
     if not p.exists():
@@ -71,10 +149,4 @@ def render_md(md_path: str | Path, *, wrap: bool = True):
 
     md = p.read_text(encoding="utf-8")
     md = _normalize_latex(md)
-
-    if wrap:
-        st.markdown("<div class='jne-theory-wrap'>", unsafe_allow_html=True)
-        st.markdown(md, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    else:
-        st.markdown(md, unsafe_allow_html=True)
+    _render_markdown_with_images(md, p.parent, wrap=wrap)
