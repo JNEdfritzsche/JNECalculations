@@ -29,6 +29,44 @@ st.set_page_config(
     layout="wide",
 )
 
+# ----------------------------
+# Password Protection
+# ----------------------------
+def check_password():
+    """Returns `True` if the user had the correct password."""
+
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        try:
+            correct_password = st.secrets["app_password"]
+        except (KeyError, FileNotFoundError):
+            correct_password = "dingleberries"  # fallback default
+        
+        if st.session_state["password"] == correct_password:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # don't store password
+        else:
+            st.session_state["password_correct"] = False
+
+    if st.session_state.get("password_correct", False):
+        return True
+
+    st.text_input(
+        "Enter password to access the site:",
+        type="password",
+        on_change=password_entered,
+        key="password",
+    )
+
+    if "password_correct" in st.session_state and not st.session_state["password_correct"]:
+        st.error("❌ Incorrect password")
+
+    return False
+
+
+if not check_password():
+    st.stop()
+
 st.title("⚡ Electrical Calculations Hub")
 st.caption("Theory • Examples • Calculators")
 
