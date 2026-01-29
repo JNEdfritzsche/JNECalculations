@@ -23,7 +23,7 @@ The voltage drop value is calculated using the following equation:
 ### Formula
 
 $$
-V_D = \frac{k \cdot f \cdot I \cdot L}{1000} 
+V_D = \frac{K \cdot f \cdot I \cdot L}{1000} 
 $$
 
 ##### Where
@@ -44,7 +44,7 @@ If determining the required conductor size or maximum allowable length for a spe
 ### Conductor sizing (solve for k)
 
 $$
-k \leq \frac{V_D \cdot 1000}{I \cdot L \cdot f}
+K \leq \frac{V_D \cdot 1000}{I \cdot L \cdot f}
 $$
 
 ### Maximum length (solve for L)
