@@ -1,4 +1,4 @@
-⚡Electrical Calculations Hub
+#⚡Electrical Calculations Hub
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://jnecalculations.streamlit.app/)
 
