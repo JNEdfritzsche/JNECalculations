@@ -57,5 +57,5 @@ $$
 
 ## References
 
-- [Design Basis – Calculations: Motor Feeder](file://jnecon.jnepeng.com/data/Common/Electrical/Electrical%20Calculations/REV%20B/)
-- [Knowledge File – OESC: Section 4 Conductors](file:///H:/Electrical/OESC%20Introduction%20Manual/SECTION%204%20-%20CONDUCTORS%20-%20Nikola/)
+- [Design Basis – Calculations: Motor Feeder]()
+- [Knowledge File – OESC: Section 4 Conductors]()
