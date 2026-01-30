@@ -269,7 +269,7 @@ with st.sidebar:
 
     st.divider()
     st.header("Jurisdiction")
-    code_mode = st.selectbox("Select electrical code", ["NEC", "OESC"], index=0)
+    code_mode = st.selectbox("Select electrical code", ["NEC", "OESC"], index=1)
 
     st.divider()
     st.caption("This portal is provided for educational purposes only and is intended to support the understanding of engineering concepts. The tutorials, examples, and tools are not a substitute for professional judgment. Always consult applicable codes, regulations, and qualified engineers before making design or compliance decisions.")
