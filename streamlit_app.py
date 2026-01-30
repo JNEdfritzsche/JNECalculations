@@ -40,7 +40,7 @@ def check_password():
         try:
             correct_password = st.secrets["app_password"]
         except (KeyError, FileNotFoundError):
-            correct_password = "dingleberries"  # fallback default
+            correct_password = "admin"  # fallback default
         
         if st.session_state["password"] == correct_password:
             st.session_state["password_correct"] = True
