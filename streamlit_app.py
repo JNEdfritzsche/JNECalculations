@@ -4,6 +4,12 @@ import re
 
 import streamlit as st
 
+# ----------------------------
+# Development Settings
+# ----------------------------
+# Set to False during development to disable password protection
+ENABLE_PASSWORD_PROTECTION = False
+
 # --- Keep your import, but prevent the whole app from crashing if packaging is wrong ---
 try:
     from lib.theory import render_md  # type: ignore
@@ -64,7 +70,7 @@ def check_password():
     return False
 
 
-if not check_password():
+if ENABLE_PASSWORD_PROTECTION and not check_password():
     st.stop()
 
 st.title("⚡ Electrical Calculations Hub")

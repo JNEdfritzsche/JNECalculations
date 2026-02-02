@@ -61,6 +61,7 @@ TITLE_OVERRIDES: Dict[str, str] = {
     "37": "Table 37 — Motor supply conductor insulation minimum temperature rating, °C (based on an ambient temperature of 30 °C)",
     "44": "Table 44 — Three-phase ac motors (AC motor full load current, A)",
     "45": "Table 45 — Single-phase ac motors (Single-phase ac motors full load current, A)",
+    "D2": "Table D2 — DC motors (DC full load current rating, A)",
     "D3": "Table D3 — K values for calculating voltage drop in an installation of 2, 3, or 4 insulated conductors in a cable or raceway based on a conductor operating temperature of 75 °C",
     "D-System-Factor": "Table D — System factor (f) for voltage drop calculations in various AC and DC electrical systems and connection types",
 }
@@ -2104,6 +2105,40 @@ TABLE_45 = {
         {"hp rating": "5", "115 V": 56.0, "230 V": 28.0},
         {"hp rating": "7-1/2", "115 V": 80.0, "230 V": 40.0},
         {"hp rating": "10", "115 V": 100.0, "230 V": 50.0},
+    ],
+}
+
+# --------------------------------------------------------------------------------------
+# Table D2 — DC motors
+# --------------------------------------------------------------------------------------
+TABLE_D2 = {
+    "title": "Table D2 — DC motors (DC full load current rating, A)",
+    "units": "A",
+    "columns": ["Motor rating (hp)", "120 V", "240 V", "500 V"],
+    "rows": [
+        {"Motor rating (hp)": "1/4", "120 V": 2.9, "240 V": 1.5, "500 V": None},
+        {"Motor rating (hp)": "1/3", "120 V": 3.6, "240 V": 1.8, "500 V": None},
+        {"Motor rating (hp)": "1/2", "120 V": 5.2, "240 V": 2.6, "500 V": None},
+        {"Motor rating (hp)": "3/4", "120 V": 7.4, "240 V": 3.7, "500 V": 1.8},
+        {"Motor rating (hp)": "1", "120 V": 9.4, "240 V": 4.7, "500 V": 2.3},
+        {"Motor rating (hp)": "1-1/2", "120 V": 13.2, "240 V": 6.6, "500 V": 3.2},
+        {"Motor rating (hp)": "2", "120 V": 17, "240 V": 8.5, "500 V": 4.1},
+        {"Motor rating (hp)": "3", "120 V": 25, "240 V": 12.5, "500 V": 6.0},
+        {"Motor rating (hp)": "5", "120 V": 40, "240 V": 20, "500 V": 9.7},
+        {"Motor rating (hp)": "7-1/2", "120 V": 58, "240 V": 29, "500 V": 14},
+        {"Motor rating (hp)": "10", "120 V": 76, "240 V": 38, "500 V": 18},
+        {"Motor rating (hp)": "15", "120 V": 110, "240 V": 55, "500 V": 26},
+        {"Motor rating (hp)": "20", "120 V": 145, "240 V": 72, "500 V": 35},
+        {"Motor rating (hp)": "25", "120 V": 179, "240 V": 89, "500 V": 43},
+        {"Motor rating (hp)": "30", "120 V": 212, "240 V": 106, "500 V": 51},
+        {"Motor rating (hp)": "40", "120 V": 280, "240 V": 140, "500 V": 68},
+        {"Motor rating (hp)": "50", "120 V": 349, "240 V": 174, "500 V": 84},
+        {"Motor rating (hp)": "60", "120 V": 418, "240 V": 209, "500 V": 101},
+        {"Motor rating (hp)": "75", "120 V": 518, "240 V": 259, "500 V": 124},
+        {"Motor rating (hp)": "100", "120 V": None, "240 V": 343, "500 V": 165},
+        {"Motor rating (hp)": "125", "120 V": None, "240 V": 426, "500 V": 205},
+        {"Motor rating (hp)": "150", "120 V": None, "240 V": 507, "500 V": 243},
+        {"Motor rating (hp)": "200", "120 V": None, "240 V": 675, "500 V": 324},
     ],
 }
 
