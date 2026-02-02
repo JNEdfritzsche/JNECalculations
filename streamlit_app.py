@@ -732,15 +732,57 @@ elif page == "Motor Feeder":
         render_md_safe("motor_feeder.md")
 
     with calc_tab:
-        header("Motor Feeder Calculator", "Single-motor conductor ampacity target (template).")
+        header("Motor Feeder Calculator", "Estimate motor IFLA from nameplate data, then apply feeder factor.")
         show_code_note(code_mode)
 
-        fla = st.number_input("Motor FLA (A)", min_value=0.1, value=40.0, step=0.1, key="mf_fla")
-        cont = st.checkbox("Apply 125% factor", value=True)
-        target = fla * (1.25 if cont else 1.0)
-        st.success(f"Conductor ampacity target: **{fmt(target, 'A')}**")
+        c1, c2, c3, c4 = st.columns(4, gap="large")
+        with c1:
+            phase = st.selectbox("System", ["3-phase", "1-phase"], index=0, key="mf_phase")
+        with c2:
+            hp = st.number_input("Motor power (HP)", min_value=0.1, value=25.0, step=0.1, key="mf_hp")
+        with c3:
+            volts = st.number_input(
+                "Voltage (V)",
+                min_value=1.0,
+                value=600.0,
+                step=1.0,
+                help="Use line-to-line voltage for 3-phase motors.",
+                key="mf_volts",
+            )
+        with c4:
+            pf = st.number_input(
+                "Power factor (cosθ)",
+                min_value=0.10,
+                max_value=1.00,
+                value=0.90,
+                step=0.01,
+                key="mf_pf",
+            )
+
+        eff = st.number_input(
+            "Efficiency (%)",
+            min_value=1.0,
+            max_value=100.0,
+            value=92.0,
+            step=0.1,
+            key="mf_eff",
+        )
+
+        denom = (math.sqrt(3) if phase == "3-phase" else 1.0) * volts * pf * (eff / 100.0)
+        ifla = (hp * 745.7) / denom if denom > 0 else None
+
+        cont = st.checkbox("Apply 125% factor", value=True, key="mf_125")
+        target = ifla * (1.25 if cont else 1.0) if ifla is not None else None
+
+        c1, c2 = st.columns(2)
+        c1.metric("Estimated IFLA (A)", fmt(ifla, "A"))
+        c2.metric("Conductor ampacity target (A)", fmt(target, "A"))
 
         st.markdown("### Equation used")
+        if phase == "3-phase":
+            eq(r"I_{FLA}=\frac{HP\cdot 745.7}{\sqrt{3}\cdot V_{LL}\cdot \cos\theta\cdot \eta}")
+        else:
+            eq(r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \cos\theta\cdot \eta}")
         eq(r"I_{target}=1.25\cdot I_{FLA}")
 
 
