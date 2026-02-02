@@ -49,8 +49,8 @@ Working with multiple motors is often found. While this increases complexity, ap
 
 | Motor No. | Duty Service | FLA |
 |-----------|--------------|-----|
-| $${M_1}$$ | Contiuous    | 9   |
-| $${M_2}$$ | Contiuous    | 12  |
+| $${M_1}$$ | Continuous    | 9   |
+| $${M_2}$$ | Continuous    | 12  |
 | $${M_3}$$ | Non-continuous, 15min. rating    | 5   |
 
 We only upsize the largest continuous FLA motor and apply the applicable factors for the non-continuous motors, resulting in
