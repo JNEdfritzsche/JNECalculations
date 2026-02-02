@@ -1554,7 +1554,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 # Minus button outside the box (on every row)
                 with minus_col:
                     st.write("")  # Spacer
-                    if st.button("➖", key=f"cf_cable_minus_{row_id}", help="Remove this cable group", use_container_width=True):
+                    if st.button("➖", key=f"cf_cable_minus_{row_id}", help="Remove this cable group", width="stretch"):
                         st.session_state["cf_cable_df"] = st.session_state["cf_cable_df"][st.session_state["cf_cable_df"]["_row_id"] != row_id].reset_index(drop=True)
                         st.rerun()
                 
@@ -1576,7 +1576,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
             plus_col1, plus_col2 = st.columns([0.95, 0.05], gap="small")
             with plus_col2:
                 st.write("")  # Spacer
-                if st.button("➕", key=f"cf_cable_plus_new", help="Add new cable group", use_container_width=True):
+                if st.button("➕", key=f"cf_cable_plus_new", help="Add new cable group", width="stretch"):
                     first_table_key = list(cable_tables.keys())[0]
                     first_table = cable_tables[first_table_key][1]
                     first_construction = list(first_table.keys())[0] if first_table else "stranded"
@@ -1869,7 +1869,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
 
                 show_df["Total group area (mm²)"] = show_df.apply(_row_total_area, axis=1)
 
-                st.dataframe(show_df, use_container_width=True, hide_index=True)
+                st.dataframe(show_df, width="stretch", hide_index=True)
             except Exception:
                 st.write("(Unable to render breakdown table in this environment.)")
 
@@ -2217,9 +2217,9 @@ elif page == "Table Library":
                 st.json(meta.get("raw", {}))
             else:
                 try:
-                    st.dataframe(df, use_container_width=True, hide_index=True)
+                    st.dataframe(df, width="stretch", hide_index=True)
                 except TypeError:
-                    st.dataframe(df, use_container_width=True)
+                    st.dataframe(df, width="stretch")
 
                 # Download CSV
                 try:
@@ -2312,17 +2312,17 @@ elif page == "Voltage Drop":
             try:
                 import pandas as pd
                 df_cu = pd.DataFrame(cu_rows_display, columns=display_cols)
-                st.dataframe(df_cu, use_container_width=True, hide_index=True)
+                st.dataframe(df_cu, width="stretch", hide_index=True)
             except Exception:
-                st.dataframe(cu_rows_display, use_container_width=True, hide_index=True)
+                st.dataframe(cu_rows_display, width="stretch", hide_index=True)
 
             st.markdown("### Aluminum Conductors — Table D3 (Ω/km)")
             
             try:
                 df_al = pd.DataFrame(al_rows_display, columns=display_cols)
-                st.dataframe(df_al, use_container_width=True, hide_index=True)
+                st.dataframe(df_al, width="stretch", hide_index=True)
             except Exception:
-                st.dataframe(al_rows_display, use_container_width=True, hide_index=True)
+                st.dataframe(al_rows_display, width="stretch", hide_index=True)
 
             st.caption(
                 "These tables are from OESC Appendix D – Table D3 "
@@ -2354,7 +2354,7 @@ elif page == "Voltage Drop":
             try:
                 import pandas as pd
                 df_f = pd.DataFrame(system_factor_data)
-                st.dataframe(df_f, use_container_width=True, hide_index=True)
+                st.dataframe(df_f, width="stretch", hide_index=True)
             except Exception:
                 for r in system_factor_data:
                     st.write(f"- **{r['System / Connection']}** — f = {r['f (used in formula)']} — {r['Voltage reference']}")
@@ -3034,9 +3034,9 @@ elif page == "Voltage Drop":
             try:
                 import pandas as pd
                 df_cu = pd.DataFrame(cu_rows_display, columns=display_cols)
-                st.dataframe(df_cu, use_container_width=True, hide_index=True)
+                st.dataframe(df_cu, width="stretch", hide_index=True)
             except Exception:
-                st.dataframe(cu_rows_display, use_container_width=True, hide_index=True)
+                st.dataframe(cu_rows_display, width="stretch", hide_index=True)
 
             st.markdown("### Aluminum Conductors — Table D3 (Ω/km)")
             al_rows_display = []
@@ -3055,9 +3055,9 @@ elif page == "Voltage Drop":
 
             try:
                 df_al = pd.DataFrame(al_rows_display, columns=display_cols)
-                st.dataframe(df_al, use_container_width=True, hide_index=True)
+                st.dataframe(df_al, width="stretch", hide_index=True)
             except Exception:
-                st.dataframe(al_rows_display, use_container_width=True, hide_index=True)
+                st.dataframe(al_rows_display, width="stretch", hide_index=True)
 
             st.caption(
                 "These tables are transcribed **exactly** from OESC Appendix D – Table D3 "
@@ -3074,7 +3074,7 @@ elif page == "Voltage Drop":
 
                 df_f = pd.DataFrame(f_table_rows)
                 st.markdown("### System factor (f) — reference table (from Appendix D)")
-                st.dataframe(df_f, use_container_width=True, hide_index=True)
+                st.dataframe(df_f, width="stretch", hide_index=True)
 
                 try:
                     current_label = f_choice[0] if isinstance(f_choice, tuple) else str(f_choice)

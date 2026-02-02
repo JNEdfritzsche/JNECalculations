@@ -132,7 +132,7 @@ def _render_markdown_with_images(md: str, md_dir: Path, wrap: bool = True):
                         st.image(
                             image_path,
                             caption=alt_text if alt_text else None,
-                            use_container_width=True,
+                            width="stretch",
                         )
                 except Exception as e:
                     st.warning(f"Failed to load image: {image_path}\n\n{e}")
