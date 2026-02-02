@@ -90,7 +90,7 @@ Rule 28-110 — Conudctor sizing: Feeder
 
 Rule 28-400 — Motor Undervoltage
 
-## Related OESC Rules
+## Related OESC Tables
 
 Tables 27 — Motor Service Duties
 
