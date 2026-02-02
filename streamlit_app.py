@@ -2347,8 +2347,8 @@ elif page == "Voltage Drop":
                 {"System / Connection": "3-φ AC — 2-wire, line-to-line, no grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
                 {"System / Connection": "3-φ AC — 3-wire, line-to-line with grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-line"},
                 {"System / Connection": "3-φ AC — 3-wire, line-to-grounded conductor", "f (used in formula)": 2.0, "Voltage reference": "Line-to-ground"},
-                {"System / Connection": "3-φ AC — 3-wire, line-to-line, no grounded conductor", "f (used in formula)": f"{math.sqrt(3):.4g}", "Voltage reference": "Line-to-line"},
-                {"System / Connection": "3-φ AC — 4-wire, line-to-line, with grounded conductor", "f (used in formula)": f"{math.sqrt(3):.4g}", "Voltage reference": "Line-to-line"},
+                {"System / Connection": "3-φ AC — 3-wire, line-to-line, no grounded conductor", "f (used in formula)": math.sqrt(3), "Voltage reference": "Line-to-line"},
+                {"System / Connection": "3-φ AC — 4-wire, line-to-line, with grounded conductor", "f (used in formula)": math.sqrt(3), "Voltage reference": "Line-to-line"},
             ]
             
             try:
