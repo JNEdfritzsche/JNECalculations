@@ -735,7 +735,7 @@ elif page == "Motor Feeder":
         render_md_safe("motor_feeder.md")
 
     with calc_tab:
-        header("Motor Feeder Calculator", "Estimate motor IFLA from nameplate data, then apply feeder factor.")
+        header("Motor Feeder Calculator", "Estimate motor I_FLA from nameplate data, then apply feeder factor.")
         show_code_note(code_mode)
 
         c1, c2, c3, c4 = st.columns(4, gap="large")
@@ -778,7 +778,7 @@ elif page == "Motor Feeder":
         target = ifla * (1.25 if cont else 1.0) if ifla is not None else None
 
         c1, c2 = st.columns(2)
-        c1.metric("Calculated IFLA (A)", fmt(ifla, "A"))
+        c1.metric("Calculated I_FLA (A)", fmt(ifla, "A"))
         c2.metric("Conductor ampacity target (A)", fmt(target, "A"))
 
         st.markdown("### Equation used")
