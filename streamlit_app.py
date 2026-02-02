@@ -44,6 +44,9 @@ st.markdown(
 <style>
 img { display: block; margin-left: auto; margin-right: auto; }
 .stImage { text-align: center; }
+/* Hide horizontal scrollbars on LaTeX blocks (keeps content scrollable if needed) */
+.katex-display { scrollbar-width: none; -ms-overflow-style: none; }
+.katex-display::-webkit-scrollbar { display: none; }
 </style>
 """,
     unsafe_allow_html=True,
@@ -775,7 +778,7 @@ elif page == "Motor Feeder":
         target = ifla * (1.25 if cont else 1.0) if ifla is not None else None
 
         c1, c2 = st.columns(2)
-        c1.metric("Estimated IFLA (A)", fmt(ifla, "A"))
+        c1.metric("Calculated IFLA (A)", fmt(ifla, "A"))
         c2.metric("Conductor ampacity target (A)", fmt(target, "A"))
 
         st.markdown("### Equation used")
