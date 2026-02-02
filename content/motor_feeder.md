@@ -60,10 +60,9 @@ We only upsize the largest continuous FLA motor and apply the applicable factors
 | $${M_1}$$ | 9 X 1.25 = 11.25    | No. 14 AWG |
 | $${M_2}$$ | 12 x 1.25 = 15   | No. 14 AWG |
 | $${M_3}$$ | 5 x 1.2 =  6 | No. 14 AWG |
-| Feeder Total | 9 + 15 + 6 = 30 | <mark> No. 10 AWG <mark>|
+| Feeder Total | 9 + 15 + 6 = 30 | <mark> No. 10 AWG <mark> |
 
-
-<!-- 
+---
 
 # Appendix
 
@@ -75,31 +74,36 @@ We only upsize the largest continuous FLA motor and apply the applicable factors
 
 ## Related OESC Rules
 
-Rule 4-004 — Conductor ampacity (Table 2)
-
-Rule 4-004(7) — Ambient correction factors (Table 5A)
+Rule 4-004 — Conductor ampacity
 
 Rule 4-006 — Temperature limitations
 
-Rule 8-102 — Voltage drop limits
+Rule 8-102 — Voltage drop 
 
-Rule 28-104 — Motor supply conductor temperature rating
+Rule 28-104 — Motor supply conductor insulation temperature rating & ampacity
 
-Rule 28-106 — Motor branch conductor ampacity (125% FLC)
+Rule 28-106 — Conductor sizing:  Single motor branch circuit
 
-Rule 28-108 — Two or more otor requirements
+Rule 28-108 — Conductor sizing:  Multiple motors branch circuit
 
-Rule 28-110 — Feeder tap conductors
+Rule 28-110 — Conudctor sizing: Feeder 
 
-Tables 37, 44, 45 — Motor insulation and nominal currents
+Rule 28-400 — Motor Undervoltage
 
-Table D2 - DC motor Full Load Ampacity
+## Related OESC Rules
 
-Table 44 - 3Φ Motor FLA at 100% PF
+Tables 27 — Motor Service Duties
 
-Table 45 - 1Φ Motor FLA at 100% PF
+Tables 37 — Motor Insulation Class Rating
 
-Look to add flowchart for methodology once everything has been checked and references are good
+Table D2 — DC motor Full Load Ampacity
+
+Table 44 — 3Φ Motor FLA at 100% PF
+
+Table 45 — 1Φ Motor FLA at 100% PF
+
+<!--
+**************************Look to add flowchart for methodology once everything has been checked and references are good*******************************
 -->
 
 
