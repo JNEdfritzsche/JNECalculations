@@ -1,4 +1,4 @@
-# Motor Feeders
+<!-- # Motor Feeders -->
 ## Overview
 Sizing feeders for motors is crucial for any application in an industrial setting. A few preceeding topics are relevant to this area such as conductor sizing & voltage drop. This section will cover some other important considerations and provide a practical workflow. Below is a diagram that covers a general single motor circuit.
 
