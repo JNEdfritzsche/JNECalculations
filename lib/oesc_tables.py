@@ -61,6 +61,7 @@ TITLE_OVERRIDES: Dict[str, str] = {
     "37": "Table 37 — Motor supply conductor insulation minimum temperature rating, °C (based on an ambient temperature of 30 °C)",
     "44": "Table 44 — Three-phase ac motors (AC motor full load current, A)",
     "45": "Table 45 — Single-phase ac motors (Single-phase ac motors full load current, A)",
+    "27": "Table 27 — Determining conductor sizes for motors for different requirements of service (Percentage of nameplate current rating of motor)",
     "D2": "Table D2 — DC motors (DC full load current rating, A)",
     "D3": "Table D3 — K values for calculating voltage drop in an installation of 2, 3, or 4 insulated conductors in a cable or raceway based on a conductor operating temperature of 75 °C",
     "D-System-Factor": "Table D — System factor (f) for voltage drop calculations in various AC and DC electrical systems and connection types",
@@ -2105,6 +2106,21 @@ TABLE_45 = {
         {"hp rating": "5", "115 V": 56.0, "230 V": 28.0},
         {"hp rating": "7-1/2", "115 V": 80.0, "230 V": 40.0},
         {"hp rating": "10", "115 V": 100.0, "230 V": 50.0},
+    ],
+}
+
+# --------------------------------------------------------------------------------------
+# Table 27 — Determining conductor sizes for motors for different requirements of service
+# --------------------------------------------------------------------------------------
+TABLE_27 = {
+    "title": "Table 27 — Determining conductor sizes for motors for different requirements of service (Percentage of nameplate current rating of motor)",
+    "units": "%",
+    "columns": ["Classification of service", "5-min rating", "15-min rating", "30- and 60-min rating", "Continuous rating"],
+    "rows": [
+        {"Classification of service": "Short-time duty (Operating valves, raising or lowering rolls, etc.)", "5-min rating": 110, "15-min rating": 120, "30- and 60-min rating": 150, "Continuous rating": None},
+        {"Classification of service": "Intermittent duty (Freight and passenger elevators, tool heads, pumps, drawbridges, turntables, etc.)", "5-min rating": 85, "15-min rating": 85, "30- and 60-min rating": 90, "Continuous rating": 140},
+        {"Classification of service": "Periodic duty (Rolls, ore- and coal-handling machines, etc.)", "5-min rating": 85, "15-min rating": 90, "30- and 60-min rating": 95, "Continuous rating": 140},
+        {"Classification of service": "Varying duty", "5-min rating": 110, "15-min rating": 120, "30- and 60-min rating": 150, "Continuous rating": 200},
     ],
 }
 
