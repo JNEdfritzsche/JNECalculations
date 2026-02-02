@@ -2,11 +2,20 @@
 ## Overview
 Sizing feeders for motors is crucial for any application in an industrial setting. A few preceeding topics are relevant to this area such as conductor sizing & voltage drop. This section will cover some other important considerations and provide a practical workflow. Below is a diagram that covers a general single motor circuit.
 
+<div align="center">
+
 ![Figure 1: Example Motor Branch Circuit](images/SingleMotorFeeder.png)
+
+</div>
+
 
 The first step for working with any motor is to gather all information available about the motor. This is usually found on the motor itself on it's nameplate, or consulting the manufacturer for the datasheet. A typical motor nameplate can be seen below.
 
+<div align="center">
+
 ![Figure 2: Motor Nameplate Example](images/TestPicture.jpg)
+
+</div>
 
 ---
 ## Feeder Size
@@ -43,7 +52,12 @@ Another important consideration is the service rating of motors. Not all motors 
 
 ---
 ## Multiple motors
+
+<div align="center">
+
 ![Figure 3: Example Multiple Motors Branch Circuit](images/MultiMotorconfig.png)
+
+</div>
 
 Working with multiple motors is often found. While this increases complexity, applying the same methodology to each motor can simplify things. Say you have three motors, with the following characteristics.
 
