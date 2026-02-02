@@ -36,6 +36,20 @@ st.set_page_config(
 )
 
 # ----------------------------
+# Global styling
+# ----------------------------
+# Center all images (both st.image and markdown-rendered images)
+st.markdown(
+    """
+<style>
+img { display: block; margin-left: auto; margin-right: auto; }
+.stImage { text-align: center; }
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+# ----------------------------
 # Password Protection
 # ----------------------------
 def check_password():

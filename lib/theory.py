@@ -125,8 +125,15 @@ def _render_markdown_with_images(md: str, md_dir: Path, wrap: bool = True):
             if i + 1 < len(parts):
                 alt_text = parts[i + 1]
                 try:
-                    # Pass the path directly; Streamlit handles local files reliably
-                    st.image(image_path, caption=alt_text if alt_text else None)
+                    # Center images by rendering inside a centered column
+                    left, center, right = st.columns([1, 2, 1], gap="small")
+                    with center:
+                        # Pass the path directly; Streamlit handles local files reliably
+                        st.image(
+                            image_path,
+                            caption=alt_text if alt_text else None,
+                            use_container_width=True,
+                        )
                 except Exception as e:
                     st.warning(f"Failed to load image: {image_path}\n\n{e}")
     
