@@ -269,6 +269,7 @@ def calc_fla(kva, volts, phase):
 # Sidebar navigation
 # ----------------------------
 PAGES = [
+    "Home",
     "Transformer Protection",
     "Transformer Feeders",
     "Grounding/Bonding Conductor Sizing",
@@ -298,12 +299,36 @@ with st.sidebar:
 # Page shell with Theory/Calculator tabs
 # (Tabs are disabled ONLY on Table Library)
 # ----------------------------
-if page != "Table Library":
+if page not in ("Table Library", "Home"):
     theory_tab, calc_tab = st.tabs(["📚 Theory", "🧮 Calculator"])
 else:
     theory_tab = None
     calc_tab = None
 
+
+# ============================
+# 0) Home
+# ============================
+if page == "Home":
+    header("Welcome", "Start here for quick context and how to use this hub.")
+    show_code_note(code_mode)
+
+    st.markdown("### What you can do")
+    st.markdown("- Find code-aligned theory notes with worked examples.")
+    st.markdown("- Run calculators for sizing, protection, and voltage drop.")
+    st.markdown("- Compare NEC vs OESC assumptions using the sidebar selector.")
+
+    st.markdown("### Popular tools")
+    st.markdown("- Transformer Protection")
+    st.markdown("- Voltage Drop")
+    st.markdown("- Conduit Size & Fill & Bend Radius")
+    st.markdown("- Cable Tray Size & Fill & Bend Radius")
+
+    st.markdown("### Quick start")
+    st.markdown("1. Pick a topic from the sidebar.")
+    st.markdown("2. Use the `Theory` tab for context and code references.")
+    st.markdown("3. Switch to `Calculator` for inputs and results.")
+    st.markdown("4. Change `Jurisdiction` to see NEC vs OESC logic.")
 
 # ============================
 # 1) Transformer Protection
