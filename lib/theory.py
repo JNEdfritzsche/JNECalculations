@@ -92,7 +92,8 @@ def _extract_and_render_images(md: str, md_dir: Path) -> str:
             image_path = str((md_dir / image_path).resolve())
         
         # Create a marker to know where images should be placed
-        return f"\n<!-- IMAGE:{image_path}:{alt_text} -->\n"
+        # Use || as delimiter to avoid issues with colons in paths
+        return f"\n<!-- IMAGE_MARKER||{image_path}||{alt_text} -->\n"
     
     # Match ![alt](path) pattern and replace with markers
     md = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', replace_with_marker, md)
@@ -106,8 +107,8 @@ def _render_markdown_with_images(md: str, md_dir: Path, wrap: bool = True):
     # Extract images and get markdown without image syntax
     md = _extract_and_render_images(md, md_dir)
     
-    # Split by image markers
-    parts = re.split(r'<!-- IMAGE:([^:]+):([^:]*) -->', md)
+    # Split by image markers using || delimiter
+    parts = re.split(r'<!-- IMAGE_MARKER\|\|(.+?)\|\|(.+?) -->', md)
     
     if wrap:
         st.markdown("<div class='jne-theory-wrap'>", unsafe_allow_html=True)
@@ -124,7 +125,9 @@ def _render_markdown_with_images(md: str, md_dir: Path, wrap: bool = True):
             if i + 1 < len(parts):
                 alt_text = parts[i + 1]
                 try:
-                    st.image(image_path, caption=alt_text if alt_text else None)
+                    # Open image as file object for better compatibility
+                    with open(image_path, "rb") as img_file:
+                        st.image(img_file, caption=alt_text if alt_text else None)
                 except Exception as e:
                     st.warning(f"Failed to load image: {image_path}\n\n{e}")
     
