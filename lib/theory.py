@@ -125,9 +125,8 @@ def _render_markdown_with_images(md: str, md_dir: Path, wrap: bool = True):
             if i + 1 < len(parts):
                 alt_text = parts[i + 1]
                 try:
-                    # Open image as file object for better compatibility
-                    with open(image_path, "rb") as img_file:
-                        st.image(img_file, caption=alt_text if alt_text else None)
+                    # Pass the path directly; Streamlit handles local files reliably
+                    st.image(image_path, caption=alt_text if alt_text else None)
                 except Exception as e:
                     st.warning(f"Failed to load image: {image_path}\n\n{e}")
     

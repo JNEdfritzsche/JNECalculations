@@ -2498,7 +2498,7 @@ elif page == "Voltage Drop":
             )
             f = float(f_choice[1])
             f_label = f_choice[0]
-            st.caption(f"Selected circuit type: **{f_label}** → f = **{f:.6g}** (used in formula \(V_D = k f I L / 1000\)).")
+            st.caption(f"Selected circuit type: **{f_label}** → f = **{f:.6g}** (used in formula \\(V_D = k f I L / 1000\\)).")
 
             Vd = (k_used * f * I * L_m) / 1000.0
             pct = (Vd / V_nom) * 100.0
@@ -3256,5 +3256,3 @@ elif page == "Conductors":
             )
 
 # End of app
-
-#testing
