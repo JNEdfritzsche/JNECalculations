@@ -3083,13 +3083,21 @@ elif page == "Voltage Drop":
         )
         use_table = k_mode.startswith("Lookup")
 
-        c1, c2, c3 = st.columns([1,1,1], gap="large")
+        c1, c2, c3, c4 = st.columns([1,1,1,1], gap="large")
         with c1:
             I = st.number_input("Load current (A)", min_value=0.0, value=50.0, step=0.1, key="vd_I")
         with c2:
             L_m = st.number_input("One-way length (m)", min_value=0.0, value=80.0, step=1.0, key="vd_Lm")
         with c3:
             V_nom = st.number_input("Nominal voltage (V)", min_value=1.0, value=600.0, step=1.0, key="vd_Vnom")
+        with c4:
+            n_parallel_vd = st.number_input(
+                "Parallel conductors per phase/pole",
+                min_value=1,
+                value=1,
+                step=1,
+                key="vd_n_parallel",
+            )
 
         if use_table:
             mat = st.selectbox("Conductor material (table to use)", ["Copper", "Aluminum"], index=0, key="vd_mat")
@@ -3188,6 +3196,7 @@ elif page == "Voltage Drop":
             f_choice = None
             f = None
             f_label = None
+            I_eff = None
             Vd = None
             pct = None
         else:
@@ -3226,9 +3235,10 @@ elif page == "Voltage Drop":
             )
             f = float(f_choice[1])
             f_label = f_choice[0]
-            st.caption(f"Selected circuit type: **{f_label}** → f = **{f:.6g}** (used in formula \\(V_D = k f I L / 1000\\)).")
+            st.caption(f"Selected circuit type: **{f_label}** → f = **{f:.6g}** (used in formula \\(V_D = k f I_{{eff}} L / 1000\\)).")
 
-            Vd = (k_used * f * I * L_m) / 1000.0
+            I_eff = safe_div(I, n_parallel_vd) if n_parallel_vd else None
+            Vd = (k_used * f * I_eff * L_m) / 1000.0 if I_eff is not None else None
             pct = (Vd / V_nom) * 100.0
 
             m1, m2 = st.columns(2)
@@ -3238,10 +3248,12 @@ elif page == "Voltage Drop":
             st.markdown("### Parameters used")
             st.write(f"- k-value: **{k_used} Ω/km** (source: Table D3, column **{selected_col_suffix}**)")
             st.write(f"- factor f: **{f:.6g}** (selected: {f_label})")
-            st.write(f"- I = **{fmt(I, 'A')}**, L = **{fmt(L_m, 'm')}**, V_nom = **{fmt(V_nom, 'V')}**")
+            st.write(f"- I (load) = **{fmt(I, 'A')}**, L = **{fmt(L_m, 'm')}**, V_nom = **{fmt(V_nom, 'V')}**")
+            st.write(f"- Parallel conductors = **{n_parallel_vd}** → I per conductor = **{fmt(I_eff, 'A')}**")
 
             st.markdown("### Equation used")
-            eq(r"V_D=\frac{k\cdot f\cdot I\cdot L}{1000}")
+            eq(r"I_{eff}=\frac{I}{N_{parallel}}")
+            eq(r"V_D=\frac{k\cdot f\cdot I_{eff}\cdot L}{1000}")
             eq(r"\%\Delta V = 100\cdot\frac{V_D}{V_{nom}}")
 
         st.caption(
@@ -3259,6 +3271,7 @@ elif page == "Voltage Drop":
             "Uses OESC Appendix D Table D3 k-values in Ω per circuit kilometre (Ω/km) when Table mode is selected.",
             "Uses voltage-drop factor f from the Appendix D system factor list.",
             "Uses one-way length L (m) directly in the formula; table equation divides by 1000 to convert m → km.",
+            "If parallel conductors are used, current is divided by N_parallel (per conductor) for the VD calc.",
             "Percent voltage drop is computed against nominal voltage V_nom.",
         ]
 
@@ -3271,6 +3284,8 @@ elif page == "Voltage Drop":
             {"Symbol": "k", "Description": "Voltage-drop factor from Table D3 (Ω/km) or manual entry", "Value": k_used},
             {"Symbol": "f", "Description": "System/connection factor from Appendix D", "Value": f},
             {"Symbol": "I", "Description": "Load current (A)", "Value": I},
+            {"Symbol": "N_parallel", "Description": "Parallel conductors per phase/pole", "Value": n_parallel_vd},
+            {"Symbol": "I_eff", "Description": "Current per conductor used in VD calc (A)", "Value": I_eff},
             {"Symbol": "L", "Description": "One-way length (m)", "Value": L_m},
             {"Symbol": "V_nom", "Description": "Nominal voltage (V)", "Value": V_nom},
             {"Symbol": "V_D", "Description": "Estimated voltage drop (V)", "Value": Vd},
@@ -3278,7 +3293,8 @@ elif page == "Voltage Drop":
         ]
 
         equations_text = [
-            ("Voltage drop", r"V_D=\frac{k\cdot f\cdot I\cdot L}{1000}"),
+            ("Effective current", r"I_{eff}=\frac{I}{N_{parallel}}"),
+            ("Voltage drop", r"V_D=\frac{k\cdot f\cdot I_{eff}\cdot L}{1000}"),
             ("Percent drop", r"\%\Delta V = 100\cdot\frac{V_D}{V_{nom}}"),
         ]
 
@@ -3369,6 +3385,7 @@ elif page == "Voltage Drop":
             meta = doc.add_paragraph()
             meta.add_run(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n").bold = True
             meta.add_run(f"k-mode: {k_mode}\n")
+            meta.add_run(f"Parallel conductors per phase/pole: {n_parallel_vd}\n")
             if use_table:
                 meta.add_run(f"Material: {mat}\n")
                 meta.add_run(f"Installation: {location}\n")
@@ -3495,6 +3512,7 @@ elif page == "Voltage Drop":
             row = 6
             if use_table:
                 summary_pairs = [
+                    ("Parallel conductors per phase/pole", n_parallel_vd),
                     ("Material", mat),
                     ("Installation", location),
                     ("Power factor column", pf_choice if location != "DC" else "(N/A — DC)"),
@@ -3503,6 +3521,7 @@ elif page == "Voltage Drop":
                 ]
             else:
                 summary_pairs = [
+                    ("Parallel conductors per phase/pole", n_parallel_vd),
                     ("Material", "(N/A — manual k)"),
                     ("Installation", "(N/A — manual k)"),
                     ("Power factor column", "(N/A — manual k)"),
@@ -3766,7 +3785,13 @@ elif page == "Conductors":
         with c2:
             sf = st.number_input("Service factor (SF)", min_value=1.0, value=1.25, step=0.05, key="cond_sf")
         with c3:
-            n_parallel = st.number_input("Parallel sets", min_value=1, value=1, step=1, key="cond_n_parallel")
+            n_parallel = st.number_input(
+                "Parallel sets",
+                min_value=1,
+                value=1,
+                step=1,
+                key="cond_n_parallel",
+            )
 
         mat = st.selectbox(
             "Conductor material (table family)",
@@ -3774,6 +3799,14 @@ elif page == "Conductors":
             index=0,
             key="cond_material",
         )
+
+        construction = st.selectbox(
+            "Conductor construction",
+            ["Single conductors", "Multi-conductor cable"],
+            index=0,
+            key="cond_construction",
+        )
+        is_multi = construction.startswith("Multi")
 
         install = st.selectbox(
             "Installation method / condition",
@@ -3785,6 +3818,104 @@ elif page == "Conductors":
             index=0,
             key="cond_install",
         )
+
+        st.markdown("### Ambient/temperature adjustments (Table 5A)")
+        use_temp_corr = st.checkbox(
+            "Apply ambient temperature correction (Table 5A)",
+            value=False,
+            key="cond_use_temp_corr",
+        )
+
+        temp_factor = 1.0
+        temp_factor_source = "None"
+
+        if use_temp_corr:
+            if oesc_tables is None:
+                st.warning("Table 5A lookup unavailable; enter the correction factor manually.")
+                temp_factor = st.number_input(
+                    "Temperature correction factor (Table 5A)",
+                    min_value=0.01,
+                    max_value=1.00,
+                    value=0.94,
+                    step=0.01,
+                    key="cond_temp_factor_manual",
+                )
+                temp_factor_source = "Manual (Table 5A)"
+            else:
+                table5a_meta = oesc_tables.get_table_meta("5A") or {}
+                table5a_rows = table5a_meta.get("rows", [])
+                table5a_cols = table5a_meta.get("columns", [])
+                temp_options = [str(c) for c in table5a_cols if c is not None]
+
+                ambient_key = None
+                if table5a_rows:
+                    for k in table5a_rows[0].keys():
+                        if "Ambient" in str(k):
+                            ambient_key = k
+                            break
+
+                ambient_vals = []
+                if ambient_key:
+                    ambient_vals = sorted(
+                        {r.get(ambient_key) for r in table5a_rows if r.get(ambient_key) is not None}
+                    )
+
+                ambient_choices = [30] + [v for v in ambient_vals if v is not None and v > 30]
+                ambient_c = st.selectbox(
+                    "Ambient temperature (°C)",
+                    ambient_choices if ambient_choices else [30],
+                    index=0,
+                    key="cond_ambient_temp",
+                )
+
+                default_label = None
+                for candidate in ("90°C", "90Â°C"):
+                    if candidate in temp_options:
+                        default_label = candidate
+                        break
+                temp_rating_label = st.selectbox(
+                    "Conductor insulation temperature rating (°C)",
+                    temp_options if temp_options else ["60°C", "75°C", "90°C"],
+                    index=temp_options.index(default_label) if temp_options and default_label in temp_options else 0,
+                    key="cond_temp_rating",
+                )
+
+                if ambient_c <= 30:
+                    temp_factor = 1.0
+                    temp_factor_source = "Table 5A (≤30°C)"
+                else:
+                    row_match = None
+                    for r in table5a_rows:
+                        if ambient_key and r.get(ambient_key) == ambient_c:
+                            row_match = r
+                            break
+                    if row_match is None:
+                        st.warning("Ambient temperature not found in Table 5A; enter the correction factor manually.")
+                        temp_factor = st.number_input(
+                            "Temperature correction factor (Table 5A)",
+                            min_value=0.01,
+                            max_value=1.00,
+                            value=0.94,
+                            step=0.01,
+                            key="cond_temp_factor_manual_fallback",
+                        )
+                        temp_factor_source = "Manual (Table 5A)"
+                    else:
+                        temp_factor = row_match.get(temp_rating_label)
+                        if temp_factor is None:
+                            st.warning("Table 5A factor not available for this temperature rating; enter manually.")
+                            temp_factor = st.number_input(
+                                "Temperature correction factor (Table 5A)",
+                                min_value=0.01,
+                                max_value=1.00,
+                                value=0.94,
+                                step=0.01,
+                                key="cond_temp_factor_manual_fallback2",
+                            )
+                            temp_factor_source = "Manual (Table 5A)"
+                        else:
+                            temp_factor = float(temp_factor)
+                            temp_factor_source = "Table 5A"
 
         I_design_total = I_load * sf
         I_per_set = safe_div(I_design_total, n_parallel) if n_parallel else None
@@ -3808,48 +3939,75 @@ elif page == "Conductors":
         corr_hint = ""
 
         if install.startswith("Free air"):
-            n_single = st.number_input(
-                "Number of single conductors in the group",
-                min_value=1,
-                value=4,
-                step=1,
-                key="cond_freeair_nsingle",
-            )
-
-            spacing = st.radio(
-                "Spacing between cables (% of largest cable diameter)",
-                ["≥ 100%", "25% to 100%", "< 25%"],
-                index=0,
-                horizontal=True,
-                key="cond_freeair_spacing",
-            )
-
-            if spacing == "≥ 100%":
-                subrule = "4-004 (1) & (2) — single in free air"
-                amp_table = cu_table(True) if is_cu else al_table(True)
-            elif spacing == "25% to 100%":
-                subrule = "4-004 (8) — single in free air"
-                amp_table = cu_table(True) if is_cu else al_table(True)
-                corr_table = "Table 5D"
-                corr_needed = True
-                corr_hint = "Enter k_corr from Table 5D (spacing 25%–100%)."
-            else:
-                if n_single <= 4:
-                    subrule = "4-004 (9) — ≤4 single in free air"
-                    amp_table = cu_table(True) if is_cu else al_table(True)
-                    corr_table = "Table 5B"
-                    corr_needed = True
-                    corr_hint = "Enter k_corr from Table 5B (spacing <25%, ≤4 singles)."
+            if is_multi:
+                st.info(
+                    "Multi-conductor cable in free air is handled using the raceway/cable ampacity tables in this helper. "
+                    "Verify applicability for your installation."
+                )
+                n_ccc_freeair = st.number_input(
+                    "Number of current-carrying conductors in cable",
+                    min_value=1,
+                    value=3,
+                    step=1,
+                    key="cond_freeair_nccc",
+                )
+                if n_ccc_freeair <= 3:
+                    subrule = "4-004 (1) & (2) — multiconductor in free air (1–3 CCC)"
+                    amp_table = cu_table(False) if is_cu else al_table(False)
                 else:
-                    subrule = "4-004 (11) — ≥5 single in free air"
+                    subrule = "4-004 (1) & (2) — multiconductor in free air (4+ CCC)"
                     amp_table = cu_table(False) if is_cu else al_table(False)
                     corr_table = "Table 5C"
                     corr_needed = True
-                    corr_hint = "Enter k_corr from Table 5C (spacing <25%, ≥5 singles)."
+                    corr_hint = "Enter k_corr from Table 5C (4+ current-carrying conductors)."
+            else:
+                n_single = st.number_input(
+                    "Number of single conductors in the group",
+                    min_value=1,
+                    value=4,
+                    step=1,
+                    key="cond_freeair_nsingle",
+                )
+
+                spacing = st.radio(
+                    "Spacing between cables (% of largest cable diameter)",
+                    ["≥ 100%", "25% to 100%", "< 25%"],
+                    index=0,
+                    horizontal=True,
+                    key="cond_freeair_spacing",
+                )
+
+                if spacing == "≥ 100%":
+                    subrule = "4-004 (1) & (2) — single in free air"
+                    amp_table = cu_table(True) if is_cu else al_table(True)
+                elif spacing == "25% to 100%":
+                    subrule = "4-004 (8) — single in free air"
+                    amp_table = cu_table(True) if is_cu else al_table(True)
+                    corr_table = "Table 5D"
+                    corr_needed = True
+                    corr_hint = "Enter k_corr from Table 5D (spacing 25%–100%)."
+                else:
+                    if n_single <= 4:
+                        subrule = "4-004 (9) — ≤4 single in free air"
+                        amp_table = cu_table(True) if is_cu else al_table(True)
+                        corr_table = "Table 5B"
+                        corr_needed = True
+                        corr_hint = "Enter k_corr from Table 5B (spacing <25%, ≤4 singles)."
+                    else:
+                        subrule = "4-004 (11) — ≥5 single in free air"
+                        amp_table = cu_table(False) if is_cu else al_table(False)
+                        corr_table = "Table 5C"
+                        corr_needed = True
+                        corr_hint = "Enter k_corr from Table 5C (spacing <25%, ≥5 singles)."
 
         elif install.startswith("Raceway"):
+            n_ccc_label = (
+                "Number of current-carrying conductors in cable"
+                if is_multi
+                else "Number of conductors in raceway/cable (use current-carrying count per your code interpretation)"
+            )
             n_ccc = st.number_input(
-                "Number of conductors in raceway/cable (use current-carrying count per your code interpretation)",
+                n_ccc_label,
                 min_value=1,
                 value=3,
                 step=1,
@@ -3905,27 +4063,207 @@ elif page == "Conductors":
         st.success(f"**Use ampacity from:** {amp_table}")
 
         corr_factor = 1.0
+        corr_factor_source = "None"
         if corr_needed:
-            corr_factor = st.number_input(
-                f"Correction factor k_corr ({corr_table})",
-                min_value=0.01,
-                max_value=1.00,
-                value=0.80,
-                step=0.01,
-                key="cond_corr_factor",
-                help=corr_hint,
-            )
-            st.info(f"Correction factor source: **{corr_table}**")
+            if corr_table == "Table 5B":
+                use_table5b = st.checkbox(
+                    "Use Table 5B lookup (auto)",
+                    value=True,
+                    key="cond_use_table5b",
+                )
+                if use_table5b:
+                    if oesc_tables is None:
+                        st.warning("Table 5B lookup unavailable; enter the factor manually.")
+                        corr_factor = st.number_input(
+                            f"Correction factor k_corr ({corr_table})",
+                            min_value=0.01,
+                            max_value=1.00,
+                            value=0.80,
+                            step=0.01,
+                            key="cond_corr_factor_5b_manual",
+                            help=corr_hint,
+                        )
+                        corr_factor_source = "Manual (Table 5B)"
+                    else:
+                        rows_5b = oesc_tables.get_table_rows("5B") or []
+                        factor = None
+                        for r in rows_5b:
+                            if r.get("Number of conductors") == n_single:
+                                factor = r.get("Correction factor")
+                                break
+                        if factor is None:
+                            st.warning("Table 5B has factors for 2–4 conductors. Enter the factor manually.")
+                            corr_factor = st.number_input(
+                                f"Correction factor k_corr ({corr_table})",
+                                min_value=0.01,
+                                max_value=1.00,
+                                value=0.80,
+                                step=0.01,
+                                key="cond_corr_factor_5b_manual_fallback",
+                                help=corr_hint,
+                            )
+                            corr_factor_source = "Manual (Table 5B)"
+                        else:
+                            corr_factor = float(factor)
+                            corr_factor_source = "Table 5B"
+                else:
+                    corr_factor = st.number_input(
+                        f"Correction factor k_corr ({corr_table})",
+                        min_value=0.01,
+                        max_value=1.00,
+                        value=0.80,
+                        step=0.01,
+                        key="cond_corr_factor_5b_manual_opt",
+                        help=corr_hint,
+                    )
+                    corr_factor_source = "Manual (Table 5B)"
+            else:
+                corr_factor = st.number_input(
+                    f"Correction factor k_corr ({corr_table})",
+                    min_value=0.01,
+                    max_value=1.00,
+                    value=0.80,
+                    step=0.01,
+                    key="cond_corr_factor",
+                    help=corr_hint,
+                )
+                corr_factor_source = corr_table or "Manual"
+
+            st.info(f"Correction factor source: **{corr_factor_source}**")
+
+        if use_temp_corr:
+            st.info(f"Temperature factor source: **{temp_factor_source}**")
+
+        k_total = None
+        if corr_factor is not None and temp_factor is not None:
+            k_total = corr_factor * temp_factor
 
         I_table_required = None
-        if I_per_set is not None:
-            I_table_required = safe_div(I_per_set, corr_factor) if corr_needed else I_per_set
+        if I_per_set is not None and k_total is not None:
+            I_table_required = safe_div(I_per_set, k_total)
 
+        st.metric("Total correction factor (k_total)", fmt(k_total))
+        st.markdown("**Correction factor breakdown**")
+        st.write(
+            f"- k_corr = **{fmt(corr_factor)}** (source: {corr_factor_source})"
+        )
+        st.write(
+            f"- k_temp = **{fmt(temp_factor)}** (source: {temp_factor_source})"
+        )
+        st.write(
+            f"- k_total = k_corr × k_temp = **{fmt(k_total)}**"
+        )
         st.metric("Minimum base-table ampacity to look for", fmt(I_table_required, "A"))
+
+        st.markdown("### Optional: Check selected conductor ampacity")
+        use_amp_check = st.checkbox(
+            "Enable adjusted ampacity check",
+            value=False,
+            key="cond_use_amp_check",
+        )
+
+        if use_amp_check:
+            base_ampacity = None
+            amp_table_id = None
+            m = re.match(r"Table\\s+([1-4])$", str(amp_table).strip())
+            if m:
+                amp_table_id = m.group(1)
+
+            if amp_table_id and oesc_tables is not None:
+                use_lookup = st.checkbox(
+                    f"Lookup base ampacity from {amp_table}",
+                    value=True,
+                    key="cond_use_amp_lookup",
+                )
+                if use_lookup:
+                    table_meta = oesc_tables.get_table_meta(amp_table_id) or {}
+                    table_rows = table_meta.get("rows", [])
+                    size_key = "Size (AWG/kcmil)"
+                    sizes = [str(r.get(size_key)) for r in table_rows if r.get(size_key) is not None]
+                    sizes = sizes if sizes else []
+
+                    temp_cols = table_meta.get("columns", [])
+                    temp_col_map = {}
+                    temp_options = []
+                    for col in temp_cols:
+                        m2 = re.search(r"(\\d+)", str(col))
+                        if m2:
+                            val = int(m2.group(1))
+                            temp_col_map[val] = col
+                            temp_options.append(val)
+                    temp_options = sorted(set(temp_options))
+
+                    size_choice = st.selectbox(
+                        "Conductor size (from table)",
+                        sizes if sizes else ["(no sizes found)"],
+                        index=0,
+                        key="cond_size_choice",
+                    )
+
+                    default_temp = 75 if 75 in temp_options else (temp_options[0] if temp_options else None)
+                    temp_choice = st.selectbox(
+                        "Table column (insulation temp rating)",
+                        temp_options if temp_options else [60, 75, 90],
+                        index=temp_options.index(default_temp) if temp_options and default_temp in temp_options else 0,
+                        key="cond_table_temp_choice",
+                    )
+
+                    if sizes:
+                        for r in table_rows:
+                            if str(r.get(size_key)) == str(size_choice):
+                                col_label = temp_col_map.get(temp_choice)
+                                base_ampacity = r.get(col_label) if col_label else None
+                                break
+
+                    if base_ampacity is None:
+                        st.warning("Selected size/temperature not found in table; enter base ampacity manually.")
+                        base_ampacity = st.number_input(
+                            "Base ampacity from table (A)",
+                            min_value=0.0,
+                            value=0.0,
+                            step=1.0,
+                            key="cond_base_ampacity_manual_fallback",
+                        )
+                else:
+                    base_ampacity = st.number_input(
+                        "Base ampacity from table (A)",
+                        min_value=0.0,
+                        value=0.0,
+                        step=1.0,
+                        key="cond_base_ampacity_manual",
+                    )
+            else:
+                st.caption("Auto table lookup unavailable for this ampacity source. Enter base ampacity manually.")
+                base_ampacity = st.number_input(
+                    "Base ampacity from table (A)",
+                    min_value=0.0,
+                    value=0.0,
+                    step=1.0,
+                    key="cond_base_ampacity_manual_only",
+                )
+
+            adjusted_ampacity = None
+            if base_ampacity is not None and k_total is not None:
+                adjusted_ampacity = float(base_ampacity) * float(k_total)
+
+            st.metric("Base ampacity (selected)", fmt(base_ampacity, "A"))
+            st.metric("Adjusted ampacity per set", fmt(adjusted_ampacity, "A"))
+            if adjusted_ampacity is not None and n_parallel:
+                st.metric("Adjusted ampacity (all sets)", fmt(adjusted_ampacity * n_parallel, "A"))
+
+            if adjusted_ampacity is not None and I_per_set is not None:
+                if adjusted_ampacity < I_per_set:
+                    st.error(
+                        "Adjusted ampacity per set is below the load current per set. "
+                        "Choose a larger conductor or reduce correction factors."
+                    )
+                else:
+                    st.success("Adjusted ampacity per set meets or exceeds the load current per set.")
 
         st.markdown("### Equations used")
         eq(r"I_{design} = I_{load}\times SF")
         eq(r"I_{per\_set} = \frac{I_{design}}{N_{parallel}}")
-        eq(r"I_{table} = \frac{I_{per\_set}}{k_{corr}}")
+        eq(r"k_{total} = k_{corr}\cdot k_{temp}")
+        eq(r"I_{table} = \frac{I_{per\_set}}{k_{total}}")
 
 # End of app
