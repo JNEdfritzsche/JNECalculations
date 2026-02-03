@@ -645,24 +645,72 @@ elif page == "Transformer Feeders":
         render_md_safe("transformer_feeders.md")
 
     with calc_tab:
-        header("Transformer Feeder Calculator", "Compute secondary FLA and a simple ampacity target.")
+        header("Transformer Feeder Calculator", "Compute primary/secondary FLA, turns ratio, and transformer type.")
         show_code_note(code_mode)
 
-        col1, col2 = st.columns(2, gap="large")
-        with col1:
-            kva = st.number_input("Transformer size (kVA)", min_value=0.1, value=150.0, step=1.0, key="tf_kva")
-        with col2:
-            vsec = st.number_input("Secondary voltage (V LL)", min_value=1.0, value=208.0, step=1.0, key="tf_vsec")
+        st.markdown("### Inputs")
+        c1, c2, c3 = st.columns([1, 1, 1], gap="large")
+        with c1:
+            phase = st.selectbox("Number of phases", ["Single-phase", "Three-phase"], index=0, key="tf_phase")
+        with c2:
+            rating_value = st.number_input("Transformer rating", min_value=0.1, value=15.0, step=0.1, key="tf_rating")
+        with c3:
+            rating_unit = st.selectbox("Rating unit", ["kVA", "MVA", "VA"], index=0, key="tf_rating_unit")
 
-        continuous = st.checkbox("Treat as continuous load (125%)", value=True, key="tf_cont")
-        Is = (kva * 1000.0) / (math.sqrt(3) * vsec)
-        target = Is * (1.25 if continuous else 1.0)
+        v1, v2 = st.columns(2, gap="large")
+        with v1:
+            vpri = st.number_input("Primary transformer voltage (V)", min_value=1.0, value=480.0, step=1.0, key="tf_vpri")
+        with v2:
+            vsec = st.number_input("Secondary transformer voltage (V)", min_value=1.0, value=120.0, step=1.0, key="tf_vsec")
 
-        st.metric("Secondary full-load current (A)", fmt(Is, "A"))
-        st.success(f"Feeder ampacity target: **{fmt(target, 'A')}**")
-        st.markdown("### Equations used")
-        eq(r"I_{sec}=\frac{S}{\sqrt{3}\,V_{sec}}")
-        eq(r"I_{target}=1.25\cdot I_{sec}")
+        st.caption("Use line-to-line voltage for three-phase transformers. Example: 15 kVA, 480 V to 120 V.")
+
+        # Convert rating to VA
+        if rating_unit == "MVA":
+            s_va = rating_value * 1_000_000.0
+        elif rating_unit == "kVA":
+            s_va = rating_value * 1_000.0
+        else:
+            s_va = rating_value
+
+        if phase == "Three-phase":
+            I1 = s_va / (math.sqrt(3) * vpri) if vpri > 0 else None
+            I2 = s_va / (math.sqrt(3) * vsec) if vsec > 0 else None
+        else:
+            I1 = s_va / vpri if vpri > 0 else None
+            I2 = s_va / vsec if vsec > 0 else None
+
+        turns_ratio = safe_div(vpri, vsec) if vpri and vsec else None
+        if vpri > vsec:
+            xform_dir = "Step-down"
+        elif vpri < vsec:
+            xform_dir = "Step-up"
+        else:
+            xform_dir = "Isolation (1:1)"
+        xform_type = f"{phase} {xform_dir} Transformer"
+
+        def _fmt_no_sci(x, unit=""):
+            if x is None:
+                return "—"
+            try:
+                v = float(x)
+            except Exception:
+                return str(x)
+            s = f"{v:,.3f}".rstrip("0").rstrip(".")
+            return f"{s} {unit}".strip()
+
+        r1, r2, r3 = st.columns([1, 1, 1], gap="large")
+        r1.metric("Primary Full-Load Current", _fmt_no_sci(I1, "A"))
+        r2.metric("Secondary Full-Load Current", _fmt_no_sci(I2, "A"))
+        r3.metric("Turns Ratio (V1/V2)", _fmt_no_sci(turns_ratio, ""))
+        st.write(f"**Transformer Type:** {xform_type}")
+
+        st.markdown("### Transformer formulas")
+        if phase == "Three-phase":
+            eq(r"I=\frac{S}{\sqrt{3}\,V}")
+        else:
+            eq(r"I=\frac{S}{V}")
+        eq(r"\text{Turns Ratio}=\frac{V_1}{V_2}=\frac{N_1}{N_2}=\frac{I_2}{I_1}")
 
 
 # ============================
