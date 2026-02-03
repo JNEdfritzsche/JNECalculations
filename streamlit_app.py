@@ -649,21 +649,55 @@ elif page == "Transformer Feeders":
         show_code_note(code_mode)
 
         st.markdown("### Inputs")
-        c1, c2, c3 = st.columns([1, 1, 1], gap="large")
-        with c1:
+        row1 = st.columns([3, 1], gap="large")
+        with row1[0]:
             phase = st.selectbox("Number of phases", ["Single-phase", "Three-phase"], index=0, key="tf_phase")
-        with c2:
+        with row1[1]:
+            st.write("")
+
+        row2 = st.columns([3, 1], gap="large")
+        with row2[0]:
             rating_value = st.number_input("Transformer rating", min_value=0.1, value=15.0, step=0.1, key="tf_rating")
-        with c3:
+        with row2[1]:
             rating_unit = st.selectbox("Rating unit", ["kVA", "MVA", "VA"], index=0, key="tf_rating_unit")
 
-        v1, v2 = st.columns(2, gap="large")
-        with v1:
-            vpri = st.number_input("Primary transformer voltage (V)", min_value=1.0, value=480.0, step=1.0, key="tf_vpri")
-        with v2:
-            vsec = st.number_input("Secondary transformer voltage (V)", min_value=1.0, value=120.0, step=1.0, key="tf_vsec")
+        row3 = st.columns([3, 1], gap="large")
+        with row3[0]:
+            vpri_value = st.number_input(
+                "Primary transformer voltage",
+                min_value=1,
+                value=480,
+                step=10,
+                format="%d",
+                key="tf_vpri",
+            )
+        with row3[1]:
+            vpri_unit = st.selectbox("Unit", ["V", "kV", "MV"], index=0, key="tf_vpri_unit")
+
+        row4 = st.columns([3, 1], gap="large")
+        with row4[0]:
+            vsec_value = st.number_input(
+                "Secondary transformer voltage",
+                min_value=1,
+                value=120,
+                step=10,
+                format="%d",
+                key="tf_vsec",
+            )
+        with row4[1]:
+            vsec_unit = st.selectbox("Unit", ["V", "kV", "MV"], index=0, key="tf_vsec_unit")
 
         st.caption("Use line-to-line voltage for three-phase transformers. Example: 15 kVA, 480 V to 120 V.")
+
+        def _volts_from(value, unit):
+            if unit == "MV":
+                return value * 1_000_000.0
+            if unit == "kV":
+                return value * 1_000.0
+            return value
+
+        vpri = _volts_from(vpri_value, vpri_unit)
+        vsec = _volts_from(vsec_value, vsec_unit)
 
         # Convert rating to VA
         if rating_unit == "MVA":
