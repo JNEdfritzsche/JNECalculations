@@ -1840,6 +1840,313 @@ elif page == "Conduit Size & Fill & Bend Radius":
         st.markdown("### Equation used")
         eq(r"\text{Fill}=\frac{\sum\left(A_{cond}\cdot N_{cond/cable}\cdot N_{cables}\right)}{A_{conduit}}")
 
+        st.divider()
+        st.markdown("### Conduit layout (visual)")
+
+        def _area_to_radius(area_mm2):
+            try:
+                a = float(area_mm2)
+            except Exception:
+                return None
+            return math.sqrt(a / math.pi) if a > 0 else None
+
+        def _layout_in_circle(n, r, R):
+            """Simple concentric-ring layout for n equal circles of radius r inside radius R."""
+            if not n or not r or not R or r <= 0 or R <= 0:
+                return []
+            if r > R:
+                return []
+            if n == 1:
+                return [(0.0, 0.0)]
+            positions = [(0.0, 0.0)]
+            remaining = n - 1
+            ring = 1
+            while remaining > 0:
+                ring_radius = ring * (2.2 * r)
+                if ring_radius + r > R:
+                    break
+                circumference = 2 * math.pi * ring_radius
+                count = max(1, int(circumference / (2.2 * r)))
+                count = min(count, remaining)
+                for i in range(count):
+                    angle = 2 * math.pi * i / count
+                    positions.append((ring_radius * math.cos(angle), ring_radius * math.sin(angle)))
+                remaining -= count
+                ring += 1
+            return positions[:n]
+
+        def _place_cables(cables, conduit_radius):
+            """Greedy circle packing using tangent candidates (deterministic)."""
+            placed = []
+            unplaced = 0
+            spacing_options = [0.5, 0.2, 0.0]  # progressively relax spacing if needed
+
+            def fits(x, y, r, spacing):
+                if (x * x + y * y) ** 0.5 + r > conduit_radius:
+                    return False
+                for other in placed:
+                    dx = x - other["x"]
+                    dy = y - other["y"]
+                    min_sep = r + other["r"] + spacing
+                    if (dx * dx + dy * dy) < (min_sep * min_sep):
+                        return False
+                return True
+
+            def circle_intersections(x0, y0, r0, x1, y1, r1):
+                dx = x1 - x0
+                dy = y1 - y0
+                d = math.hypot(dx, dy)
+                if d == 0 or d > (r0 + r1) or d < abs(r0 - r1):
+                    return []
+                a = (r0 * r0 - r1 * r1 + d * d) / (2 * d)
+                h_sq = r0 * r0 - a * a
+                if h_sq < 0:
+                    return []
+                h = math.sqrt(h_sq)
+                xm = x0 + a * dx / d
+                ym = y0 + a * dy / d
+                rx = -dy * (h / d)
+                ry = dx * (h / d)
+                return [(xm + rx, ym + ry), (xm - rx, ym - ry)]
+
+            # Place larger cables first to improve packing
+            cables_sorted = sorted(cables, key=lambda c: (c.get("r") or 0.0), reverse=True)
+            angles = [i * (math.pi / 18.0) for i in range(36)]
+
+            for cable in cables_sorted:
+                r = cable.get("r")
+                if r is None or r <= 0:
+                    unplaced += 1
+                    continue
+                if r > conduit_radius:
+                    unplaced += 1
+                    continue
+                if not placed:
+                    cable["x"], cable["y"] = 0.0, 0.0
+                    placed.append(cable)
+                    continue
+
+                placed_flag = False
+
+                for spacing in spacing_options:
+                    best = None
+                    best_score = None
+                    candidates = []
+
+                    # Tangent to one circle (angle sweep)
+                    for other in placed:
+                        base_dist = other["r"] + r + spacing
+                        for a in angles:
+                            candidates.append(
+                                (other["x"] + base_dist * math.cos(a), other["y"] + base_dist * math.sin(a))
+                            )
+
+                    # Tangent to two circles (circle intersections)
+                    for i in range(len(placed)):
+                        for j in range(i + 1, len(placed)):
+                            o1 = placed[i]
+                            o2 = placed[j]
+                            d1 = o1["r"] + r + spacing
+                            d2 = o2["r"] + r + spacing
+                            candidates.extend(
+                                circle_intersections(o1["x"], o1["y"], d1, o2["x"], o2["y"], d2)
+                            )
+
+                    # Rank candidates by distance to center
+                    for (x, y) in candidates:
+                        if not fits(x, y, r, spacing):
+                            continue
+                        score = (x * x + y * y)
+                        if best_score is None or score < best_score:
+                            best_score = score
+                            best = (x, y)
+
+                    # Fallback: a few concentric rings
+                    if best is None:
+                        for ring in range(1, 16):
+                            ring_r = ring * (r * 1.1)
+                            if ring_r + r > conduit_radius:
+                                break
+                            for a in angles:
+                                x = ring_r * math.cos(a)
+                                y = ring_r * math.sin(a)
+                                if fits(x, y, r, spacing):
+                                    score = (x * x + y * y)
+                                    if best_score is None or score < best_score:
+                                        best_score = score
+                                        best = (x, y)
+                            if best is not None:
+                                break
+
+                    if best is not None:
+                        cable["x"], cable["y"] = best[0], best[1]
+                        placed.append(cable)
+                        placed_flag = True
+                        break
+
+                if not placed_flag:
+                    unplaced += 1
+
+            return placed, unplaced
+
+        def _place_cables_allow_overlap(cables, conduit_radius):
+            """Fallback placement that allows overlap (keeps all circles inside the conduit)."""
+            placed = []
+            for i, cable in enumerate(cables):
+                r = cable.get("r")
+                if r is None or r <= 0 or r > conduit_radius:
+                    continue
+                if i == 0:
+                    cable["x"], cable["y"] = 0.0, 0.0
+                    placed.append(cable)
+                    continue
+                # place along expanding spiral without collision checks
+                angle = i * 0.7
+                dist = min(conduit_radius - r, (0.7 * r) * math.sqrt(i))
+                x = dist * math.cos(angle)
+                y = dist * math.sin(angle)
+                cable["x"], cable["y"] = x, y
+                placed.append(cable)
+            return placed
+
+        def _build_conduit_svg(conduit_radius, cables, overpacked=False):
+            canvas = 360
+            margin = 12
+            scale = (canvas - 2 * margin) / (2 * conduit_radius) if conduit_radius else 1.0
+            cx = canvas / 2
+            cy = canvas / 2
+
+            def to_px(val_mm):
+                return val_mm * scale
+
+            svg_parts = []
+            svg_parts.append(
+                f'<svg width="{canvas}" height="{canvas}" viewBox="0 0 {canvas} {canvas}" '
+                f'xmlns="http://www.w3.org/2000/svg">'
+            )
+            svg_parts.append(
+                f'<circle cx="{cx}" cy="{cy}" r="{to_px(conduit_radius):.2f}" '
+                f'stroke="#222" stroke-width="2" fill="#f8f8f8"/>'
+            )
+
+            palette = ["#5B8FF9", "#61DDAA", "#F6BD16", "#E8684A", "#9270CA", "#6DC8EC", "#FF9D4D"]
+
+            for cable in cables:
+                x = cable.get("x")
+                y = cable.get("y")
+                r = cable.get("r")
+                if x is None or y is None or r is None:
+                    continue
+                color = palette[cable.get("group_idx", 0) % len(palette)]
+                svg_parts.append(
+                    f'<circle cx="{cx + to_px(x):.2f}" cy="{cy + to_px(y):.2f}" r="{to_px(r):.2f}" '
+                    f'stroke="#333" stroke-width="1" fill="{color}" fill-opacity="0.55"/>'
+                )
+
+                n_cond = cable.get("n_cond")
+                r_cond = cable.get("r_cond")
+                if n_cond and r_cond:
+                    conductor_positions = _layout_in_circle(int(n_cond), r_cond, r - 0.3)
+                    for (dx, dy) in conductor_positions:
+                        svg_parts.append(
+                            f'<circle cx="{cx + to_px(x + dx):.2f}" cy="{cy + to_px(y + dy):.2f}" '
+                            f'r="{to_px(r_cond):.2f}" stroke="#444" stroke-width="0.6" '
+                            f'fill="#ffffff" fill-opacity="0.9"/>'
+                        )
+
+            if overpacked:
+                # Diagonal red hatch clipped to conduit circle
+                svg_parts.append(
+                    f'<defs><clipPath id="conduitClip"><circle cx="{cx}" cy="{cy}" '
+                    f'r="{to_px(conduit_radius):.2f}"/></clipPath></defs>'
+                )
+                svg_parts.append(f'<g clip-path="url(#conduitClip)" opacity="0.35">')
+                step = 14
+                for x in range(-canvas, canvas * 2, step):
+                    x1 = x
+                    y1 = -canvas
+                    x2 = x + canvas
+                    y2 = canvas
+                    svg_parts.append(
+                        f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" '
+                        f'stroke="#cc0000" stroke-width="6"/>'
+                    )
+                svg_parts.append("</g>")
+
+            svg_parts.append("</svg>")
+            return "".join(svg_parts)
+
+        show_viz = st.checkbox("Show conduit cross-section diagram", value=True, key="cf_show_viz")
+        if show_viz:
+            conduit_radius = _area_to_radius(conduit_internal_area) if conduit_internal_area else None
+            if not conduit_radius:
+                st.warning("Provide a conduit internal area to render the cross-section.")
+            else:
+                cable_instances = []
+                approx_notes = []
+
+                try:
+                    for group_idx, (_, r) in enumerate(edited.iterrows()):
+                        qty = int(_to_float(r.get("Qty (cables)")) or 0)
+                        n_cond = int(_to_float(r.get("Conductors per cable")) or 0)
+
+                        area_per_cable = _to_float(r.get("Area per cable (mm²)"))
+                        if area_per_cable is None and t6_area:
+                            t = _norm(r.get("Cable type", ""))
+                            s = _norm(r.get("Conductor size", ""))
+                            a_cond_table = _to_float(t6_area.get(t, {}).get(s, None))
+                            if a_cond_table is not None and n_cond:
+                                area_per_cable = float(n_cond) * float(a_cond_table)
+
+                        area_per_conductor = None
+                        if t6_area:
+                            t = _norm(r.get("Cable type", ""))
+                            s = _norm(r.get("Conductor size", ""))
+                            area_per_conductor = _to_float(t6_area.get(t, {}).get(s, None))
+
+                        if area_per_conductor is None and area_per_cable and n_cond:
+                            area_per_conductor = area_per_cable / n_cond
+                            approx_notes.append("Conductor areas were approximated from cable area for custom entries.")
+
+                        r_cable = _area_to_radius(area_per_cable) if area_per_cable else None
+                        r_cond = _area_to_radius(area_per_conductor) if area_per_conductor else None
+
+                        for _ in range(qty):
+                            cable_instances.append(
+                                {
+                                    "r": r_cable,
+                                    "n_cond": n_cond,
+                                    "r_cond": r_cond,
+                                    "group_idx": group_idx,
+                                }
+                            )
+                except Exception:
+                    cable_instances = []
+
+                if not cable_instances:
+                    st.info("Add at least one cable group with an area to render the layout.")
+                else:
+                    placed, unplaced = _place_cables(cable_instances, conduit_radius)
+                    overpacked = (
+                        conduit_allowed_area is not None
+                        and total_cable_area is not None
+                        and total_cable_area > conduit_allowed_area + 1e-9
+                    )
+                    if unplaced > 0 and overpacked:
+                        placed = _place_cables_allow_overlap(cable_instances, conduit_radius)
+                    svg = _build_conduit_svg(conduit_radius, placed, overpacked=overpacked)
+                    st.markdown(svg, unsafe_allow_html=True)
+
+                    notes = []
+                    if unplaced > 0:
+                        notes.append("Cables overlap in the diagram because fill exceeds the available space.")
+                    if approx_notes:
+                        notes.append("Conductor circles may be approximate when per-conductor area is unavailable.")
+                    if overpacked:
+                        notes.append("Red hatching indicates the conduit is over-packed.")
+                    if notes:
+                        st.caption(" ".join(notes))
+
         with st.expander("Show calculation details", expanded=False):
             st.write(f"- Conduit: **{conduit_type}** — **{conduit_trade}**")
             st.write(f"- Conduit internal area: **{fmt(conduit_internal_area, 'mm²')}**")
