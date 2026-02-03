@@ -1156,6 +1156,167 @@ elif page == "Conduit Size & Fill & Bend Radius":
         t6_types, t6_sizes_by_type, t6_area = _table6_to_maps(t6_df)
         t9_type_col, t9_size_col, t9_index = _table9_to_index(t9_df)
 
+        # Shared palette for cable group coloring (matches conduit diagram)
+        CF_PALETTE = ["#5B8FF9", "#61DDAA", "#F6BD16", "#E8684A", "#9270CA", "#6DC8EC", "#FF9D4D"]
+
+        def _area_to_radius(area_mm2):
+            try:
+                a = float(area_mm2)
+            except Exception:
+                return None
+            return math.sqrt(a / math.pi) if a > 0 else None
+
+        def _pack_circles_in_circle(n, r, R):
+            """Pack n equal circles of radius r inside radius R using tangent candidates."""
+            if not n or not r or not R or r <= 0 or R <= 0:
+                return []
+            if r > R:
+                return []
+            if n == 1:
+                return [(0.0, 0.0)]
+
+            placed = []
+            spacing_options = [0.2, 0.0]
+            angles = [i * (math.pi / 18.0) for i in range(36)]
+
+            def fits(x, y, rr, spacing):
+                if math.hypot(x, y) + rr > R:
+                    return False
+                for ox, oy in placed:
+                    dx = x - ox
+                    dy = y - oy
+                    if (dx * dx + dy * dy) < (2 * rr + spacing) ** 2:
+                        return False
+                return True
+
+            def circle_intersections(x0, y0, r0, x1, y1, r1):
+                dx = x1 - x0
+                dy = y1 - y0
+                d = math.hypot(dx, dy)
+                if d == 0 or d > (r0 + r1) or d < abs(r0 - r1):
+                    return []
+                a = (r0 * r0 - r1 * r1 + d * d) / (2 * d)
+                h_sq = r0 * r0 - a * a
+                if h_sq < 0:
+                    return []
+                h = math.sqrt(h_sq)
+                xm = x0 + a * dx / d
+                ym = y0 + a * dy / d
+                rx = -dy * (h / d)
+                ry = dx * (h / d)
+                return [(xm + rx, ym + ry), (xm - rx, ym - ry)]
+
+            placed.append((0.0, 0.0))
+            while len(placed) < n:
+                placed_flag = False
+                for spacing in spacing_options:
+                    best = None
+                    best_score = None
+                    candidates = []
+
+                    for (ox, oy) in placed:
+                        base_dist = 2 * r + spacing
+                        for a in angles:
+                            candidates.append((ox + base_dist * math.cos(a), oy + base_dist * math.sin(a)))
+
+                    for i in range(len(placed)):
+                        for j in range(i + 1, len(placed)):
+                            (x1, y1) = placed[i]
+                            (x2, y2) = placed[j]
+                            d1 = 2 * r + spacing
+                            d2 = 2 * r + spacing
+                            candidates.extend(circle_intersections(x1, y1, d1, x2, y2, d2))
+
+                    for (x, y) in candidates:
+                        if not fits(x, y, r, spacing):
+                            continue
+                        score = x * x + y * y
+                        if best_score is None or score < best_score:
+                            best_score = score
+                            best = (x, y)
+
+                    if best is None:
+                        # ring fallback
+                        for ring in range(1, 12):
+                            ring_r = ring * (r * 1.1)
+                            if ring_r + r > R:
+                                break
+                            for a in angles:
+                                x = ring_r * math.cos(a)
+                                y = ring_r * math.sin(a)
+                                if fits(x, y, r, spacing):
+                                    score = x * x + y * y
+                                    if best_score is None or score < best_score:
+                                        best_score = score
+                                        best = (x, y)
+                            if best is not None:
+                                break
+
+                    if best is not None:
+                        placed.append(best)
+                        placed_flag = True
+                        break
+
+                if not placed_flag:
+                    break
+
+            return placed
+
+        def _build_cable_group_swatch_svg(area_per_cable, n_cond, area_per_conductor, group_idx):
+            """Render a small SVG swatch showing this cable group's color and conductor layout."""
+            r_cable = _area_to_radius(area_per_cable)
+            if r_cable is None or r_cable <= 0:
+                return None
+
+            r_cond = _area_to_radius(area_per_conductor) if area_per_conductor else None
+
+            canvas = 90
+            margin = 6
+            scale = (canvas - 2 * margin) / (2 * r_cable)
+            cx = canvas / 2
+            cy = canvas / 2
+
+            def to_px(val_mm):
+                return val_mm * scale
+
+            color = CF_PALETTE[group_idx % len(CF_PALETTE)]
+
+            svg_parts = []
+            svg_parts.append(
+                f'<svg width="{canvas}" height="{canvas}" viewBox="0 0 {canvas} {canvas}" '
+                f'xmlns="http://www.w3.org/2000/svg">'
+            )
+            svg_parts.append(
+                f'<circle cx="{cx}" cy="{cy}" r="{to_px(r_cable):.2f}" '
+                f'stroke="#333" stroke-width="1" fill="{color}" fill-opacity="0.55"/>'
+            )
+
+            if n_cond:
+                inner_margin = 0.6
+                R_inner = r_cable - inner_margin
+                if R_inner > 0:
+                    if r_cond is None or r_cond <= 0:
+                        r_cond_use = R_inner / max(1.6 * math.sqrt(int(n_cond)), 1.6)
+                    else:
+                        r_cond_use = min(r_cond, R_inner)
+
+                    conductor_positions = []
+                    for _ in range(15):
+                        conductor_positions = _pack_circles_in_circle(int(n_cond), r_cond_use, R_inner)
+                        if len(conductor_positions) >= int(n_cond):
+                            break
+                        r_cond_use *= 0.9
+
+                    for (dx, dy) in conductor_positions[: int(n_cond)]:
+                        svg_parts.append(
+                            f'<circle cx="{cx + to_px(dx):.2f}" cy="{cy + to_px(dy):.2f}" '
+                            f'r="{to_px(r_cond_use):.2f}" stroke="#111" stroke-width="0.6" '
+                            f'fill="#000000"/>'
+                        )
+
+            svg_parts.append("</svg>")
+            return "".join(svg_parts)
+
         # ----------------------------
         # Conduit selection (Table 9 or manual fallback)
         # ----------------------------
@@ -1601,6 +1762,26 @@ elif page == "Conduit Size & Fill & Bend Radius":
                             with area_display_col2:
                                 total_area = area_per_cable * qty
                                 st.caption(f"Total area: {total_area:.2f} mm²")
+
+                        # Cable group color swatch (matches conduit diagram palette/layout)
+                        area_per_conductor = None
+                        if t6_area:
+                            t = _norm(table_key)
+                            s = _norm(cond_size)
+                            area_per_conductor = _to_float(t6_area.get(t, {}).get(s, None))
+                        if area_per_conductor is None and area_per_cable and n_cond:
+                            area_per_conductor = float(area_per_cable) / float(n_cond)
+
+                        with col2:
+                            swatch_svg = _build_cable_group_swatch_svg(
+                                area_per_cable=area_per_cable,
+                                n_cond=int(n_cond) if n_cond else 0,
+                                area_per_conductor=area_per_conductor,
+                                group_idx=display_num - 1,
+                            )
+                            if swatch_svg:
+                                st.markdown(swatch_svg, unsafe_allow_html=True)
+                                st.caption("Group color preview (matches conduit diagram)")
                 
                 # Minus button outside the box (on every row)
                 with minus_col:
@@ -1891,13 +2072,6 @@ elif page == "Conduit Size & Fill & Bend Radius":
         st.divider()
         st.markdown("### Conduit layout (visual)")
 
-        def _area_to_radius(area_mm2):
-            try:
-                a = float(area_mm2)
-            except Exception:
-                return None
-            return math.sqrt(a / math.pi) if a > 0 else None
-
         def _layout_in_circle(n, r, R):
             """Simple concentric-ring layout for n equal circles of radius r inside radius R."""
             if not n or not r or not R or r <= 0 or R <= 0:
@@ -1922,102 +2096,6 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 remaining -= count
                 ring += 1
             return positions[:n]
-
-        def _pack_circles_in_circle(n, r, R):
-            """Pack n equal circles of radius r inside radius R using tangent candidates."""
-            if not n or not r or not R or r <= 0 or R <= 0:
-                return []
-            if r > R:
-                return []
-            if n == 1:
-                return [(0.0, 0.0)]
-
-            placed = []
-            spacing_options = [0.2, 0.0]
-            angles = [i * (math.pi / 18.0) for i in range(36)]
-
-            def fits(x, y, rr, spacing):
-                if math.hypot(x, y) + rr > R:
-                    return False
-                for ox, oy in placed:
-                    dx = x - ox
-                    dy = y - oy
-                    if (dx * dx + dy * dy) < (2 * rr + spacing) ** 2:
-                        return False
-                return True
-
-            def circle_intersections(x0, y0, r0, x1, y1, r1):
-                dx = x1 - x0
-                dy = y1 - y0
-                d = math.hypot(dx, dy)
-                if d == 0 or d > (r0 + r1) or d < abs(r0 - r1):
-                    return []
-                a = (r0 * r0 - r1 * r1 + d * d) / (2 * d)
-                h_sq = r0 * r0 - a * a
-                if h_sq < 0:
-                    return []
-                h = math.sqrt(h_sq)
-                xm = x0 + a * dx / d
-                ym = y0 + a * dy / d
-                rx = -dy * (h / d)
-                ry = dx * (h / d)
-                return [(xm + rx, ym + ry), (xm - rx, ym - ry)]
-
-            placed.append((0.0, 0.0))
-            while len(placed) < n:
-                placed_flag = False
-                for spacing in spacing_options:
-                    best = None
-                    best_score = None
-                    candidates = []
-
-                    for (ox, oy) in placed:
-                        base_dist = 2 * r + spacing
-                        for a in angles:
-                            candidates.append((ox + base_dist * math.cos(a), oy + base_dist * math.sin(a)))
-
-                    for i in range(len(placed)):
-                        for j in range(i + 1, len(placed)):
-                            (x1, y1) = placed[i]
-                            (x2, y2) = placed[j]
-                            d1 = 2 * r + spacing
-                            d2 = 2 * r + spacing
-                            candidates.extend(circle_intersections(x1, y1, d1, x2, y2, d2))
-
-                    for (x, y) in candidates:
-                        if not fits(x, y, r, spacing):
-                            continue
-                        score = x * x + y * y
-                        if best_score is None or score < best_score:
-                            best_score = score
-                            best = (x, y)
-
-                    if best is None:
-                        # ring fallback
-                        for ring in range(1, 12):
-                            ring_r = ring * (r * 1.1)
-                            if ring_r + r > R:
-                                break
-                            for a in angles:
-                                x = ring_r * math.cos(a)
-                                y = ring_r * math.sin(a)
-                                if fits(x, y, r, spacing):
-                                    score = x * x + y * y
-                                    if best_score is None or score < best_score:
-                                        best_score = score
-                                        best = (x, y)
-                            if best is not None:
-                                break
-
-                    if best is not None:
-                        placed.append(best)
-                        placed_flag = True
-                        break
-
-                if not placed_flag:
-                    break
-
-            return placed
 
         def _place_cables(cables, conduit_radius, angle_offset=0.0, angle_count=36, seed_mode="center"):
             """Greedy circle packing using tangent candidates (deterministic)."""
@@ -2190,15 +2268,13 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 f'stroke="#222" stroke-width="2" fill="#f8f8f8"/>'
             )
 
-            palette = ["#5B8FF9", "#61DDAA", "#F6BD16", "#E8684A", "#9270CA", "#6DC8EC", "#FF9D4D"]
-
             for cable in cables:
                 x = cable.get("x")
                 y = cable.get("y")
                 r = cable.get("r")
                 if x is None or y is None or r is None:
                     continue
-                color = palette[cable.get("group_idx", 0) % len(palette)]
+                color = CF_PALETTE[cable.get("group_idx", 0) % len(CF_PALETTE)]
                 svg_parts.append(
                     f'<circle cx="{cx + to_px(x):.2f}" cy="{cy + to_px(y):.2f}" r="{to_px(r):.2f}" '
                     f'stroke="#333" stroke-width="1" fill="{color}" fill-opacity="0.55"/>'
