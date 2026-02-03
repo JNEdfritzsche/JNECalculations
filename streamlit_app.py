@@ -665,10 +665,9 @@ elif page == "Transformer Feeders":
         with row3[0]:
             vpri_value = st.number_input(
                 "Primary transformer voltage",
-                min_value=1,
-                value=480,
-                step=10,
-                format="%d",
+                min_value=1.0,
+                value=480.0,
+                step=1.0,
                 key="tf_vpri",
             )
         with row3[1]:
@@ -678,10 +677,9 @@ elif page == "Transformer Feeders":
         with row4[0]:
             vsec_value = st.number_input(
                 "Secondary transformer voltage",
-                min_value=1,
-                value=120,
-                step=10,
-                format="%d",
+                min_value=1.0,
+                value=120.0,
+                step=1.0,
                 key="tf_vsec",
             )
         with row4[1]:
