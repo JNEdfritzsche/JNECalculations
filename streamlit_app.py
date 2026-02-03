@@ -1875,7 +1875,103 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 ring += 1
             return positions[:n]
 
-        def _place_cables(cables, conduit_radius):
+        def _pack_circles_in_circle(n, r, R):
+            """Pack n equal circles of radius r inside radius R using tangent candidates."""
+            if not n or not r or not R or r <= 0 or R <= 0:
+                return []
+            if r > R:
+                return []
+            if n == 1:
+                return [(0.0, 0.0)]
+
+            placed = []
+            spacing_options = [0.2, 0.0]
+            angles = [i * (math.pi / 18.0) for i in range(36)]
+
+            def fits(x, y, rr, spacing):
+                if math.hypot(x, y) + rr > R:
+                    return False
+                for ox, oy in placed:
+                    dx = x - ox
+                    dy = y - oy
+                    if (dx * dx + dy * dy) < (2 * rr + spacing) ** 2:
+                        return False
+                return True
+
+            def circle_intersections(x0, y0, r0, x1, y1, r1):
+                dx = x1 - x0
+                dy = y1 - y0
+                d = math.hypot(dx, dy)
+                if d == 0 or d > (r0 + r1) or d < abs(r0 - r1):
+                    return []
+                a = (r0 * r0 - r1 * r1 + d * d) / (2 * d)
+                h_sq = r0 * r0 - a * a
+                if h_sq < 0:
+                    return []
+                h = math.sqrt(h_sq)
+                xm = x0 + a * dx / d
+                ym = y0 + a * dy / d
+                rx = -dy * (h / d)
+                ry = dx * (h / d)
+                return [(xm + rx, ym + ry), (xm - rx, ym - ry)]
+
+            placed.append((0.0, 0.0))
+            while len(placed) < n:
+                placed_flag = False
+                for spacing in spacing_options:
+                    best = None
+                    best_score = None
+                    candidates = []
+
+                    for (ox, oy) in placed:
+                        base_dist = 2 * r + spacing
+                        for a in angles:
+                            candidates.append((ox + base_dist * math.cos(a), oy + base_dist * math.sin(a)))
+
+                    for i in range(len(placed)):
+                        for j in range(i + 1, len(placed)):
+                            (x1, y1) = placed[i]
+                            (x2, y2) = placed[j]
+                            d1 = 2 * r + spacing
+                            d2 = 2 * r + spacing
+                            candidates.extend(circle_intersections(x1, y1, d1, x2, y2, d2))
+
+                    for (x, y) in candidates:
+                        if not fits(x, y, r, spacing):
+                            continue
+                        score = x * x + y * y
+                        if best_score is None or score < best_score:
+                            best_score = score
+                            best = (x, y)
+
+                    if best is None:
+                        # ring fallback
+                        for ring in range(1, 12):
+                            ring_r = ring * (r * 1.1)
+                            if ring_r + r > R:
+                                break
+                            for a in angles:
+                                x = ring_r * math.cos(a)
+                                y = ring_r * math.sin(a)
+                                if fits(x, y, r, spacing):
+                                    score = x * x + y * y
+                                    if best_score is None or score < best_score:
+                                        best_score = score
+                                        best = (x, y)
+                            if best is not None:
+                                break
+
+                    if best is not None:
+                        placed.append(best)
+                        placed_flag = True
+                        break
+
+                if not placed_flag:
+                    break
+
+            return placed
+
+        def _place_cables(cables, conduit_radius, angle_offset=0.0, angle_count=36, seed_mode="center"):
             """Greedy circle packing using tangent candidates (deterministic)."""
             placed = []
             unplaced = 0
@@ -1911,7 +2007,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
 
             # Place larger cables first to improve packing
             cables_sorted = sorted(cables, key=lambda c: (c.get("r") or 0.0), reverse=True)
-            angles = [i * (math.pi / 18.0) for i in range(36)]
+            angles = [angle_offset + i * (math.pi / max(1.0, angle_count / 2.0)) for i in range(angle_count)]
 
             for cable in cables_sorted:
                 r = cable.get("r")
@@ -1922,7 +2018,11 @@ elif page == "Conduit Size & Fill & Bend Radius":
                     unplaced += 1
                     continue
                 if not placed:
-                    cable["x"], cable["y"] = 0.0, 0.0
+                    if seed_mode == "boundary":
+                        seed_r = max(0.0, conduit_radius - r)
+                        cable["x"], cable["y"] = seed_r * math.cos(angle_offset), seed_r * math.sin(angle_offset)
+                    else:
+                        cable["x"], cable["y"] = 0.0, 0.0
                     placed.append(cable)
                     continue
 
@@ -1931,6 +2031,9 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 for spacing in spacing_options:
                     best = None
                     best_score = None
+                    current_max = 0.0
+                    for o in placed:
+                        current_max = max(current_max, math.hypot(o["x"], o["y"]) + o["r"])
                     candidates = []
 
                     # Tangent to one circle (angle sweep)
@@ -1952,11 +2055,19 @@ elif page == "Conduit Size & Fill & Bend Radius":
                                 circle_intersections(o1["x"], o1["y"], d1, o2["x"], o2["y"], d2)
                             )
 
+                    # Boundary candidates (tangent to conduit wall)
+                    boundary_r = conduit_radius - r
+                    if boundary_r > 0:
+                        for a in angles:
+                            candidates.append((boundary_r * math.cos(a), boundary_r * math.sin(a)))
+
                     # Rank candidates by distance to center
                     for (x, y) in candidates:
                         if not fits(x, y, r, spacing):
                             continue
-                        score = (x * x + y * y)
+                        extent = math.hypot(x, y) + r
+                        max_extent = max(current_max, extent)
+                        score = (max_extent, extent, (x * x + y * y))
                         if best_score is None or score < best_score:
                             best_score = score
                             best = (x, y)
@@ -1971,7 +2082,9 @@ elif page == "Conduit Size & Fill & Bend Radius":
                                 x = ring_r * math.cos(a)
                                 y = ring_r * math.sin(a)
                                 if fits(x, y, r, spacing):
-                                    score = (x * x + y * y)
+                                    extent = math.hypot(x, y) + r
+                                    max_extent = max(current_max, extent)
+                                    score = (max_extent, extent, (x * x + y * y))
                                     if best_score is None or score < best_score:
                                         best_score = score
                                         best = (x, y)
@@ -2045,14 +2158,29 @@ elif page == "Conduit Size & Fill & Bend Radius":
 
                 n_cond = cable.get("n_cond")
                 r_cond = cable.get("r_cond")
-                if n_cond and r_cond:
-                    conductor_positions = _layout_in_circle(int(n_cond), r_cond, r - 0.3)
-                    for (dx, dy) in conductor_positions:
-                        svg_parts.append(
-                            f'<circle cx="{cx + to_px(x + dx):.2f}" cy="{cy + to_px(y + dy):.2f}" '
-                            f'r="{to_px(r_cond):.2f}" stroke="#444" stroke-width="0.6" '
-                            f'fill="#ffffff" fill-opacity="0.9"/>'
-                        )
+                if n_cond:
+                    margin = 0.6
+                    R_inner = r - margin
+                    if R_inner > 0:
+                        if r_cond is None or r_cond <= 0:
+                            r_cond_use = R_inner / max(1.6 * math.sqrt(int(n_cond)), 1.6)
+                        else:
+                            r_cond_use = min(r_cond, R_inner)
+
+                        # Shrink conductors if they don't fit
+                        conductor_positions = []
+                        for _ in range(15):
+                            conductor_positions = _pack_circles_in_circle(int(n_cond), r_cond_use, R_inner)
+                            if len(conductor_positions) >= int(n_cond):
+                                break
+                            r_cond_use *= 0.9
+
+                        for (dx, dy) in conductor_positions[: int(n_cond)]:
+                            svg_parts.append(
+                                f'<circle cx="{cx + to_px(x + dx):.2f}" cy="{cy + to_px(y + dy):.2f}" '
+                                f'r="{to_px(r_cond_use):.2f}" stroke="#111" stroke-width="0.6" '
+                                f'fill="#000000"/>'
+                            )
 
             if overpacked:
                 # Diagonal red hatch clipped to conduit circle
@@ -2084,11 +2212,14 @@ elif page == "Conduit Size & Fill & Bend Radius":
             else:
                 cable_instances = []
                 approx_notes = []
+                render_issues = []
+                expected_cable_count = 0
 
                 try:
                     for group_idx, (_, r) in enumerate(edited.iterrows()):
                         qty = int(_to_float(r.get("Qty (cables)")) or 0)
                         n_cond = int(_to_float(r.get("Conductors per cable")) or 0)
+                        expected_cable_count += max(qty, 0)
 
                         area_per_cable = _to_float(r.get("Area per cable (mm²)"))
                         if area_per_cable is None and t6_area:
@@ -2097,6 +2228,8 @@ elif page == "Conduit Size & Fill & Bend Radius":
                             a_cond_table = _to_float(t6_area.get(t, {}).get(s, None))
                             if a_cond_table is not None and n_cond:
                                 area_per_cable = float(n_cond) * float(a_cond_table)
+                        if area_per_cable is None:
+                            render_issues.append("One or more cable groups are missing an area per cable.")
 
                         area_per_conductor = None
                         if t6_area:
@@ -2122,11 +2255,46 @@ elif page == "Conduit Size & Fill & Bend Radius":
                             )
                 except Exception:
                     cable_instances = []
+                    render_issues.append("Unexpected error while building cable instances for rendering.")
 
                 if not cable_instances:
                     st.info("Add at least one cable group with an area to render the layout.")
+                    if render_issues:
+                        st.caption(" ".join(sorted(set(render_issues))))
                 else:
                     placed, unplaced = _place_cables(cable_instances, conduit_radius)
+                    # Retry with different seeds/angles to improve packing (non-overlapping)
+                    if unplaced > 0:
+                        best_placed = placed
+                        best_unplaced = unplaced
+                        best_extent = None
+                        seed_modes = ["center", "boundary"]
+                        offsets = [0.0, math.pi / 36.0, math.pi / 18.0, math.pi / 12.0, math.pi / 9.0]
+                        for mode in seed_modes:
+                            for off in offsets:
+                                p2, u2 = _place_cables(
+                                    cable_instances,
+                                    conduit_radius,
+                                    angle_offset=off,
+                                    angle_count=48,
+                                    seed_mode=mode,
+                                )
+                                if u2 == 0:
+                                    # Choose the tightest layout
+                                    extent = 0.0
+                                    for c in p2:
+                                        extent = max(extent, math.hypot(c["x"], c["y"]) + c["r"])
+                                    if best_extent is None or extent < best_extent:
+                                        best_extent = extent
+                                        best_placed = p2
+                                        best_unplaced = u2
+                                elif u2 < best_unplaced:
+                                    best_unplaced = u2
+                                    best_placed = p2
+                            if best_unplaced == 0:
+                                # keep looking for tighter layouts
+                                continue
+                        placed, unplaced = best_placed, best_unplaced
                     overpacked = (
                         conduit_allowed_area is not None
                         and total_cable_area is not None
@@ -2138,12 +2306,25 @@ elif page == "Conduit Size & Fill & Bend Radius":
                     st.markdown(svg, unsafe_allow_html=True)
 
                     notes = []
-                    if unplaced > 0:
-                        notes.append("Cables overlap in the diagram because fill exceeds the available space.")
+                    rendered_count = len(placed)
+                    if rendered_count != expected_cable_count:
+                        notes.append(
+                            f"Rendered {rendered_count} of {expected_cable_count} cables. "
+                            "Missing items may be due to unavailable cable area."
+                        )
+                    if unplaced > 0 and overpacked:
+                        notes.append("Cables overlap in the diagram because fill exceeds the allowable space.")
+                    if unplaced > 0 and not overpacked:
+                        notes.append(
+                            "A non-overlapping layout could not be found even though fill is within allowable. "
+                            "Try adjusting cable grouping or quantities to help the packer."
+                        )
                     if approx_notes:
                         notes.append("Conductor circles may be approximate when per-conductor area is unavailable.")
                     if overpacked:
                         notes.append("Red hatching indicates the conduit is over-packed.")
+                    if render_issues:
+                        notes.append(" ".join(sorted(set(render_issues))))
                     if notes:
                         st.caption(" ".join(notes))
 
