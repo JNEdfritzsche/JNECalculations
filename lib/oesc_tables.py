@@ -184,6 +184,63 @@ TABLE_25: Dict[str, Any] = {
     ],
 }
 
+# ----------------------------
+# Table 29 — Rating or setting of overcurrent devices for the protection of motor branch circuits
+# ----------------------------
+TABLE_29: Dict[str, Any] = {
+    "title": "Table 29 — Rating or setting of overcurrent devices for the protection of motor branch circuits",
+    "units": "Full load current, %",
+    "columns": [
+        "Type of motor",
+        "Maximum fuse rating — Time-delay* fuses",
+        "Maximum fuse rating — Non-time-delay",
+        "Maximum setting — Inverse-time circuit breaker",
+    ],
+    "rows": [
+        {
+            "Type of motor": "Alternating current — Single-phase all types",
+            "Maximum fuse rating — Time-delay* fuses": 175,
+            "Maximum fuse rating — Non-time-delay": 300,
+            "Maximum setting — Inverse-time circuit breaker": 250,
+        },
+        {
+            "Type of motor": "Alternating current — Squirrel-cage and synchronous: Full-voltage, resistor and reactor starting",
+            "Maximum fuse rating — Time-delay* fuses": 175,
+            "Maximum fuse rating — Non-time-delay": 300,
+            "Maximum setting — Inverse-time circuit breaker": 250,
+        },
+        {
+            "Type of motor": "Alternating current — Squirrel-cage and synchronous: Auto-transformer and star delta starting, Not more than 30 A",
+            "Maximum fuse rating — Time-delay* fuses": 175,
+            "Maximum fuse rating — Non-time-delay": 250,
+            "Maximum setting — Inverse-time circuit breaker": 200,
+        },
+        {
+            "Type of motor": "Alternating current — Squirrel-cage and synchronous: Auto-transformer and star delta starting, More than 30 A",
+            "Maximum fuse rating — Time-delay* fuses": 175,
+            "Maximum fuse rating — Non-time-delay": 200,
+            "Maximum setting — Inverse-time circuit breaker": 200,
+        },
+        {
+            "Type of motor": "Alternating current — Wound rotor",
+            "Maximum fuse rating — Time-delay* fuses": 150,
+            "Maximum fuse rating — Non-time-delay": 150,
+            "Maximum setting — Inverse-time circuit breaker": 150,
+        },
+        {
+            "Type of motor": "Direct current",
+            "Maximum fuse rating — Time-delay* fuses": 150,
+            "Maximum fuse rating — Non-time-delay": 150,
+            "Maximum setting — Inverse-time circuit breaker": 150,
+        },
+    ],
+    "notes": [
+        "* Includes time-delay “D” fuses referred to in Rule 14-200.",
+        "1) Synchronous motors of the low-torque, low-speed type (usually 450 rpm or lower), such as those used to drive reciprocating compressors, pumps, etc., and that start up unloaded, do not require a fuse rating or circuit breaker setting in excess of 200% of full load current.",
+        "2) For the use of instantaneous-trip (magnetic only) circuit breakers in motor branch circuits, see Rule 28-210.",
+    ],
+}
+
 
 
 # --------------------------------------------------------------------------------------
