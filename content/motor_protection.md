@@ -32,7 +32,7 @@ To size each motor's overcurrent device, we would apply the factor from Table 29
 | Motor No. | Ampere Target| Closest Fuse Rating |
 |-----------|--------------|---------------------|
 | $${M_1}$$ | 62 $$\cdot$$ 1.75 = 108.5 A | 100 A |
-| $${M_2}$$ | 27 $$\cdo$$t 1.75 = 47.25 A | 45 A  |
+| $${M_2}$$ | 27 $$\cdot$$ 1.75 = 47.25 A | 45 A  |
 | $${M_3}$$ | 11 $$\cdot$$ 1.75 = 19.25 A | 15 A  |
 
 To size the feeder supplying all these motors, we adjust the largest FLC in the circuit, and add the remaining FLCs to size our overcurrent device.
