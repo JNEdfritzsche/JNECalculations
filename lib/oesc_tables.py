@@ -34,6 +34,16 @@ from __future__ import annotations
 from typing import Dict, Any, Optional
 
 # ----------------------------
+# Helpers
+# ----------------------------
+def _rows_from_columns(columns: list[str], data: list[list[Any]]) -> list[dict[str, Any]]:
+    """Build list-of-dicts rows from a columns list and a list-of-lists data matrix."""
+    rows: list[dict[str, Any]] = []
+    for row in data:
+        rows.append({col: row[i] if i < len(row) else None for i, col in enumerate(columns)})
+    return rows
+
+# ----------------------------
 # Friendly title overrides
 # (Some legacy tables are stored in "raw" structures, so their titles are not embedded in the object.)
 # ----------------------------
@@ -65,6 +75,7 @@ TITLE_OVERRIDES: Dict[str, str] = {
     "D2": "Table D2 — DC motors (DC full load current rating, A)",
     "D3": "Table D3 — K values for calculating voltage drop in an installation of 2, 3, or 4 insulated conductors in a cable or raceway based on a conductor operating temperature of 75 °C",
     "D-System-Factor": "Table D — System factor (f) for voltage drop calculations in various AC and DC electrical systems and connection types",
+    "D16": "Table D16 — Sizes of conductors, fuse ratings, and circuit breaker settings for motor overload protection and motor circuit overcurrent protection",
 }
 
 # ----------------------------
@@ -2462,6 +2473,122 @@ TABLE_D3 = {
         {"size_awg_kcmil": "750", "copper_dc": 0.0558, "copper_cable_100pf": 0.0668, "copper_cable_90pf": 0.085, "copper_cable_80pf": 0.0915, "copper_raceway_100pf": 0.0668, "copper_raceway_90pf": 0.0889, "copper_raceway_80pf": 0.097, "aluminum_dc": 0.0916, "aluminum_cable_100pf": 0.0968, "aluminum_cable_90pf": 0.115, "aluminum_cable_80pf": 0.121, "aluminum_raceway_100pf": 0.0968, "aluminum_raceway_90pf": 0.119, "aluminum_raceway_80pf": 0.126},
         {"size_awg_kcmil": "1000", "copper_dc": 0.0417, "copper_cable_100pf": 0.0558, "copper_cable_90pf": 0.0739, "copper_cable_80pf": 0.0805, "copper_raceway_100pf": 0.0558, "copper_raceway_90pf": 0.0778, "copper_raceway_80pf": 0.086, "aluminum_dc": 0.0686, "aluminum_cable_100pf": 0.0758, "aluminum_cable_90pf": 0.0933, "aluminum_cable_80pf": 0.0994, "aluminum_raceway_100pf": 0.0758, "aluminum_raceway_90pf": 0.0973, "aluminum_raceway_80pf": 0.105},
     ],
+}
+# --------------------------------------------------------------------------------------
+# Table D16 — Sizes of conductors, fuse ratings, and circuit breaker settings
+# --------------------------------------------------------------------------------------
+
+_D16_COLUMNS = ['Full load current rating of motor, A', 'Minimum ampacity of insulated conductor, A', 'Single-phase (all types; squirrel-cage & synchronous full-voltage/resistor/reactor) — Non-time-delay fuses, A', 'Single-phase (all types; squirrel-cage & synchronous full-voltage/resistor/reactor) — Time-delay* fuses, A', 'Single-phase (all types; squirrel-cage & synchronous full-voltage/resistor/reactor) — Circuit breaker, A', 'Squirrel-cage & synchronous (auto-transformer & star delta) — Non-time-delay fuses, A', 'Squirrel-cage & synchronous (auto-transformer & star delta) — Time-delay* fuses, A', 'Squirrel-cage & synchronous (auto-transformer & star delta) — Circuit breaker, A', 'DC or wound rotor AC — Non-time-delay fuses, A', 'DC or wound rotor AC — Time-delay* fuses, A', 'DC or wound rotor AC — Circuit breaker, A']
+
+_D16_DATA = [
+    [1, 1.25, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    [2, 2.5, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    [3, 3.8, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    [4, 5.0, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    [5, 6.25, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    [6, 7.5, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    [7, 8.75, 20, 15, 15, 15, 15, 15, 15, 15, 15],
+    [8, 10.0, 20, 15, 20, 20, 15, 15, 15, 15, 15],
+    [9, 11.25, 25, 15, 20, 20, 15, 15, 15, 15, 15],
+    [10, 12.5, 30, 15, 25, 25, 15, 20, 15, 15, 15],
+    [11, 13.75, 30, 15, 25, 25, 15, 20, 15, 15, 15],
+    [12, 15.0, 35, 20, 30, 30, 20, 20, 15, 15, 15],
+    [13, 16.25, 35, 20, 30, 30, 25, 20, 15, 15, 15],
+    [14, 17.5, 40, 20, 35, 35, 25, 20, 20, 20, 20],
+    [15, 18.75, 45, 25, 35, 35, 25, 30, 20, 20, 20],
+    [16, 20.0, 45, 25, 40, 40, 25, 30, 20, 20, 20],
+    [17, 21.3, 50, 25, 40, 40, 25, 30, 25, 25, 25],
+    [18, 22.5, 50, 30, 45, 45, 35, 30, 25, 25, 25],
+    [19, 23.8, 50, 30, 45, 45, 35, 30, 25, 25, 25],
+    [20, 25.0, 60, 35, 50, 50, 35, 40, 30, 30, 30],
+    [22, 27.5, 60, 35, 50, 50, 35, 40, 30, 30, 30],
+    [24, 30.0, 70, 40, 60, 60, 45, 40, 35, 35, 35],
+    [26, 32.5, 70, 45, 60, 60, 45, 50, 35, 35, 35],
+    [28, 35.0, 80, 45, 70, 70, 45, 50, 40, 40, 40],
+    [30, 37.5, 90, 50, 70, 70, 50, 60, 45, 45, 45],
+    [32, 40.0, 90, 50, 80, 60, 50, 60, 45, 45, 45],
+    [34, 42.5, 100, 50, 80, 60, 50, 60, 50, 50, 50],
+    [36, 45.0, 100, 60, 90, 70, 60, 70, 50, 50, 50],
+    [38, 47.5, 110, 60, 90, 70, 60, 70, 50, 50, 50],
+    [40, 50.0, 110, 70, 100, 80, 80, 70, 60, 60, 60],
+    [42, 52.5, 125, 70, 100, 80, 80, 70, 60, 60, 60],
+    [44, 55.0, 125, 70, 110, 80, 80, 70, 60, 60, 60],
+    [46, 57.5, 125, 80, 110, 90, 90, 70, 60, 60, 60],
+    [48, 60.0, 125, 80, 110, 90, 90, 70, 70, 70, 70],
+    [50, 62.5, 150, 80, 125, 100, 90, 100, 70, 70, 70],
+    [52, 65.0, 150, 90, 125, 100, 90, 100, 70, 70, 70],
+    [54, 67.5, 150, 90, 125, 100, 90, 100, 80, 80, 80],
+    [56, 70.0, 150, 90, 125, 110, 110, 100, 80, 80, 80],
+    [58, 72.5, 150, 100, 125, 110, 110, 100, 80, 80, 80],
+    [60, 75.0, 175, 100, 150, 110, 110, 100, 90, 90, 90],
+    [62, 77.5, 175, 100, 150, 110, 110, 100, 90, 90, 90],
+    [64, 80.0, 175, 110, 150, 125, 110, 125, 90, 90, 90],
+    [66, 82.5, 175, 110, 150, 125, 110, 125, 90, 90, 90],
+    [68, 85.0, 200, 110, 150, 125, 110, 125, 100, 100, 100],
+    [70, 87.5, 200, 110, 175, 125, 110, 125, 100, 100, 100],
+    [72, 90.0, 200, 125, 175, 125, 125, 125, 100, 100, 100],
+    [74, 92.5, 200, 125, 175, 125, 125, 125, 110, 110, 110],
+    [76, 95.0, 225, 125, 175, 150, 125, 150, 110, 110, 110],
+    [78, 97.5, 225, 125, 175, 150, 125, 150, 110, 110, 110],
+    [80, 100.0, 225, 125, 200, 150, 125, 150, 110, 110, 110],
+    [82, 102.5, 225, 125, 200, 150, 125, 150, 110, 110, 110],
+    [84, 105.0, 250, 125, 200, 150, 125, 150, 125, 125, 125],
+    [86, 107.5, 250, 150, 200, 150, 150, 150, 125, 125, 125],
+    [88, 110.0, 250, 150, 200, 175, 150, 175, 125, 125, 125],
+    [90, 112.5, 250, 150, 225, 175, 150, 175, 125, 125, 125],
+    [92, 115.0, 250, 150, 225, 175, 150, 175, 125, 125, 125],
+    [94, 117.5, 250, 150, 225, 175, 150, 175, 125, 125, 125],
+    [96, 120.0, 250, 150, 225, 175, 150, 175, 125, 125, 125],
+    [98, 122.5, 250, 150, 225, 175, 150, 175, 125, 125, 125],
+    [100, 125.0, 300, 175, 250, 200, 175, 200, 150, 150, 150],
+    [105, 131.3, 300, 175, 250, 200, 175, 200, 150, 150, 150],
+    [110, 137.5, 300, 175, 250, 200, 175, 200, 150, 150, 150],
+    [115, 143.8, 300, 200, 250, 225, 200, 225, 150, 150, 150],
+    [120, 150.0, 350, 200, 300, 225, 200, 225, 175, 175, 175],
+    [125, 156.3, 350, 200, 300, 250, 200, 250, 175, 175, 175],
+    [130, 162.5, 350, 225, 300, 250, 225, 250, 175, 175, 175],
+    [135, 168.8, 400, 225, 300, 250, 225, 250, 200, 200, 200],
+    [140, 175.0, 400, 225, 350, 250, 225, 250, 200, 200, 200],
+    [145, 181.3, 400, 250, 350, 250, 250, 250, 200, 200, 200],
+    [150, 187.5, 450, 250, 350, 300, 250, 300, 225, 225, 225],
+    [155, 193.8, 450, 250, 350, 300, 250, 300, 225, 225, 225],
+    [160, 200.0, 450, 250, 400, 300, 250, 300, 225, 225, 225],
+    [165, 206.3, 450, 250, 400, 300, 250, 300, 225, 225, 225],
+    [170, 212.5, 500, 250, 400, 300, 250, 300, 250, 250, 250],
+    [175, 218.8, 500, 300, 400, 350, 300, 350, 250, 250, 250],
+    [180, 225.0, 500, 300, 450, 350, 300, 350, 250, 250, 250],
+    [185, 231.3, 500, 300, 450, 350, 300, 350, 250, 250, 250],
+    [190, 237.5, 500, 300, 450, 350, 300, 350, 250, 250, 250],
+    [195, 243.8, 500, 300, 450, 350, 300, 350, 250, 250, 250],
+    [200, 250.0, 600, 350, 500, 400, 350, 400, 300, 300, 300],
+    [210, 262.5, 600, 350, 500, 400, 350, 400, 300, 300, 300],
+    [220, 275.0, 600, 350, 500, 400, 350, 400, 300, 300, 300],
+    [230, 287.5, 600, 400, 500, 450, 450, 400, 300, 300, 300],
+    [240, 300.0, None, 400, None, 450, 450, 400, 350, 350, 350],
+    [250, 312.5, None, 400, None, 500, 450, 500, 350, 350, 350],
+    [260, 325.0, None, 450, 600, 500, 450, 500, 350, 350, 350],
+    [270, 337.5, None, 450, 600, 500, 450, 500, 400, 400, 400],
+    [280, 350.0, None, 450, None, 500, 450, 500, 400, 400, 400],
+    [290, 362.5, None, 500, None, 500, 500, 500, 400, 400, 400],
+    [300, 375.0, None, 500, None, 600, 500, 600, 450, 450, 450],
+    [320, 400, None, 500, None, 600, 500, 600, 450, 450, 450],
+    [340, 425, None, 500, None, 600, 500, 600, 500, 500, 500],
+    [360, 450, None, 600, None, None, 600, None, 500, 500, 500],
+    [380, 475, None, 600, None, None, 600, None, 500, 500, 500],
+    [400, 500, None, None, None, None, None, None, 600, 600, 600],
+    [420, 525, None, None, None, None, None, None, 600, 600, 600],
+    [440, 550, None, None, None, None, None, None, 600, 600, 600],
+    [460, 575, None, None, None, None, None, None, 600, 600, 600],
+    [480, 600, None, None, None, None, None, None, 600, 600, 600],
+    [500, 625, None, None, None, None, None, None, None, None, None],
+]
+
+
+TABLE_D16 = {
+    "title": "Table D16 — Sizes of conductors, fuse ratings, and circuit breaker settings for motor overload protection and motor circuit overcurrent protection",
+    "units": "A",
+    "columns": _D16_COLUMNS,
+    "rows": _rows_from_columns(_D16_COLUMNS, _D16_DATA),
 }
 
 # ----------------------------
