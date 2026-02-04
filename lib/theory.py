@@ -205,7 +205,10 @@ digraph G {
                 st.exception(_GRAPHVIZ_IMPORT_ERROR)
         return
 
-    st.graphviz_chart(dot, width="stretch")
+    # Keep flowcharts a bit smaller and centered for readability.
+    left, center, right = st.columns([1, 2, 1], gap="small")
+    with center:
+        st.graphviz_chart(dot, width=600)
 
 
 def render_md(md_path: str | Path, *, wrap: bool = True):
