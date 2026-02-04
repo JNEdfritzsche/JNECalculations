@@ -4,14 +4,6 @@ import re
 
 import streamlit as st
 
-# Optional: Graphviz for flowchart skeletons
-try:
-    import graphviz  # type: ignore
-    _GRAPHVIZ_IMPORT_ERROR = None
-except Exception as e:
-    graphviz = None  # type: ignore
-    _GRAPHVIZ_IMPORT_ERROR = str(e)
-
 # ----------------------------
 # Development Settings
 # ----------------------------
@@ -810,57 +802,6 @@ elif page == "Motor Protection":
         header("Motor Protection — Theory")
         show_code_note(code_mode)
         render_md_safe("motor_protection.md")
-
-        st.markdown("### Flowchart skeleton (Streamlit + Graphviz)")
-        st.write(
-            "Basic placeholder flowchart to show how you can map motor protection steps. "
-            "Replace labels and decision logic with your project-specific workflow."
-        )
-
-        flowchart_code = """import streamlit as st
-
-
-dot = '''digraph G {
-  rankdir=TB;
-  node [shape=box, style=rounded];
-  Start -> "Gather nameplate data";
-  "Gather nameplate data" -> "Determine FLA";
-  "Determine FLA" -> "Select overload setting";
-  "Determine FLA" -> "Select short-circuit device";
-  "Select overload setting" -> "Verify coordination";
-  "Select short-circuit device" -> "Verify coordination";
-  "Verify coordination" -> End;
-}'''
-
-st.graphviz_chart(dot, width="stretch")
-"""
-
-        if graphviz is None:
-            st.warning(
-                "Graphviz isn't available in this environment, so the flowchart can't render yet. "
-                "Install the `graphviz` Python package (and system Graphviz if required), then reload."
-            )
-            if _GRAPHVIZ_IMPORT_ERROR is not None:
-                with st.expander("Import error details"):
-                    st.exception(_GRAPHVIZ_IMPORT_ERROR)
-        else:
-            dot = """
-digraph G {
-  rankdir=TB;
-  node [shape=box, style=rounded];
-  Start -> "Gather nameplate data";
-  "Gather nameplate data" -> "Determine FLA";
-  "Determine FLA" -> "Select overload setting";
-  "Determine FLA" -> "Select short-circuit device";
-  "Select overload setting" -> "Verify coordination";
-  "Select short-circuit device" -> "Verify coordination";
-  "Verify coordination" -> End;
-}
-"""
-            st.graphviz_chart(dot, width="stretch")
-
-        st.markdown("### Code skeleton")
-        st.code(flowchart_code, language="python")
 
     with calc_tab:
         header("Motor Protection Calculator", "Estimate overload and short-circuit device settings.")

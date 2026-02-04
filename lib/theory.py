@@ -5,6 +5,14 @@ import re
 from pathlib import Path
 import streamlit as st
 
+# Optional: Graphviz for embedded flowcharts in markdown
+try:
+    import graphviz  # type: ignore
+    _GRAPHVIZ_IMPORT_ERROR = None
+except Exception as e:
+    graphviz = None  # type: ignore
+    _GRAPHVIZ_IMPORT_ERROR = str(e)
+
 
 # Convert common LaTeX wrappers often found in exported documents:
 #   \[ ... \]  -> $$ ... $$
@@ -106,39 +114,82 @@ def _render_markdown_with_images(md: str, md_dir: Path, wrap: bool = True):
     """
     # Extract images and get markdown without image syntax
     md = _extract_and_render_images(md, md_dir)
-    
-    # Split by image markers using || delimiter
-    parts = re.split(r'<!-- IMAGE_MARKER\|\|(.+?)\|\|(.+?) -->', md)
-    
+
+    # Match either image markers or flowchart markers
+    marker_rx = re.compile(
+        r"<!-- IMAGE_MARKER\|\|(.+?)\|\|(.+?) -->|<!-- FLOWCHART_([A-Z0-9_]+) -->",
+        flags=re.DOTALL,
+    )
+
     if wrap:
         st.markdown("<div class='jne-theory-wrap'>", unsafe_allow_html=True)
-    
-    # Process parts: alternates between markdown and image markers
-    for i, part in enumerate(parts):
-        if i % 3 == 0:
-            # Markdown content
-            if part.strip():
-                st.markdown(part, unsafe_allow_html=True)
-        elif i % 3 == 1:
-            # Image path
-            image_path = part
-            if i + 1 < len(parts):
-                alt_text = parts[i + 1]
-                try:
-                    # Center images by rendering inside a centered column
-                    left, center, right = st.columns([1, 2, 1], gap="small")
-                    with center:
-                        # Pass the path directly; Streamlit handles local files reliably
-                        st.image(
-                            image_path,
-                            caption=alt_text if alt_text else None,
-                            width="stretch",
-                        )
-                except Exception as e:
-                    st.warning(f"Failed to load image: {image_path}\n\n{e}")
-    
+
+    cursor = 0
+    for match in marker_rx.finditer(md):
+        # Render markdown chunk before marker
+        chunk = md[cursor:match.start()]
+        if chunk.strip():
+            st.markdown(chunk, unsafe_allow_html=True)
+
+        image_path, alt_text, flow_id = match.groups()
+        if image_path is not None:
+            try:
+                left, center, right = st.columns([1, 2, 1], gap="small")
+                with center:
+                    st.image(
+                        image_path,
+                        caption=alt_text if alt_text else None,
+                        width="stretch",
+                    )
+            except Exception as e:
+                st.warning(f"Failed to load image: {image_path}\n\n{e}")
+        elif flow_id is not None:
+            _render_flowchart(flow_id)
+
+        cursor = match.end()
+
+    # Render remaining markdown
+    tail = md[cursor:]
+    if tail.strip():
+        st.markdown(tail, unsafe_allow_html=True)
+
     if wrap:
         st.markdown("</div>", unsafe_allow_html=True)
+
+
+def _render_flowchart(flow_id: str):
+    flowcharts = {
+        "MOTOR_PROTECTION": """
+digraph G {
+  rankdir=TB;
+  node [shape=box, style=rounded];
+  Start -> "Gather nameplate data";
+  "Gather nameplate data" -> "Determine FLA";
+  "Determine FLA" -> "Select overload setting";
+  "Determine FLA" -> "Select short-circuit device";
+  "Select overload setting" -> "Verify coordination";
+  "Select short-circuit device" -> "Verify coordination";
+  "Verify coordination" -> End;
+}
+""",
+    }
+
+    dot = flowcharts.get(flow_id)
+    if dot is None:
+        st.warning(f"Unknown flowchart marker: {flow_id}")
+        return
+
+    if graphviz is None:
+        st.warning(
+            "Graphviz isn't available in this environment, so the flowchart can't render yet. "
+            "Install the `graphviz` Python package (and system Graphviz if required), then reload."
+        )
+        if _GRAPHVIZ_IMPORT_ERROR is not None:
+            with st.expander("Import error details"):
+                st.exception(_GRAPHVIZ_IMPORT_ERROR)
+        return
+
+    st.graphviz_chart(dot, width="stretch")
 
 
 def render_md(md_path: str | Path, *, wrap: bool = True):
