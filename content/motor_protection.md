@@ -15,7 +15,7 @@ The most common devices used are time-delay fuses, non-time-delay fuses. inverse
 
 Below is a general flow to follow for sizing overcurrent devices based on inputs. Note that for *any type of motor* that is protected by an instantaneous trip circuit breaker, the size must be circuit breaker must be sized to either the FLC by 13 or LRC by 2.15.
 
-<!-- Flowchart method 28-4: Method to determine max overcurrent device size for an individual motor -->
+<!-- FLOWCHART_MOTOR_PROTECTION -->
 
 For sizing the overcurrent device for a feeder supplying multiple motors, the methodology is similar to conductor sizing feeders. You size the largest FLC accordingly by table 29, then sum that adjusted FLC with the other nominal FLCs to size the main feeder. 
 
