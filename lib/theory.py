@@ -164,27 +164,39 @@ digraph G {
   rankdir=TB;
  
   node [shape=box, style=rounded];
- 
+
   d1 [label="Gather all \n information available"];
-  d2 [label="Table 29 Row 1"];
+  d2 [label="Table 29 \n Row 1"];
   d1 -> d2 [label="1Φ AC"];
- 
-  d3 [label="Motor \n Type", shape=diamond];
-  d4 [label="Starter or \n controller type", shape=diamond];
-  d5 [label="Table 29 Row 5"];
-  d6 [label="FLC > 30A?", shape=diamond];
-  d7 [label="Table 29 Row 2"];
-  d8 [label="Table 29 Row 4"];
-  d9 [label="Table 29 Row 3"];
+
+  d3 [label="Motor \n Type", shape=diamond,
+  fixedsize=true,
+  width=1,
+  height=1,
+  margin=0.05];
+  d4 [label="Starter or \n controller type", shape=diamond,
+  fixedsize=true,
+  width=1.3,
+  height=1.1,
+  margin=0.05];
+  d5 [label="Table 29 \n Row 5"];
+  d6 [label="FLC > 30 A ?", shape=diamond,
+  fixedsize=true,
+  width=1,
+  height=1,
+  margin=0.05];
+  d7 [label="Table 29 \n Row 2"];
+  d8 [label="Table 29 \n Row 4"];
+  d9 [label="Table 29 \n Row 3"];
   d1 -> d3 [label="3Φ AC"];
-  d3 -> d4 [label="Squirrel-cage or Synchronous"];
+  d3 -> d4 [label="Squirrel-cage \n or Synchronous"];
   d3 -> d5 [label="Wound Rotor"];
-  d4 -> d6 [label="Auto-tx or \n star delta"];
+  d4 -> d6 [label="Auto-TX or \n Star-Delta"];
   d4 -> d7 [label="FV&R"];
   d6 -> d8 [label="Yes"];
   d6 -> d9 [label="No"];
- 
-  d10 [label="Table 29 Row 6"];
+
+  d10 [label="Table 29 \n Row 6"];
   d1 -> d10 [label="DC"];
 }
 """,
