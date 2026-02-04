@@ -109,6 +109,81 @@ TABLE_13: Dict[str, Any] = {
     ],
 }
 
+# ----------------------------
+# Table 25 — Overcurrent trip coils for circuit breakers and overload devices for protecting motors
+# ----------------------------
+TABLE_25: Dict[str, Any] = {
+    "title": "Table 25 — Overcurrent trip coils for circuit breakers and overload devices for protecting motors",
+    "units": None,
+    "columns": [
+        "For circuit protection — Number and location of overcurrent devices (trip coils)",
+        "System",
+        "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs",
+        "Kind of motor",
+    ],
+    "rows": [
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "3-trip coils, one in each conductor",
+            "System": "3-wire, 3-phase ac, ungrounded or with grounded neutral",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "3 — one in each phase, not to be connected in any neutral conductor",
+            "Kind of motor": "3-phase ac",
+        },
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "3-trip coils, one in each phase",
+            "System": "4-wire, 3-phase ac",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "3 — one in each phase, not to be connected in any neutral conductor",
+            "Kind of motor": "3-phase ac",
+        },
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "2-trip coils, one in each phase†",
+            "System": "4-wire, 2-phase ac, ungrounded",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "2 — one in each phase, not to be connected in any neutral or grounded conductor",
+            "Kind of motor": "2-phase ac",
+        },
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "2-trip coils, one in each outside conductor",
+            "System": "3-wire, 2-phase ac",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "2 — one in each phase, not to be connected in any neutral or grounded conductor",
+            "Kind of motor": "2-phase ac",
+        },
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "4-trip coils, one in each ungrounded conductor",
+            "System": "4-wire, 2-phase ac, with neutral",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "2 — one in each phase, not to be connected in any neutral or grounded conductor",
+            "Kind of motor": "2-phase ac",
+        },
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "4-trip coils, one in each ungrounded conductor",
+            "System": "5-wire, 2-phase ac",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "2 — one in each phase, not to be connected in any neutral or grounded conductor",
+            "Kind of motor": "2-phase ac",
+        },
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "2-trip coils, one in each outside conductor",
+            "System": "3-wire, 1-phase ac or dc",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "1 — in any conductor except a neutral or grounded conductor",
+            "Kind of motor": "1-phase ac or dc",
+        },
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "1-trip coil in each ungrounded conductor",
+            "System": "2-wire ac or dc, ungrounded or with one conductor grounded‡",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "1 — in any conductor except a neutral or grounded conductor",
+            "Kind of motor": "1-phase ac or dc",
+        },
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "2-trip coils, one in each ungrounded conductor",
+            "System": "3-wire, 1-phase ac or dc, with grounded neutral",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "1 — in any conductor except a neutral or grounded conductor",
+            "Kind of motor": "1-phase ac or dc",
+        },
+    ],
+    "notes": [
+        "* This does not preclude the use of other arrangements that will provide equivalent protection.",
+        "† For services, see Section 6.",
+        "‡ This does not preclude the use of one single-pole circuit breaker in each insulated conductor for the protection of an ungrounded 2-wire circuit.",
+    ],
+}
+
 
 
 # --------------------------------------------------------------------------------------
