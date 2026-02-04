@@ -67,6 +67,48 @@ TITLE_OVERRIDES: Dict[str, str] = {
     "D-System-Factor": "Table D — System factor (f) for voltage drop calculations in various AC and DC electrical systems and connection types",
 }
 
+# ----------------------------
+# Table 13 — Rating or setting of overcurrent devices protecting conductors
+# ----------------------------
+TABLE_13: Dict[str, Any] = {
+    "title": "Table 13 — Rating or setting of overcurrent devices protecting conductors",
+    "units": "A",
+    "columns": [
+        "Ampacity of conductor, A",
+        "Rating or setting permitted, A",
+    ],
+    "rows": [
+        {"Ampacity of conductor, A": "0–15", "Rating or setting permitted, A": 15},
+        {"Ampacity of conductor, A": "16–20", "Rating or setting permitted, A": 20},
+        {"Ampacity of conductor, A": "21–25", "Rating or setting permitted, A": 25},
+        {"Ampacity of conductor, A": "26–30", "Rating or setting permitted, A": 30},
+        {"Ampacity of conductor, A": "31–35", "Rating or setting permitted, A": 35},
+        {"Ampacity of conductor, A": "36–40", "Rating or setting permitted, A": 40},
+        {"Ampacity of conductor, A": "41–45", "Rating or setting permitted, A": 45},
+        {"Ampacity of conductor, A": "46–50", "Rating or setting permitted, A": 50},
+        {"Ampacity of conductor, A": "51–60", "Rating or setting permitted, A": 60},
+        {"Ampacity of conductor, A": "61–70", "Rating or setting permitted, A": 70},
+        {"Ampacity of conductor, A": "71–80", "Rating or setting permitted, A": 80},
+        {"Ampacity of conductor, A": "81–90", "Rating or setting permitted, A": 90},
+        {"Ampacity of conductor, A": "91–100", "Rating or setting permitted, A": 100},
+        {"Ampacity of conductor, A": "101–110", "Rating or setting permitted, A": 110},
+        {"Ampacity of conductor, A": "111–125", "Rating or setting permitted, A": 125},
+        {"Ampacity of conductor, A": "126–150", "Rating or setting permitted, A": 150},
+        {"Ampacity of conductor, A": "151–175", "Rating or setting permitted, A": 175},
+        {"Ampacity of conductor, A": "176–200", "Rating or setting permitted, A": 200},
+        {"Ampacity of conductor, A": "201–225", "Rating or setting permitted, A": 225},
+        {"Ampacity of conductor, A": "226–250", "Rating or setting permitted, A": 250},
+        {"Ampacity of conductor, A": "251–300", "Rating or setting permitted, A": 300},
+        {"Ampacity of conductor, A": "301–350", "Rating or setting permitted, A": 350},
+        {"Ampacity of conductor, A": "351–400", "Rating or setting permitted, A": 400},
+        {"Ampacity of conductor, A": "401–450", "Rating or setting permitted, A": 450},
+        {"Ampacity of conductor, A": "451–500", "Rating or setting permitted, A": 500},
+        {"Ampacity of conductor, A": "501–600", "Rating or setting permitted, A": 600},
+        {"Ampacity of conductor, A": "601–700", "Rating or setting permitted, A": 700},
+        {"Ampacity of conductor, A": "701–800", "Rating or setting permitted, A": 800},
+    ],
+}
+
 
 
 # --------------------------------------------------------------------------------------
