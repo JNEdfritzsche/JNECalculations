@@ -188,6 +188,24 @@ def _numeric_sort(items):
     """Sort items numerically, handling strings with fractions and regular numbers."""
     return sorted(items, key=_numeric_sort_key)
 
+def format_cond_size(size_value):
+    """Format conductor size with AWG/kcmil suffix based on numeric value."""
+    s = str(size_value).strip()
+    if not s or s == "(size not found)":
+        return s
+    s_lower = s.lower()
+    if "kcmil" in s_lower or "mcm" in s_lower:
+        return re.sub(r"\s*(kcmil|mcm)\s*", " kcmil", s, flags=re.IGNORECASE).strip()
+    if "awg" in s_lower:
+        return re.sub(r"\s*awg\s*", " AWG", s, flags=re.IGNORECASE).strip()
+    if "/" in s:
+        return f"{s} AWG"
+    try:
+        val = float(s)
+        return f"{s} kcmil" if val >= 250 else f"{s} AWG"
+    except Exception:
+        return s
+
 
 def eq(latex: str):
     """Render a LaTeX equation in a consistent display style."""
@@ -3785,13 +3803,23 @@ elif page == "Conductors":
         with c2:
             sf = st.number_input("Service factor (SF)", min_value=1.0, value=1.25, step=0.05, key="cond_sf")
         with c3:
-            n_parallel = st.number_input(
-                "Parallel sets",
-                min_value=1,
-                value=1,
-                step=1,
-                key="cond_n_parallel",
+            use_parallel = st.checkbox(
+                "Run additional parallel sets",
+                value=False,
+                key="cond_use_parallel",
             )
+            if use_parallel:
+                extra_sets = st.number_input(
+                    "Additional parallel sets",
+                    min_value=1,
+                    value=1,
+                    step=1,
+                    key="cond_additional_sets",
+                    help="1 additional set = 2 total runs; 2 additional sets = 3 total runs.",
+                )
+                n_parallel = 1 + int(extra_sets)
+            else:
+                n_parallel = 1
 
         mat = st.selectbox(
             "Conductor material (table family)",
@@ -3869,7 +3897,7 @@ elif page == "Conductors":
                 )
 
                 default_label = None
-                for candidate in ("90°C", "90Â°C"):
+                for candidate in ("90°C",):
                     if candidate in temp_options:
                         default_label = candidate
                         break
@@ -4151,23 +4179,142 @@ elif page == "Conductors":
             f"- k_temp = **{fmt(temp_factor)}** (source: {temp_factor_source})"
         )
         st.write(
-            f"- k_total = k_corr × k_temp = **{fmt(k_total)}**"
+            f"- k_total = k_corr x k_temp = **{fmt(k_total)}**"
         )
         st.metric("Minimum base-table ampacity to look for", fmt(I_table_required, "A"))
 
-        st.markdown("### Optional: Check selected conductor ampacity")
+        st.markdown("### Auto-select conductor from ampacity table")
+        def _to_float_local(x):
+            try:
+                if x is None or x in ("—", "-"):
+                    return None
+                return float(x)
+            except Exception:
+                return None
+
+        amp_table_id = None
+        m = re.search(r"Table\s*([1-4])", str(amp_table))
+        if m:
+            amp_table_id = m.group(1)
+
+        auto_pick_ready = amp_table_id is not None and oesc_tables is not None and I_table_required is not None
+        if auto_pick_ready:
+            auto_pick = st.checkbox(
+                "Auto-pick smallest size that meets required base ampacity",
+                value=True,
+                key="cond_auto_pick",
+            )
+            if auto_pick:
+                table_meta = oesc_tables.get_table_meta(amp_table_id) or {}
+                table_rows = table_meta.get("rows", [])
+                size_key = "Size (AWG/kcmil)"
+                if table_rows and size_key not in table_rows[0]:
+                    for k in table_rows[0].keys():
+                        if "size" in str(k).lower():
+                            size_key = k
+                            break
+
+                temp_cols = table_meta.get("columns", [])
+                temp_col_map = {}
+                temp_options = []
+                for col in temp_cols:
+                    m2 = re.search(r"(\d+)", str(col))
+                    if m2:
+                        val = int(m2.group(1))
+                        temp_col_map[val] = col
+                        temp_options.append(val)
+                temp_options = sorted(set(temp_options))
+
+                default_temp = 75 if 75 in temp_options else (temp_options[0] if temp_options else None)
+                temp_choice = st.selectbox(
+                    "Table column (insulation temp rating)",
+                    temp_options if temp_options else [60, 75, 90],
+                    index=temp_options.index(default_temp) if temp_options and default_temp in temp_options else 0,
+                    key="cond_auto_table_temp_choice",
+                )
+
+                selected_row = None
+                selected_base = None
+                col_label = temp_col_map.get(temp_choice)
+                if col_label:
+                    for r in table_rows:
+                        base_val = _to_float_local(r.get(col_label))
+                        if base_val is not None and base_val >= float(I_table_required):
+                            selected_row = r
+                            selected_base = base_val
+                            break
+
+                if selected_row is None or selected_base is None:
+                    st.warning(
+                        "No size in the selected table column meets the required base ampacity. "
+                        "Consider a higher temperature column or another table (if applicable)."
+                    )
+                else:
+                    selected_size = str(selected_row.get(size_key, "(size not found)"))
+                    adjusted_ampacity = selected_base * float(k_total) if k_total is not None else None
+                    selected_size_display = format_cond_size(selected_size)
+                    st.markdown("### Recommended conductor size")
+                    st.markdown(f"## **{selected_size_display}**")
+                    st.caption(f"From {amp_table}")
+                    st.metric("Base ampacity (table)", fmt(selected_base, "A"))
+                    if adjusted_ampacity is not None and n_parallel and n_parallel > 1:
+                        st.metric("Adjusted ampacity per set", fmt(adjusted_ampacity, "A"))
+                        st.metric("Adjusted ampacity (all sets)", fmt(adjusted_ampacity * n_parallel, "A"))
+                    else:
+                        st.metric("Adjusted ampacity", fmt(adjusted_ampacity, "A"))
+
+                    st.markdown("**Ampacity derating breakdown (selected cable)**")
+                    st.write(
+                        f"- Base ampacity ({amp_table}, {selected_size_display}, {temp_choice}°C column) = **{fmt(selected_base, 'A')}**"
+                    )
+                    st.write(
+                        f"- k_corr = **{fmt(corr_factor)}** (source: {corr_factor_source})"
+                    )
+                    st.write(
+                        f"- k_temp = **{fmt(temp_factor)}** (source: {temp_factor_source})"
+                    )
+                    st.write(
+                        f"- k_total = k_corr x k_temp = **{fmt(k_total)}**"
+                    )
+                    st.write(
+                        f"- Adjusted ampacity per set = base x k_total = **{fmt(adjusted_ampacity, 'A')}**"
+                    )
+                    st.write(
+                        f"- Required base ampacity = I_per_set / k_total = **{fmt(I_table_required, 'A')}**"
+                    )
+                    st.write(
+                        f"- Design current per set = **{fmt(I_per_set, 'A')}**"
+                    )
+
+                    if adjusted_ampacity is not None and I_per_set is not None:
+                        if adjusted_ampacity < I_per_set:
+                            st.error(
+                                "Adjusted ampacity per set is below the load current per set. "
+                                "Choose a larger conductor or reduce correction factors."
+                            )
+                        else:
+                            st.success("Adjusted ampacity per set meets or exceeds the load current per set.")
+        else:
+            st.caption("Auto-selection is available only when Tables 1-4 are selected and the table library is loaded.")
+            with st.expander("Why auto-selection is disabled", expanded=False):
+                st.write(f"- Table selection detected: **{amp_table}**")
+                st.write(f"- Table id parsed (1-4): **{amp_table_id if amp_table_id else 'None'}**")
+                st.write(f"- Table library loaded: **{'Yes' if oesc_tables is not None else 'No'}**")
+                st.write(
+                    f"- Required base ampacity computed: **{'Yes' if I_table_required is not None else 'No'}**"
+                )
+                if oesc_tables is None and _TABLES_IMPORT_ERROR:
+                    st.write(f"- Table library import error: `{_TABLES_IMPORT_ERROR}`")
+
+        st.markdown("### Optional: Check selected conductor ampacity (manual override)")
         use_amp_check = st.checkbox(
-            "Enable adjusted ampacity check",
+            "Enable manual ampacity check",
             value=False,
             key="cond_use_amp_check",
         )
 
         if use_amp_check:
             base_ampacity = None
-            amp_table_id = None
-            m = re.match(r"Table\\s+([1-4])$", str(amp_table).strip())
-            if m:
-                amp_table_id = m.group(1)
 
             if amp_table_id and oesc_tables is not None:
                 use_lookup = st.checkbox(
@@ -4179,6 +4326,11 @@ elif page == "Conductors":
                     table_meta = oesc_tables.get_table_meta(amp_table_id) or {}
                     table_rows = table_meta.get("rows", [])
                     size_key = "Size (AWG/kcmil)"
+                    if table_rows and size_key not in table_rows[0]:
+                        for k in table_rows[0].keys():
+                            if "size" in str(k).lower():
+                                size_key = k
+                                break
                     sizes = [str(r.get(size_key)) for r in table_rows if r.get(size_key) is not None]
                     sizes = sizes if sizes else []
 
@@ -4186,7 +4338,7 @@ elif page == "Conductors":
                     temp_col_map = {}
                     temp_options = []
                     for col in temp_cols:
-                        m2 = re.search(r"(\\d+)", str(col))
+                        m2 = re.search(r"(\d+)", str(col))
                         if m2:
                             val = int(m2.group(1))
                             temp_col_map[val] = col
@@ -4198,6 +4350,7 @@ elif page == "Conductors":
                         sizes if sizes else ["(no sizes found)"],
                         index=0,
                         key="cond_size_choice",
+                        format_func=lambda s: format_cond_size(s),
                     )
 
                     default_temp = 75 if 75 in temp_options else (temp_options[0] if temp_options else None)
@@ -4247,9 +4400,11 @@ elif page == "Conductors":
                 adjusted_ampacity = float(base_ampacity) * float(k_total)
 
             st.metric("Base ampacity (selected)", fmt(base_ampacity, "A"))
-            st.metric("Adjusted ampacity per set", fmt(adjusted_ampacity, "A"))
-            if adjusted_ampacity is not None and n_parallel:
+            if adjusted_ampacity is not None and n_parallel and n_parallel > 1:
+                st.metric("Adjusted ampacity per set", fmt(adjusted_ampacity, "A"))
                 st.metric("Adjusted ampacity (all sets)", fmt(adjusted_ampacity * n_parallel, "A"))
+            else:
+                st.metric("Adjusted ampacity", fmt(adjusted_ampacity, "A"))
 
             if adjusted_ampacity is not None and I_per_set is not None:
                 if adjusted_ampacity < I_per_set:
