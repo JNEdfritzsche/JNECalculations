@@ -1,5 +1,3 @@
-Motor Protection
-
 ## Overview
 
 Once motor feeder size has been determined, our next consideration is motor protection devices. Motor protection consists of three primary functions:
