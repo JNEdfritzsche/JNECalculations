@@ -86,7 +86,7 @@ RLC for compressors
 
 ## Related Knowledge File
 
-![Knowledge File - OESC: Section 28 Motor and Generators]()
+[Knowledge File - OESC: Section 28 Motor and Generators]()
 
 ## Related OESC Rules
 
