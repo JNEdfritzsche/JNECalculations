@@ -67,7 +67,7 @@ The rules generally cover different situations and cases where starters and disc
 As we saw in the first section, we aim to chose a fuse size as close as we can to the adjusted FLC. Sometimes we are limited to standard fuse sizes which could be well below this target, which might not allow our motor to start. Furthermore, all these calculations are based on the assumption that not all the motors will be starting simultaneously. Though typically in the past 15 years, most industrial motors come with soft starters of VFds, so motor not starting due to nuissance tripping is not as big of a concern anymore.
 -->
 ---
-# General rules
+## General rules
 As a general rule of thumb, we can follow Figure 1 below as a quick guide to choosing devices for different motors. 
 
 <div align="center">
@@ -82,13 +82,13 @@ RLC for compressors
 -->
 
 ---
-# Appendix
+## Appendix
 
-## Related Knowledge File
+### Related Knowledge File
 
 [Knowledge File - OESC: Section 28 Motor and Generators]()
 
-## Related OESC Rules
+### Related OESC Rules
 
 Rule 28-200 — Branch circuit overcurrent protection<br/>
 Rule 28-202 — Feeder circuit overcurrent protection<br/>
@@ -96,7 +96,7 @@ Rule 28-210 — Instantaneous-trip circuit breakers<br/>
 Rule 28-306 — Trip selection of overload devices<br/>
 Rule 28-604 — Location of disconnecting means<br/>
 
-## Related OESC Tables
+### Related OESC Tables
 
 Table 13 — Overcurrent devices; conductor protection<br/>
 Table 29 — Overcurrent devices; motor branch circuits<br/>
