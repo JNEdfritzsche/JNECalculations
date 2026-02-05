@@ -78,42 +78,31 @@ We only upsize the largest continuous FLA motor and apply the applicable factors
 
 ---
 
-# Appendix
+## Appendix
 
-## Related Knowledge File
+### Related Knowledge File
 
 [Design Basis – Calculations: Motor Feeder]()
 
 [Knowledge File – OESC: Section 28 Motor and Generators]()
 
-## Related OESC Rules
+### Related OESC Rules
 
-Rule 4-004 — Conductor ampacity
-
-Rule 4-006 — Temperature limitations
-
-Rule 8-102 — Voltage drop 
-
-Rule 28-104 — Motor supply conductor insulation temperature rating & ampacity
-
-Rule 28-106 — Conductor sizing:  Single motor branch circuit
-
-Rule 28-108 — Conductor sizing:  Multiple motors branch circuit
-
-Rule 28-110 — Conudctor sizing: Feeder 
-
+Rule 4-004 — Conductor ampacity<br/>
+Rule 4-006 — Temperature limitations<br/>
+Rule 8-102 — Voltage drop <br/>
+Rule 28-104 — Motor supply conductor insulation temperature rating & ampacity<br/>
+Rule 28-106 — Conductor sizing:  Single motor branch circuit<br/>
+Rule 28-108 — Conductor sizing:  Multiple motors branch circuit<br/>
+Rule 28-110 — Conudctor sizing: Feeder <br/>
 Rule 28-400 — Motor Undervoltage
 
 ## Related OESC Tables
 
-Tables 27 — Motor Service Duties
-
-Tables 37 — Motor Insulation Class Rating
-
-Table D2 — DC motor Full Load Ampacity
-
-Table 44 — 3Φ Motor FLA at 100% PF
-
+Tables 27 — Motor Service Duties<br/>
+Tables 37 — Motor Insulation Class Rating<br/>
+Table D2 — DC motor Full Load Ampacity<br/>
+Table 44 — 3Φ Motor FLA at 100% PF<br/>
 Table 45 — 1Φ Motor FLA at 100% PF
 
 <!--
