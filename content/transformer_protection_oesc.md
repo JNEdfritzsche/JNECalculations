@@ -4,7 +4,7 @@ The Transformer Protection section describes the OESC intent and design principl
 
 <div align="center">
 
-![Figure 1: Example Motor Protection](images/Transformer_Protection.png)
+![Figure 1: Example Transformer Protection](images/Transformer_Protector.png)
 
 </div>
 
