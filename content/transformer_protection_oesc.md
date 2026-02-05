@@ -3,7 +3,7 @@
 The Transformer Protection section describes the OESC intent and design principles for overcurrent protection to maintain operability of a typical transformer. The OESC classifies three main groups of transformer circuits, each with its own associated design rules. This section focuses on the sizing of the fuses and breakers used to protect the transformer, cable sizing can be found in the Transformer Feeders section of this website. The general layout of a transformer with primary-side overcurrent protection can be seen below.
 
 <img
-  src="Transformer_Protector.png"
+  src="images/Transformer_Protector.png"
   alt="Figure 1: Transformer Protection"
   width="400"
 />
