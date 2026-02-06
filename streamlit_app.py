@@ -474,13 +474,13 @@ if page == "Transformer Protection":
                 else:
                     if Ip < 2.0:
                         mult = 3.00
-                        reason = "Ip < 2 A → up to 300% permitted."
+                        reason = "Ip < 2 A — up to 300% permitted."
                     elif Ip < 9.0:
                         mult = 1.67
-                        reason = "Ip < 9 A → up to 167% permitted."
+                        reason = "Ip < 9 A — up to 167% permitted."
                     else:
                         mult = 1.50
-                        reason = "Ip ≥ 9 A → up to 150% permitted; if not a standard size, next higher standard permitted."
+                        reason = "Ip ≥ 9 A — up to 150% permitted; if not a standard size, next higher standard permitted."
 
                     raw_primary = mult * Ip
                     st.caption(reason)
@@ -660,7 +660,10 @@ elif page == "Transformer Feeders":
     with theory_tab:
         header("Transformer Feeders — Theory")
         show_code_note(code_mode)
-        render_md_safe("transformer_feeders.md")
+        if code_mode == "OESC":
+            render_md_safe("transformer_feeders_oesc.md")
+        else:
+            render_md_safe("transformer_feeders_nec.md")
 
     with calc_tab:
         header("Transformer Feeder Calculator", "Compute primary/secondary FLA, turns ratio, and transformer type.")
@@ -770,7 +773,10 @@ elif page == "Grounding/Bonding Conductor Sizing":
     with theory_tab:
         header("Grounding & Bonding — Theory")
         show_code_note(code_mode)
-        render_md_safe("grounding_bonding.md")
+        if code_mode == "OESC":
+            render_md_safe("grounding_bonding_oesc.md")
+        else:
+            render_md_safe("grounding_bonding_nec.md")
 
     with calc_tab:
         header("Grounding/Bonding Helper", "Simple placeholder — replace with real NEC/OESC table logic.")
@@ -801,7 +807,10 @@ elif page == "Motor Protection":
     with theory_tab:
         header("Motor Protection — Theory")
         show_code_note(code_mode)
-        render_md_safe("motor_protection.md")
+        if code_mode == "OESC":
+            render_md_safe("motor_protection_oesc.md")
+        else:
+            render_md_safe("motor_protection_nec.md")
 
     with calc_tab:
         header("Motor Protection Calculator", "Estimate overload and short-circuit device settings.")
@@ -830,7 +839,10 @@ elif page == "Motor Feeder":
     with theory_tab:
         header("Motor Feeder — Theory")
         show_code_note(code_mode)
-        render_md_safe("motor_feeder.md")
+        if code_mode == "OESC":
+            render_md_safe("motor_feeder_oesc.md")
+        else:
+            render_md_safe("motor_feeder_nec.md")
 
     with calc_tab:
         header("Motor Feeder Calculator", "Estimate motor I_FLA from nameplate data, then apply feeder factor.")
@@ -894,7 +906,10 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
     with theory_tab:
         header("Cable Tray Size, Fill & Bend Radius — Theory")
         show_code_note(code_mode)
-        render_md_safe("cable_tray_fill.md")
+        if code_mode == "OESC":
+            render_md_safe("cable_tray_fill_oesc.md")
+        else:
+            render_md_safe("cable_tray_fill_nec.md")
 
     with calc_tab:
         header("Tray Fill & Bend Radius Calculator", "Estimate cable area + bend radius.")
@@ -927,7 +942,10 @@ elif page == "Conduit Size & Fill & Bend Radius":
     with theory_tab:
         header("Conduit Size, Fill & Bend Radius — Theory")
         show_code_note(code_mode)
-        render_md_safe("conduit_fill.md")
+        if code_mode == "OESC":
+            render_md_safe("conduit_fill_oesc.md")
+        else:
+            render_md_safe("conduit_fill_nec.md")
 
     with calc_tab:
         header("Conduit Fill Calculator — OESC Table 6 + Table 9 (dynamic cables)", "Select a conduit, add any number of cable groups, and the app computes conduit fill.")
@@ -2773,7 +2791,10 @@ elif page == "Cable Tray Ampacity":
     with theory_tab:
         header("Cable Tray Ampacity — Theory")
         show_code_note(code_mode)
-        render_md_safe("cable_tray_ampacity.md")
+        if code_mode == "OESC":
+            render_md_safe("cable_tray_ampacity_oesc.md")
+        else:
+            render_md_safe("cable_tray_ampacity_nec.md")
 
     with calc_tab:
         header("Ampacity Derating Calculator", "Apply base ampacity and derating factors.")
@@ -2797,7 +2818,10 @@ elif page == "Demand Load":
     with theory_tab:
         header("Demand Load — Theory")
         show_code_note(code_mode)
-        render_md_safe("demand_load.md")
+        if code_mode == "OESC":
+            render_md_safe("demand_load_oesc.md")
+        else:
+            render_md_safe("demand_load_nec.md")
 
     with calc_tab:
         header("Demand Load Calculator", "Compute demand load from connected load and factor.")
@@ -2908,7 +2932,10 @@ elif page == "Voltage Drop":
     with theory_tab:
         header("Voltage Drop — Theory")
         show_code_note(code_mode)
-        render_md_safe("voltage_drop.md")
+        if code_mode == "OESC":
+            render_md_safe("voltage_drop_oesc.md")
+        else:
+            render_md_safe("voltage_drop_nec.md")
 
         # -------------------------------------------------
         # Display Table D3 reference tables
@@ -3783,7 +3810,10 @@ elif page == "Conductors":
     with theory_tab:
         header("Conductors — Theory", "OESC Section 4 (Rule 4-004) workflow + worked example case study.")
         show_code_note(code_mode)
-        render_md_safe("conductors.md")
+        if code_mode == "OESC":
+            render_md_safe("conductors_oesc.md")
+        else:
+            render_md_safe("conductors_nec.md")
 
     with calc_tab:
         header("Conductors — Calculator", "Workflow helper: design current, table selection, correction-factor math, and k-value voltage drop check.")
