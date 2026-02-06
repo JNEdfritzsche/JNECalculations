@@ -3795,6 +3795,33 @@ elif page == "Conductors":
                 "Switch the sidebar jurisdiction to **OESC** for best alignment."
             )
 
+        st.markdown("### Conductor Selection Flowchart")
+        dot = """
+digraph G {
+  rankdir=TB;
+  node [shape=box, style=rounded];
+
+  d1 [label="Path?"];
+  d1 -> d2 [label="Free air"];
+  d2 [label="<= 25% spacing?", shape=diamond, fixedsize=true, width=1.2, height=0.8, margin=0.05];
+  d2 -> d3 [label="No"];
+  d3 [label="Table 1/3"];
+  d2 -> d4 [label="Yes"];
+  d4 [label="<= 4 Conductors?", shape=diamond, fixedsize=true, width=1.2, height=0.8, margin=0.05];
+  d5 [label="Table 1/3 x 5B"];
+  d6 [label="Table 2/4 x 5C"];
+  d4 -> d5 [label="Yes"];
+  d4 -> d6 [label="No"];
+
+  d1 -> d7 [label="Raceway/Cable"];
+  d7 [label="<= 3 Conductors?", shape=diamond, fixedsize=true, width=1.2, height=0.8, margin=0.05];
+  d7 -> d6 [label="No"];
+  d8 [label="Table 2/4"];
+  d7 -> d8 [label="Yes"];
+}
+"""
+        st.graphviz_chart(dot)
+
         st.markdown("## 1) Ampacity workflow helper (service factor + table selection)")
 
         c1, c2, c3 = st.columns([1, 1, 1], gap="large")
