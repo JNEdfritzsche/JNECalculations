@@ -90,8 +90,8 @@ $$
 
 | Protection Type | OESC Multiplier | Primary FLA | Secondary FLA |
 |-----------------|-----------------|-------------|---------------|
-| Fuses           | 1.50 | 41.84 \cdot 1.50 = 62.76 | 1926.78 \cdot 1.50 = 2886.75 |
-| Circuit Breaker | 3.00 | 41.84 \cdot 3.00 = 125.52 | 1926.78 \cdot 3.00 = 5773.5 |
+| Fuses           | 1.50 | 41.84 $$\cdot$$ 1.50 = 62.76 | 1926.78 $$\cdot$$ 1.50 = 2886.75 |
+| Circuit Breaker | 3.00 | 41.84 $$\cdot$$ 3.00 = 125.52 | 1926.78 $$\cdot$$ 3.00 = 5773.5 |
 
 ### Oil-Cooled < 750 V
 
@@ -121,7 +121,7 @@ $$
 
 | Protection Type | OESC Multiplier | Primary FLA | Secondary FLA |
 |-----------------|-----------------|-------------|---------------|
-| Overcurrent Protection | 1.50 | 72.17 \cdot 1.50 = 108.26 | 208.18 \cdot 1.50 = 312.27 |
+| Overcurrent Protection | 1.50 | 72.17 $$\cdot$$ 1.50 = 108.26 | 208.18 $$\cdot$$ 1.50 = 312.27 |
 
 ### Dry-Type < 750 V
 
@@ -153,7 +153,7 @@ $$
 
 | Protection Type | OESC Multiplier | Primary FLA | Secondary FLA |
 |-----------------|-----------------|-------------|---------------|
-| Overcurrent Protection | 1.25 | 72.17 \cdot 1.25 = 90.21 | 208.18 \cdot 1.25 = 260.26 |
+| Overcurrent Protection | 1.25 | 72.17 $$\cdot$$ 1.25 = 90.21 | 208.18 $$\cdot$$ 1.25 = 260.26 |
 
 <!-- Dont know where you found this, 26-250,252,254 does nto mention anything like this. if rule is found then adjust accordingly.
 
@@ -175,8 +175,8 @@ b) Carry **25 × transformer rated primary full-load current** for **0.01 s**
 
 | Condition | Current Withstand |
 |----------|--------------------|
-| 12 × FLA @ 0.1 s | 72.17 \cdot 12 = 866.04 |
-| 25 × FLA @ 0.01 s | 72.17 \cdot 25 = 1804.25 |
+| 12 × FLA @ 0.1 s | 72.17 $$\cdot$$ 12 = 866.04 |
+| 25 × FLA @ 0.01 s | 72.17 $$\cdot$$ 25 = 1804.25 |
 
 -->
 
