@@ -41,7 +41,7 @@ When spacing is maintained at this distance, there is no derating factor applied
 ---
 ## Parallel Runs & Direct Bury
 
-Parallel runs and direct bury are generally for conductor sizes #1/0 AWG and larger. If buried, either directly buried in the ground or embedded conduit in concrete, we look to find the configuration in Diagrams D8-D11 and determine ampacity from their respective Tables D8A to D11A. For parallel runs in a certain configuration that maintain that spacing for the entire run, 
+Parallel runs and direct bury are generally for conductor sizes #1/0 AWG and larger. If buried, either directly buried in the ground or embedded conduit in concrete, we look to find the configuration in Diagrams D8-D11 and determine ampacity from their respective Tables D8A to D11A.
 
 ---
 ## Other considerations
