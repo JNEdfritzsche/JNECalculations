@@ -1,88 +1,67 @@
-## Conductors — Theory
-OESC Section 4 (Rule 4-004) workflow + worked example case study.
+## Overview
 
-> **Note (Jurisdiction):** This page is based on an OESC/CEC (Ontario/Canada) conductor sizing workflow summary. If you need NEC-specific conductor sizing, this page would need a separate NEC implementation.
+The main area of concern for conductors is sizing. When properly sizing conductors, we consider the amount of power the load requires, then derate the cable accordingly. There are plenty of factors to consider for derating; such as ambient temperature, location, grouping, installation path, etc. This section will cover general methodology for each type of derating, as the ability to know which derating factors to apply is the main focus.
 
-### Keywords
-- **Raceway:** any channel designed for holding wires, cables, or busbars, such as conduits, tubing, and ducts.  
-- **Spacing:** the separation between cables in a run, given as **% of largest cable diameter**.  
-- **Service factor:** a multiplying factor that indicates how much a piece of equipment can be overloaded without significant damage under specified conditions.
+---
+## Base Ampacity
 
-### Summary
-This summary is intended to familiarize you with calculating cable sizes for different loads and runs, using a CEC Handbook-style workflow and OESC tables (Tables 1–4 plus correction factors). Always consult the full code book for final compliance.
+At the elementary level, running conductors/cables through free air at 30°C, we use Tables 1/3 for single conductors and Tables 2/4 for 1-3 multi-conductor cables (or 1-3 single conductors in a raceway). Since many rules consider upsizing the cable according to a service factor, it is generally recommended to upsize 125% for most loads.
 
-### Ampacity selection chart (ambient temperature ≤ 30°C)
-Table-selection logic summarized from OESC Rule 4-004 guidance.
+---
+## Temperature Derating
 
-| Subrule | Conductors | Condition | Spacing (% of cable diameter) | Use ampacity from |
-|---|---|---|---|---|
-| 4-004 (1) & (2) | a) Single | Free air | ≥ 100% | Table **1** (Cu) or **3** (Al) |
-| 4-004 (1) & (2) | b) 1 to 3 | Raceway or cable | N/A | Table **2** (Cu) or **4** (Al) |
-| 4-004 (1) & (2) | c) 4 or more | Raceway or cable | N/A | Table **2** or **4** × correction factor from Table **5C** |
-| 4-004 (1) & (2) | d) Not more than 4 | No. 1/0 AWG and larger underground run — direct buried or in a direct-buried raceway | Configurations in Diagrams D8 to D11 | Tables **D8A to D11B** or IEEE **835** method |
-| 4-004 (1) & (2) | e) Not more than 4 | No. 1/0 AWG and larger underground run — direct buried or in a direct-buried raceway | Configuration not described in D8 to D11 | IEEE **835** method |
-| 4-004 (1) & (2) | f) Not more than 4 | Smaller than No. 1/0 AWG underground run — direct buried or in a direct-buried raceway | Configuration not described in D8 to D11 | IEEE **835** method or as specified in Tables **2** and **4** |
-| 4-004 (8) | Single | Free air | 25% to 100% | Table **1** or **3** × correction factor from Table **5D** |
-| 4-004 (9) | Not more than 4 single | Free air | < 25% | Table **1** or **3** × correction factor from Table **5B** |
-| 4-004 (11) | 5 or more single | Free air | < 25% | Table **2** or **4** × correction factor from Table **5C** |
+All tables are calculated based on a 30°C ambient temperature, but cables can be exposed to higher temperatures. We use **Table 5A** to derate conductor ampacity where;
 
-### Typical assumptions used in the worked example
-- Termination temperature assumption often used for quick checks: **60°C** for equipment **<100A**, and **75°C** for equipment **>100A**  
-- Service factor often assumed for equipment: **SF = 1.25**  
-- Power factor often assumed: **pf ≈ 0.9**  
-- Ambient temperature: **≤ 30°C**
+$$
+\text{Conductor Ampacity}_{new} = \text{Conductor Ampacity}_{old} \times \text{Table 5A Factor}
+$$
 
-### Common calculation relationships used in the workflow
-Service-factor (design multiplier) current:
+---
+## Conduit Derating
 
-$$ I_{design} = I_{load}\times SF $$
+Often conduits will house multiple conductors, which case, you would apply Table 5C factor to Table 2/4.
 
-If using parallel runs (per set current):
+---
+## Spacing Derating
 
-$$ I_{per\_set} = \frac{I_{design}}{N_{parallel}} $$
+Cables can be spaced in three ways based on the diameter of the largest cable in the group;
 
-If a correction factor applies (Table 5B / 5C / 5D), the base-table ampacity needed is:
+### Spacing <25% Diameter
 
-$$ I_{table} = \frac{I_{per\_set}}{k_{corr}} $$
+For close spacing, it can be applied in two different way depending on the configuration, but some cases are defined to be functionally equivalent (FE) to each other. For 1-4 single conductors in free air, you would apply Table 5B factor to Table 1/3. Five or more single conductors in free air with close spacing is FE to 4 or more single conductors in a raceway/cable, where you would apply Table 5C factor to Table 2/4
 
-### Worked example case study (steel mill — tasks 1 to 5)
+### 25% Diameter < Spacing < 100% Diameter
 
-**Case:** steel mill installing new equipment and replacing old cables; a transformer supplies lighting, motors, control panels, heaters, etc.  
-**Conditions:** transformer inside electrical room; feeds equipment through free air (tray), raceways, and direct-buried routes.
+This spacing is uncommon, but for single conductors in this configuration you would apply correction factor from Table 5D, according to Rule 4-004 8).
 
-**Task 1:** 3Φ 500 kVA, 13.8 kV / 600 V transformer; single conductors for secondary connection.  
-- Primary/secondary FLA: **20.919 A / 481.139 A**  
-- With SF=1.25: **26.15 A / 601.42 A**  
-- Example result: **500 MCM** (Table 1, rounded up)
+### Spacing >100% Diameter
 
-**Task 2 (Free air / ladder tray):** ladder trays considered free-air.  
-- 40A 1Φ + GND (3C), plenty of spacing → design 50A → Table 2 → **No. 6 AWG**  
-- 100A 3Φ delta + GND (4 singles), spacing 25–100% → apply Table 5D → table current 150A → Table 1 → **No. 2 AWG**  
-- 200A 3Φ wye + GND, parallel singles, <25% spacing → per-conductor 100A → apply Table 5C → table current 179A → Table 2 → **No. 3/0 AWG**
+When spacing is maintained at this distance, there is no derating factor applied.
 
-**Task 3 (Raceway):**  
-- 125A 3Φ 3W delta in its own conduit → 156.25A design → Table 2 → **No. 2/0 AWG**  
-- 150A 3Φ 4W wye in its own conduit (Al) → apply Table 5C → table current 234.38A → Table 4 → **350 MCM**
+---
+## Parallel Runs & Direct Bury
 
-**Task 4 (Direct-bury):** follow Diagrams D8–D11; otherwise IEEE 835 method.  
-- 325A 3Φ, 3 singles flat config (Diagram D8 Detail 1) → 406.25A design → Table D8A → **No. 4/0 AWG**  
-- 160A 3Φ using parallel 3C cables in underground conduit (Diagram D11 Detail 2) → diagram table shows smallest cable 185A, so example uses Table 2 → **No. 3 AWG**  
-*(Spacing often must be calculated and iterated.)*
+Parallel runs and direct bury are generally for conductor sizes #1/0 AWG and larger. If buried, either directly buried in the ground or embedded conduit in concrete, we look to find the configuration in Diagrams D8-D11 and determine ampacity from their respective Tables D8A to D11A. For parallel runs in a certain configuration that maintain that spacing for the entire run, 
 
-**Task 5 (Voltage drop / k-value):** 600V / 100A heater, 1.5 km away.  
-- Design current 125A; max VD = 5% = 30V  
-- Compute **k_max = 0.08 Ω/km**, select from Table D3 → **1000 MCM**
+---
+## Other considerations
 
-### Voltage drop k-value relationship used in the example
+In an industrial setting, cables can be exposed to many different things that affect its rating. For example, cables run underground must be wet rated, or if outside must be rated for sunlight exposure. Running equipment and cables in hazardous locations also affords its own considerations. Section 18 & Table 19 cover this area more in depth.
 
-$$ k_{max} = \frac{\Delta V_{allow}}{2\,I\,L_{km}} $$
+---
+## General Methodology
 
-Compare \(k_{max}\) to manufacturer k-values (Ω/km). Tables 1–4 ampacities do not include voltage drop.
+To determine which derating factors to apply and their exceptions, the reference charts below can be used.
 
-<details>
-  <summary><b>Manufacturer spec reminder (why cable spec sheets matter)</b></summary>
-  <br/>
-  The Knowledge File includes examples of manufacturer spec pages (e.g., TECK90 and armored VFD cable).
-  In real projects, you’ll need spec-sheet details such as conductor class/stranding, insulation type, jacket/armor, OD, weight,
-  minimum bend radius, pull tension, and resistance/k-values for voltage drop and heat calculations.
-</details>
+<div align="center">
+
+![Figure 1: Derating Factor Selection Chart](images/AmpacitySelectionChart.png)</br>
+![Figure 2: Quick Correction Factor Reference](images/QuickCorrFactRef.png)
+
+</div>
+
+---
+# Related Reading
+
+Knowledge File — OESC: Section 4 Conductors </br>
+Knowledge File — Conductor and Cable Derating
