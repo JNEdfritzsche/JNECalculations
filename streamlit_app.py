@@ -3197,8 +3197,18 @@ elif page == "Voltage Drop":
             pf_choice = "100% pf"
             size = None
 
+        operating_temp_c = st.selectbox(
+            "Conductor operating temperature (°C)",
+            [60, 75, 90],
+            index=1,
+            format_func=lambda t: f"{t}°C",
+            key="vd_operating_temp_c",
+        )
+        temp_multiplier_map = {60: 0.95, 75: 1.00, 90: 1.05}
+        k_temp_multiplier = temp_multiplier_map.get(int(operating_temp_c), 1.00)
+
         if not use_table:
-            k_used = st.number_input(
+            k_base = st.number_input(
                 "Manual k-value (Ω/km)",
                 min_value=0.0,
                 value=0.10,
@@ -3243,12 +3253,22 @@ elif page == "Voltage Drop":
                     f"Table value not found for {mat} {size} / {location} {pf_short}. "
                     f"Available columns for this size: {available}"
                 )
-                k_used = None
+                k_base = None
                 selected_col_suffix = None
             else:
-                k_used = float(k_found)
+                k_base = float(k_found)
                 selected_col_suffix = found_key
-                st.caption(f"Table D3 k-value selected for {mat} {size} ({selected_col_suffix}): **{k_used} Ω/km**")
+                st.caption(
+                    f"Table D3 base k-value selected for {mat} {size} ({selected_col_suffix}): "
+                    f"**{k_base} Ω/km** at 75°C reference."
+                )
+
+        k_used = (k_base * k_temp_multiplier) if k_base is not None else None
+        if k_base is not None:
+            st.caption(
+                f"Temperature-adjusted k-value: **{k_used:.6g} Ω/km** "
+                f"(base {k_base:.6g} x {k_temp_multiplier:.2f} for {operating_temp_c}°C)."
+            )
 
         # --------------------------
         # f-factor options (used in both table + manual modes)
@@ -3310,7 +3330,18 @@ elif page == "Voltage Drop":
             m2.metric("Voltage drop (%)", fmt(pct, "%"))
 
             st.markdown("### Parameters used")
-            st.write(f"- k-value: **{k_used} Ω/km** (source: Table D3, column **{selected_col_suffix}**)")
+            if use_table:
+                st.write(
+                    f"- k-value base (75°C Table D3): **{k_base:.6g} Ω/km** "
+                    f"(column **{selected_col_suffix}**)"
+                )
+            else:
+                st.write(f"- k-value base (manual): **{k_base:.6g} Ω/km**")
+            st.write(
+                f"- Operating temperature = **{operating_temp_c}°C** "
+                f"→ k multiplier = **{k_temp_multiplier:.2f}**"
+            )
+            st.write(f"- k-value used in calc: **{k_used:.6g} Ω/km**")
             st.write(f"- factor f: **{f:.6g}** (selected: {f_label})")
             st.write(f"- I (load) = **{fmt(I, 'A')}**, L = **{fmt(L_m, 'm')}**, V_nom = **{fmt(V_nom, 'V')}**")
             st.write(f"- Parallel conductors = **{n_parallel_vd}** → I per conductor = **{fmt(I_eff, 'A')}**")
@@ -3322,7 +3353,7 @@ elif page == "Voltage Drop":
 
         st.caption(
             "Notes: Table D3 values are transcribed exactly from the supplied images (cable vs raceway and pf columns). "
-            "When using Manual k-value mode the table lookup controls are hidden and k is used exactly as entered."
+            "Manual mode uses your entered k as the 75°C base value before the operating-temperature multiplier is applied."
         )
 
         # -------------------------------------------------
@@ -3332,7 +3363,8 @@ elif page == "Voltage Drop":
         st.markdown("### 📄 Export calculation report")
 
         assumptions = [
-            "Uses OESC Appendix D Table D3 k-values in Ω per circuit kilometre (Ω/km) when Table mode is selected.",
+            "Uses OESC Appendix D Table D3 k-values in Ω per circuit kilometre (Ω/km) as 75°C base values when Table mode is selected.",
+            "Applies an operating-temperature multiplier to k: 60°C → 0.95, 75°C → 1.00, 90°C → 1.05.",
             "Uses voltage-drop factor f from the Appendix D system factor list.",
             "Uses one-way length L (m) directly in the formula; table equation divides by 1000 to convert m → km.",
             "If parallel conductors are used, current is divided by N_parallel (per conductor) for the VD calc.",
@@ -3345,7 +3377,9 @@ elif page == "Voltage Drop":
         ]
 
         variables = [
-            {"Symbol": "k", "Description": "Voltage-drop factor from Table D3 (Ω/km) or manual entry", "Value": k_used},
+            {"Symbol": "k_base", "Description": "Base voltage-drop factor at 75°C from Table D3 or manual entry (Ω/km)", "Value": k_base},
+            {"Symbol": "k_mult", "Description": "Operating-temperature multiplier applied to k_base", "Value": k_temp_multiplier},
+            {"Symbol": "k", "Description": "Adjusted voltage-drop factor used in calculation (Ω/km)", "Value": k_used},
             {"Symbol": "f", "Description": "System/connection factor from Appendix D", "Value": f},
             {"Symbol": "I", "Description": "Load current (A)", "Value": I},
             {"Symbol": "N_parallel", "Description": "Parallel conductors per phase/pole", "Value": n_parallel_vd},
@@ -3449,6 +3483,8 @@ elif page == "Voltage Drop":
             meta = doc.add_paragraph()
             meta.add_run(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n").bold = True
             meta.add_run(f"k-mode: {k_mode}\n")
+            meta.add_run(f"Conductor operating temperature: {operating_temp_c}°C\n")
+            meta.add_run(f"k multiplier: {k_temp_multiplier:.2f}\n")
             meta.add_run(f"Parallel conductors per phase/pole: {n_parallel_vd}\n")
             if use_table:
                 meta.add_run(f"Material: {mat}\n")
@@ -3457,9 +3493,12 @@ elif page == "Voltage Drop":
                     meta.add_run(f"Power factor column: {pf_choice}\n")
                 meta.add_run(f"Conductor size: {size}\n")
                 meta.add_run(f"Selected Table D3 column: {selected_col_suffix}\n")
+                meta.add_run(f"Base k-value (75°C): {k_base:.6g} Ω/km\n")
             else:
                 meta.add_run("Material/Installation/Size selection: (not used; manual k-value mode)\n")
                 meta.add_run("k source: Manual entry\n")
+                meta.add_run(f"Base k-value (75°C): {k_base:.6g} Ω/km\n")
+            meta.add_run(f"Adjusted k-value used: {k_used:.6g} Ω/km\n")
 
             doc.add_heading("Equations", level=2)
             for title, latex in equations_text:
@@ -3576,21 +3615,29 @@ elif page == "Voltage Drop":
             row = 6
             if use_table:
                 summary_pairs = [
+                    ("Conductor operating temperature (°C)", operating_temp_c),
+                    ("k multiplier", f"{k_temp_multiplier:.2f}"),
                     ("Parallel conductors per phase/pole", n_parallel_vd),
                     ("Material", mat),
                     ("Installation", location),
                     ("Power factor column", pf_choice if location != "DC" else "(N/A — DC)"),
                     ("Conductor size", size),
                     ("Selected Table D3 column", selected_col_suffix),
+                    ("Base k-value (75°C) (Ω/km)", f"{k_base:.6g}"),
+                    ("Adjusted k-value used (Ω/km)", f"{k_used:.6g}"),
                 ]
             else:
                 summary_pairs = [
+                    ("Conductor operating temperature (°C)", operating_temp_c),
+                    ("k multiplier", f"{k_temp_multiplier:.2f}"),
                     ("Parallel conductors per phase/pole", n_parallel_vd),
                     ("Material", "(N/A — manual k)"),
                     ("Installation", "(N/A — manual k)"),
                     ("Power factor column", "(N/A — manual k)"),
                     ("Conductor size", "(N/A — manual k)"),
                     ("k source", "Manual entry"),
+                    ("Base k-value (75°C) (Ω/km)", f"{k_base:.6g}"),
+                    ("Adjusted k-value used (Ω/km)", f"{k_used:.6g}"),
                 ]
 
             for kname, kval in summary_pairs:
