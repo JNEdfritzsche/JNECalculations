@@ -18,11 +18,11 @@ except Exception as e:
 #   \[ ... \]  -> $$ ... $$
 #   \( ... \)  -> $ ... $
 _LATEX_BLOCK_PATTERNS = [
-    (re.compile(r"\\\[(.*?)\\\]", flags=re.DOTALL), r"$$\1$$"),
+    (re.compile(r"\\\[(.*)\\\]", flags=re.DOTALL), r"$$\1$$"),
 ]
 
 _LATEX_INLINE_PATTERNS = [
-    (re.compile(r"\\\((.*?)\\\)", flags=re.DOTALL), r"$\1$"),
+    (re.compile(r"\\\((.*)\\\)", flags=re.DOTALL), r"$\1$"),
 ]
 
 
@@ -117,7 +117,7 @@ def _render_markdown_with_images(md: str, md_dir: Path, wrap: bool = True):
 
     # Match either image markers or flowchart markers
     marker_rx = re.compile(
-        r"<!-- IMAGE_MARKER\|\|(.+?)\|\|(.+?) -->|<!-- FLOWCHART_([A-Z0-9_]+) -->",
+        r"<!-- IMAGE_MARKER\|\|(.+)\|\|(.+) -->|<!-- FLOWCHART_([A-Z0-9_]+) -->",
         flags=re.DOTALL,
     )
 
@@ -180,7 +180,7 @@ digraph G {
   height=1.1,
   margin=0.05];
   d5 [label="Table 29 \n Row 5"];
-  d6 [label="FLC > 30 A ?", shape=diamond,
+  d6 [label="FLC > 30 A ", shape=diamond,
   fixedsize=true,
   width=1,
   height=1,

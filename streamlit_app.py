@@ -300,6 +300,7 @@ PAGES = [
     "Conduit Size & Fill & Bend Radius",
     "Cable Tray Ampacity",
     "Demand Load",
+    "Power Factor Correction",
     "Voltage Drop",
     "Conductors",
     "Table Library",
@@ -2834,9 +2835,24 @@ elif page == "Demand Load":
 
         st.markdown("### Equation used")
         eq(r"P_{demand}=P_{connected}\cdot f_{demand}")
+
 # ============================
-# 10) Voltage Drop  (FULL BLOCK — Table D3 expander always shown; f-list filtered for DC; size order matches Table D3)
+# 10) Power Factor Correction
 # ============================
+elif page == "Power Factor Correction":
+    with theory_tab:
+        header("Power Factor Correction — Theory")
+        show_code_note(code_mode)
+        if code_mode == "OESC":
+            render_md_safe("power_factor_correction_oesc.md")
+        else:
+            render_md_safe("power_factor_correction_nec.md")
+
+    with calc_tab:
+        header("Power Factor Correction — Calculator")
+        show_code_note(code_mode)
+        st.info("Placeholder — content coming soon.")
+
 
 # ============================
 # Table Library (browse/search embedded OESC tables)
@@ -2927,6 +2943,9 @@ elif page == "Table Library":
                 except Exception:
                     st.caption("CSV download unavailable in this environment.")
 
+# ============================
+# 11) Voltage Drop  (FULL BLOCK — Table D3 expander always shown; f-list filtered for DC; size order matches Table D3)
+# ============================
 
 elif page == "Voltage Drop":
     with theory_tab:
@@ -3804,7 +3823,7 @@ elif page == "Voltage Drop":
                 st.caption("Pandas not available; shown as plaintext.")
 
 # ============================
-# 11) Conductors
+# 12) Conductors
 # ============================
 elif page == "Conductors":
     with theory_tab:
@@ -3831,20 +3850,20 @@ digraph G {
   rankdir=TB;
   node [shape=box, style=rounded];
 
-  d1 [label="Path?"];
+  d1 [label="Path"];
   d1 -> d2 [label="Free air"];
-  d2 [label="<= 25% spacing?", shape=diamond, fixedsize=true, width=1.2, height=0.8, margin=0.05];
+  d2 [label="<= 25% spacing", shape=diamond, fixedsize=true, width=1.2, height=0.8, margin=0.05];
   d2 -> d3 [label="No"];
   d3 [label="Table 1/3"];
   d2 -> d4 [label="Yes"];
-  d4 [label="<= 4 Conductors?", shape=diamond, fixedsize=true, width=1.2, height=0.8, margin=0.05];
+  d4 [label="<= 4 Conductors", shape=diamond, fixedsize=true, width=1.2, height=0.8, margin=0.05];
   d5 [label="Table 1/3 x 5B"];
   d6 [label="Table 2/4 x 5C"];
   d4 -> d5 [label="Yes"];
   d4 -> d6 [label="No"];
 
   d1 -> d7 [label="Raceway/Cable"];
-  d7 [label="<= 3 Conductors?", shape=diamond, fixedsize=true, width=1.2, height=0.8, margin=0.05];
+  d7 [label="<= 3 Conductors", shape=diamond, fixedsize=true, width=1.2, height=0.8, margin=0.05];
   d7 -> d6 [label="No"];
   d8 [label="Table 2/4"];
   d7 -> d8 [label="Yes"];
@@ -4117,7 +4136,7 @@ digraph G {
                 key="cond_ug_sizeclass",
             )
             in_diagrams = st.radio(
-                "Is the configuration covered in Diagrams D8 to D11?",
+                "Is the configuration covered in Diagrams D8 to D11",
                 ["Yes", "No"],
                 index=0,
                 horizontal=True,
