@@ -55,7 +55,7 @@ To determine which derating factors to apply and their exceptions, the reference
 
 <div align="center">
 
-![Figure 1: Derating Factor Selection Chart](images/AmpacitySelectionChart.png)</br>
+![Figure 1: Derating Factor Selection Chart](images/AmpacitySelectionChart.png) </br>
 ![Figure 2: Quick Correction Factor Reference](images/QuickCorrFactRef.png)
 
 </div>
