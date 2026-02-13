@@ -15,7 +15,7 @@ When motors start, they pull a large inrush current, typically six times the Ful
 - Inverse-time (thermal-magnetic) circuit breakers, and 
 - instantaneous (magnetic-only) circuit breakers. 
 
-As per Rules 28-200 & 28-204, we generally size overcurrent device by Table 29 (and Table D16 which is based on Table 29) to a maximum of 300%, selecting the closest standard fuse size not exceeding the calcualted value.
+As per Rules 28-200 & 28-204, we generally size overcurrent device by Table 29 (and Table D16 which is based on Table 29) to a maximum of 300%, selecting the closest standard fuse size not exceeding the calcualted value. A list of common/standard fuse sizes can be found in Table 13.
 
 Below is a general flow to follow for sizing overcurrent devices based on available information. Note that for **any type of motor** protected by an **instantaneous trip** circuit breaker, the size must be circuit breaker must be sized to either the FLC by 1300% or Locked Rotor Current (LRC) by 215%.
 
