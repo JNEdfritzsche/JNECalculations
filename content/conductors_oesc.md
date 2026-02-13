@@ -16,10 +16,12 @@ $$
 \text{Conductor Ampacity}_{new} = \text{Conductor Ampacity}_{old} \times \text{Table 5A Factor}
 $$
 
+Another consideration for temperature is the equipment rating. For instance, when equipment has terminals rated for 75°C, then any conductor sized for connection to the equipment must have the same rating. 
+
 ---
 ## Conduit Derating
 
-Often conduits will house multiple conductors, which case, you would apply Table 5C factor to Table 2/4.
+Often conduits will house multiple conductors, in which case, you would apply Table 5C factor to Table 2/4.
 
 ---
 ## Spacing Derating
