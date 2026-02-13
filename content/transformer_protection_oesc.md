@@ -45,7 +45,7 @@ OESC Section 8-104 states that the ampere rating of a consumer’s service, feed
 - b) a total of more than 3 hours in any 6 hour period if the load exceeds 225 A.
 
 ### Fuses vs Breakers
-While creating the design, the engineer should consider the cost comparisons, availability of units, the total load size, and what the devices are protecting. Circuit breakers are typically used on higher value assets for tighter regulation and to prevent one phase tripping which may happen with fuses. Fuses are often less expensive and used for lower voltage or remote applications of transformers.
+While creating the design, the engineer should consider the cost comparisons, availability of units, the total load size, and what the devices are protecting. Circuit breakers are typically used on higher value assets for tighter regulation and to prevent one phase tripping which may happen with fuses. Fuses are often less expensive and used for lower voltage or remote applications of transformers. A list of common/standard fuse sizes can be found in Table 13.
 
 ### Transformer Connection Types
 Another thing to consider is how the transformer windings are configured. <!-- I feel this is too elementary for this. 
