@@ -3112,7 +3112,7 @@ elif page == "Voltage Drop":
                 "8":   {"DC":4.14,"Cable 100%":4.14,"Cable 90%":4.07,"Cable 80%":3.97,"Raceway 90%":4.07,"Raceway 80%":3.98},
                 "6":   {"DC":2.62,"Cable 100%":2.62,"Cable 90%":2.58,"Cable 80%":2.52,"Raceway 90%":2.58,"Raceway 80%":2.53},
                 "4":   {"DC":1.65,"Cable 100%":1.65,"Cable 90%":1.63,"Cable 80%":1.60,"Raceway 90%":1.64,"Raceway 80%":1.61},
-                "3":   {"DC":1.31,"Cable 100%":1.31,"Cable 90%":1.30,"Cable 80%":1.27,"Raceway 90%":1.30,"Raceway 80%":1.28},
+                "3":   {"DC":1.30,"Cable 100%":1.31,"Cable 90%":1.30,"Cable 80%":1.27,"Raceway 90%":1.30,"Raceway 80%":1.28},
                 "2":   {"DC":1.04,"Cable 100%":1.04,"Cable 90%":1.04,"Cable 80%":1.02,"Raceway 90%":1.04,"Raceway 80%":1.03},
                 "1":   {"DC":0.82,"Cable 100%":0.82,"Cable 90%":0.823,"Cable 80%":0.812,"Raceway 90%":0.827,"Raceway 80%":0.818},
                 "1/0": {"DC":0.651,"Cable 100%":0.652,"Cable 90%":0.659,"Cable 80%":0.652,"Raceway 90%":0.663,"Raceway 80%":0.657},
