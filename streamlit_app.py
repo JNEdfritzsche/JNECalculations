@@ -3486,6 +3486,7 @@ elif page == "Voltage Drop":
             meta.add_run(f"Conductor operating temperature: {operating_temp_c}°C\n")
             meta.add_run(f"k multiplier: {k_temp_multiplier:.2f}\n")
             meta.add_run(f"Parallel conductors per phase/pole: {n_parallel_vd}\n")
+            meta.add_run(f"Selected f-factor option: {f_label}\n")
             if use_table:
                 meta.add_run(f"Material: {mat}\n")
                 meta.add_run(f"Installation: {location}\n")
@@ -3541,38 +3542,6 @@ elif page == "Voltage Drop":
                     row[2].text = f'{float(c["Value"]):.6g}'
                 except Exception:
                     row[2].text = str(c["Value"])
-
-            doc.add_heading("System factor (f) reference (Appendix D)", level=2)
-            tf = doc.add_table(rows=1, cols=3)
-            hdr = tf.rows[0].cells
-            hdr[0].text = "System / Connection"
-            hdr[1].text = "f (used in formula)"
-            hdr[2].text = "Voltage reference"
-            for r in f_table_rows:
-                row = tf.add_row().cells
-                row[0].text = r["System / Connection"]
-                row[1].text = f'{float(r["f (used in formula)"]):.6g}'
-                row[2].text = r["Voltage reference"]
-
-            doc.add_heading("Table D3 (Copper) — Ω/km", level=2)
-            tcu = doc.add_table(rows=1, cols=len(display_cols))
-            for j, col in enumerate(display_cols):
-                tcu.rows[0].cells[j].text = col
-            for r in cu_rows:
-                rr = tcu.add_row().cells
-                for j, col in enumerate(display_cols):
-                    val = r.get(col, None)
-                    rr[j].text = _cell_text(val)  # ✅ FIXED
-
-            doc.add_heading("Table D3 (Aluminum) — Ω/km", level=2)
-            tal = doc.add_table(rows=1, cols=len(display_cols))
-            for j, col in enumerate(display_cols):
-                tal.rows[0].cells[j].text = col
-            for r in al_rows:
-                rr = tal.add_row().cells
-                for j, col in enumerate(display_cols):
-                    val = r.get(col, None)
-                    rr[j].text = _cell_text(val)  # ✅ FIXED
 
             # basic style tweak
             style = doc.styles["Normal"]
@@ -3694,35 +3663,6 @@ elif page == "Voltage Drop":
             for c in constants:
                 ws.append([c["Name"], c["Meaning"], c["Value"]])
             autosize(ws)
-
-            # --- Table D3 Copper
-            ws = wb.create_sheet("Table D3 - Copper")
-            ws.append(display_cols)
-            for cell in ws[1]:
-                cell.font = Font(bold=True)
-            for r in cu_rows:
-                ws.append([r.get(col, None) for col in display_cols])
-            autosize(ws)
-
-            # --- Table D3 Aluminum
-            ws = wb.create_sheet("Table D3 - Aluminum")
-            ws.append(display_cols)
-            for cell in ws[1]:
-                cell.font = Font(bold=True)
-            for r in al_rows:
-                ws.append([r.get(col, None) for col in display_cols])
-            autosize(ws)
-
-            # --- f-factor reference
-            ws = wb.create_sheet("f-factor reference")
-            ws.append(["System / Connection", "f (used in formula)", "Voltage reference"])
-            for cell in ws[1]:
-                cell.font = Font(bold=True)
-            for r in f_table_rows:
-                ws.append([r["System / Connection"], float(r["f (used in formula)"]), r["Voltage reference"]])
-            ws.column_dimensions["A"].width = 75
-            ws.column_dimensions["B"].width = 18
-            ws.column_dimensions["C"].width = 25
 
             bio = io.BytesIO()
             wb.save(bio)
