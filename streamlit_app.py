@@ -2597,12 +2597,12 @@ elif page == "Conduit Size & Fill & Bend Radius":
             meta.add_run(f"Conduit type: {conduit_type}\n")
             meta.add_run(f"Trade size: {conduit_trade}\n")
 
-            doc.add_heading("Equations", level=2)
+            doc.add_heading("Equations", level=1)
             p = doc.add_paragraph()
             p.add_run("Conduit fill calculation: ").bold = True
             p.add_run(r"Fill = Σ(A_cond × N_cond/cable × N_cables) / A_conduit")
 
-            doc.add_heading("Assumptions", level=2)
+            doc.add_heading("Assumptions", level=1)
             assumptions_cf = [
                 "Conduit internal area retrieved from OESC Table 9 or manually entered.",
                 "Cable areas calculated from Table 6 data based on conductor size and count.",
@@ -2613,7 +2613,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
             for a in assumptions_cf:
                 doc.add_paragraph(a, style="List Bullet")
 
-            doc.add_heading("Input Summary", level=2)
+            doc.add_heading("Input Summary", level=1)
             summary_data = [
                 ("Conduit Type", conduit_type),
                 ("Trade Size", conduit_trade),
@@ -2633,7 +2633,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 row[0].text = str(param)
                 row[1].text = str(val)
 
-            doc.add_heading("Cable Group Breakdown", level=2)
+            doc.add_heading("Cable Group Breakdown", level=1)
             try:
                 show_df = edited.copy()
                 cols_to_show = ["Name", "Table", "Construction", "Conductor size", "Conductors per cable", "Qty (cables)", "Area per cable (mm²)"]
@@ -2655,7 +2655,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 doc.add_paragraph(f"(Unable to render cable breakdown: {str(e)})")
 
             if conduit_allowed_area is not None and conduit_internal_area:
-                doc.add_heading("Compliance Status", level=2)
+                doc.add_heading("Compliance Status", level=1)
                 ok = total_cable_area <= conduit_allowed_area + 1e-9
                 status_text = "✓ PASS: Fill is within the allowable limit" if ok else "✗ FAIL: Fill exceeds the allowable limit"
                 doc.add_paragraph(status_text)
