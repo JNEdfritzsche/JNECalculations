@@ -48,6 +48,60 @@ ENABLE_PASSWORD_PROTECTION = False
 PROJECT_NUMBER = ""
 DESIGNER_NAME = ""
 
+# ----------------------------
+# Report Export Helpers
+# ----------------------------
+def append_to_value_line(cell, value: str, paragraph_index: int = 1):
+# Ensure the paragraph exists
+    while len(cell.paragraphs) <= paragraph_index:
+        cell.add_paragraph("")
+
+    p = cell.paragraphs[paragraph_index]
+
+    # Append text to existing formatting
+    p.add_run(value)
+
+
+def add_omml_equation_to_paragraph(p, omml_inner: str) -> None:
+    """
+    Appends an inline Word equation (<m:oMath>) to an existing paragraph.
+    `omml_inner` is the content inside <m:oMath>...</m:oMath>.
+    """
+    xml = f'<m:oMath {nsdecls("m")}>{omml_inner}</m:oMath>'
+    p._p.append(parse_xml(xml))
+
+
+def set_table_borders(table):
+    tbl = table._tbl
+    tblPr = tbl.tblPr
+
+    borders = OxmlElement('w:tblBorders')
+
+    for border_name in (
+        'top', 'left', 'bottom', 'right',
+        'insideH', 'insideV'
+    ):
+        border = OxmlElement(f'w:{border_name}')
+        border.set(qn('w:val'), 'single')   # line style
+        border.set(qn('w:sz'), '8')         # thickness (8 = 1pt)
+        border.set(qn('w:space'), '0')
+        border.set(qn('w:color'), '000000') # black
+        borders.append(border)
+
+    tblPr.append(borders)
+
+
+def _delete_paragraph(p):
+    # python-docx has no public delete API; remove the underlying XML element
+    p._element.getparent().remove(p._element)
+    p._p = p._element = None
+
+
+def remove_leading_blank_paragraphs(doc: Document):
+    # Remove any completely empty paragraphs at the very start of the document body
+    while doc.paragraphs and doc.paragraphs[0].text.strip() == "":
+        _delete_paragraph(doc.paragraphs[0])
+
 
 st.set_page_config(
     page_title="Electrical Calculations Hub",
@@ -376,6 +430,7 @@ if page == "Home":
     st.markdown("2. Use the `Theory` tab for context and code references.")
     st.markdown("3. Switch to `Calculator` for inputs and results.")
     st.markdown("4. Change `Jurisdiction` to see NEC vs OESC logic.")
+
 
 # ============================
 # 1) Transformer Protection
@@ -2587,22 +2642,72 @@ elif page == "Conduit Size & Fill & Bend Radius":
         st.divider()
         st.markdown("### 📄 Export calculation report")
 
+
+        omml_fill = r"""
+        <m:r><m:t>Fill</m:t></m:r>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num>
+                <m:e>
+                    <m:r><m:t>∑</m:t></m:r>
+
+                    <m:r><m:t>(</m:t></m:r>
+                    
+                    <m:sSub>
+                        <m:e><m:r><m:t>A</m:t></m:r></m:e>
+                        <m:sub><m:r><m:t>cond</m:t></m:r></m:sub>
+                    </m:sSub>
+
+                    <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                    
+                    <m:sSub>
+                        <m:e><m:r><m:t>N</m:t></m:r></m:e>
+                        <m:sub><m:r><m:t>cond/cable</m:t></m:r></m:sub>
+                    </m:sSub>
+
+                    <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+
+                    <m:sSub>
+                        <m:e><m:r><m:t>N</m:t></m:r></m:e>
+                        <m:sub><m:r><m:t>cables</m:t></m:r></m:sub>
+                    </m:sSub>
+
+                    <m:r><m:t>)</m:t></m:r>
+                </m:e>
+            </m:num>
+
+            <m:den>
+                <m:sSub>
+                    <m:e><m:r><m:t>A</m:t></m:r></m:e>
+                    <m:sub><m:r><m:t>conduit</m:t></m:r></m:sub>
+                </m:sSub>
+            </m:den>
+        </m:f>
+        """
+
+
         def build_conduit_word_report():
 
             doc = Document("content/files/Template.docx")
-            doc.add_heading("Conduit Fill Calculation Report", level=1)
 
-            meta = doc.add_paragraph()
-            meta.add_run(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n").bold = True
-            meta.add_run(f"Conduit type: {conduit_type}\n")
-            meta.add_run(f"Trade size: {conduit_trade}\n")
+            remove_leading_blank_paragraphs(doc)
 
-            doc.add_heading("Equations", level=2)
+            table = doc.sections[0].header.tables[0]
+
+            append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
+            append_to_value_line(table.cell(0, 4), "#")
+            append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
+            append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
+            append_to_value_line(table.cell(3, 3), "")
+            append_to_value_line(table.cell(3, 4), "")
+            append_to_value_line(table.cell(3, 2), "Conduit Fill Calculation Report")
+
+            doc.add_heading("Equations", level=1)
             p = doc.add_paragraph()
             p.add_run("Conduit fill calculation: ").bold = True
-            p.add_run(r"Fill = Σ(A_cond × N_cond/cable × N_cables) / A_conduit")
+            add_omml_equation_to_paragraph(p, omml_fill)
 
-            doc.add_heading("Assumptions", level=2)
+            doc.add_heading("Assumptions", level=1)
             assumptions_cf = [
                 "Conduit internal area retrieved from OESC Table 9 or manually entered.",
                 "Cable areas calculated from Table 6 data based on conductor size and count.",
@@ -2611,9 +2716,9 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 "Allowable fill follows the OESC standard for the selected number of cables.",
             ]
             for a in assumptions_cf:
-                doc.add_paragraph(a, style="List Bullet")
+                doc.add_paragraph(a, style="CalcBullet")
 
-            doc.add_heading("Input Summary", level=2)
+            doc.add_heading("Input Summary", level=1)
             summary_data = [
                 ("Conduit Type", conduit_type),
                 ("Trade Size", conduit_trade),
@@ -2632,8 +2737,10 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 row = t.add_row().cells
                 row[0].text = str(param)
                 row[1].text = str(val)
+            
+            set_table_borders(t)
 
-            doc.add_heading("Cable Group Breakdown", level=2)
+            doc.add_heading("Cable Group Breakdown", level=1)
             try:
                 show_df = edited.copy()
                 cols_to_show = ["Name", "Table", "Construction", "Conductor size", "Conductors per cable", "Qty (cables)", "Area per cable (mm²)"]
@@ -2654,8 +2761,10 @@ elif page == "Conduit Size & Fill & Bend Radius":
             except Exception as e:
                 doc.add_paragraph(f"(Unable to render cable breakdown: {str(e)})")
 
+            set_table_borders(t_cables)
+
             if conduit_allowed_area is not None and conduit_internal_area:
-                doc.add_heading("Compliance Status", level=2)
+                doc.add_heading("Compliance Status", level=1)
                 ok = total_cable_area <= conduit_allowed_area + 1e-9
                 status_text = "✓ PASS: Fill is within the allowable limit" if ok else "✗ FAIL: Fill exceeds the allowable limit"
                 doc.add_paragraph(status_text)
@@ -3385,16 +3494,26 @@ elif page == "Voltage Drop":
             {"Name": "√3", "Meaning": "Three-phase factor for specific circuit types per table note", "Value": float(math.sqrt(3))},
         ]
 
+        inputs = [
+            {"Name": "Conductor material", "Value": mat},
+            {"Name": "Installation type", "Value": location},
+            {"Name": "Operating temperature (°C)", "Value": operating_temp_c},
+            {"Name": "Load current (A)", "Value": I},
+            {"Name": "One way length (m)", "Value": L_m},
+            {"Name": "Nominal Voltage (V)", "Value": V_nom},
+            {"Name": "Parallel conductors per phase/pole", "Value": n_parallel_vd},
+            {"Name": "Power Factor Column", "Value": pf_choice},
+            {"Name": "Conductor size (Table D3)", "Value": size},
+            {"Name": "Selected Table D3 Column", "Value": selected_col_suffix},
+        ]
+
         variables = [
             {"Symbol": "k_base", "Description": "Base voltage-drop factor at 75°C from Table D3 or manual entry (Ω/km)", "Value": k_base},
             {"Symbol": "k_mult", "Description": "Operating-temperature multiplier applied to k_base", "Value": k_temp_multiplier},
+            {"Symbol": "f-factor option", "Description": "System/connection factor from Appendix D", "Value": f_label},
             {"Symbol": "k", "Description": "Adjusted voltage-drop factor used in calculation (Ω/km)", "Value": k_used},
             {"Symbol": "f", "Description": "System/connection factor from Appendix D", "Value": f},
-            {"Symbol": "I", "Description": "Load current (A)", "Value": I},
-            {"Symbol": "N_parallel", "Description": "Parallel conductors per phase/pole", "Value": n_parallel_vd},
             {"Symbol": "I_eff", "Description": "Current per conductor used in VD calc (A)", "Value": I_eff},
-            {"Symbol": "L", "Description": "One-way length (m)", "Value": L_m},
-            {"Symbol": "V_nom", "Description": "Nominal voltage (V)", "Value": V_nom},
             {"Symbol": "V_D", "Description": "Estimated voltage drop (V)", "Value": Vd},
             {"Symbol": "%ΔV", "Description": "Voltage drop percent (%)", "Value": pct},
         ]
@@ -3478,16 +3597,6 @@ elif page == "Voltage Drop":
             except Exception:
                 return str(val)
             
-        def append_to_value_line(cell, value: str, paragraph_index: int = 1):
-        # Ensure the paragraph exists
-            while len(cell.paragraphs) <= paragraph_index:
-                cell.add_paragraph("")
-
-            p = cell.paragraphs[paragraph_index]
-
-            # Append text to existing formatting
-            p.add_run(value)
-
         # ----------------------------
         # Voltage drop report generation
         # ----------------------------
@@ -3553,38 +3662,11 @@ elif page == "Voltage Drop":
         }
 
 
-        def add_omml_equation_to_paragraph(p, omml_inner: str) -> None:
-            """
-            Appends an inline Word equation (<m:oMath>) to an existing paragraph.
-            `omml_inner` is the content inside <m:oMath>...</m:oMath>.
-            """
-            xml = f'<m:oMath {nsdecls("m")}>{omml_inner}</m:oMath>'
-            p._p.append(parse_xml(xml))
-
-
-        def set_table_borders(table):
-            tbl = table._tbl
-            tblPr = tbl.tblPr
-
-            borders = OxmlElement('w:tblBorders')
-
-            for border_name in (
-                'top', 'left', 'bottom', 'right',
-                'insideH', 'insideV'
-            ):
-                border = OxmlElement(f'w:{border_name}')
-                border.set(qn('w:val'), 'single')   # line style
-                border.set(qn('w:sz'), '8')         # thickness (8 = 1pt)
-                border.set(qn('w:space'), '0')
-                border.set(qn('w:color'), '000000') # black
-                borders.append(border)
-
-            tblPr.append(borders)
-
-
         def build_vd_word_report():
 
             doc = Document("content/files/Template.docx")
+
+            remove_leading_blank_paragraphs(doc)
 
             table = doc.sections[0].header.tables[0]
 
@@ -3592,8 +3674,8 @@ elif page == "Voltage Drop":
             append_to_value_line(table.cell(0, 4), "#")
             append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
             append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
-            append_to_value_line(table.cell(3, 3), "checked by")
-            append_to_value_line(table.cell(3, 4), "checked date")
+            append_to_value_line(table.cell(3, 3), "")
+            append_to_value_line(table.cell(3, 4), "")
             append_to_value_line(table.cell(3, 2), "Voltage Drop Calculation Report")
 
             meta = doc.add_paragraph()
@@ -3638,6 +3720,26 @@ elif page == "Voltage Drop":
 
             for a in assumptions:
                 doc.add_paragraph(a, style="CalcBullet")
+
+
+            doc.add_heading("Variables (inputs and results)", level=1)
+
+            t = doc.add_table(rows=1, cols=1)
+            hdr = t.rows[0].cells
+            hdr[0].text = "Name"
+            hdr[2].text = "Value"
+
+            for v in variables:
+                row = t.add_row().cells
+                row[0].text = str(v["Symbol"])
+                row[1].text = str(v["Description"])
+                val = v["Value"]
+                try:
+                    row[2].text = "—" if val is None else f"{float(val):.6g}"
+                except Exception:
+                    row[2].text = "—" if val is None else str(val)
+
+            set_table_borders(t)
 
             # -------------------------
             # Variables
