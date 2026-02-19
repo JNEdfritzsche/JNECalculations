@@ -2611,7 +2611,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 "Allowable fill follows the OESC standard for the selected number of cables.",
             ]
             for a in assumptions_cf:
-                doc.add_paragraph(a, style="List Bullet")
+                doc.add_paragraph(a, style="CalcBullet")
 
             doc.add_heading("Input Summary", level=1)
             summary_data = [
