@@ -143,7 +143,7 @@ def _render_markdown_with_images(md: str, md_dir: Path, wrap: bool = True):
                             st.image(
                                 image_path,
                                 caption=alt_text if alt_text else None,
-                                use_container_width=True,
+                                width="stretch",
                             )
                     else:
                         st.warning(f"Image file not found: {image_path}")

@@ -1,16 +1,30 @@
+# Standard library
+import io
 import math
-from pathlib import Path
 import re
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
 
+# Third-party
 import streamlit as st
+from docx import Document
+from docx.shared import Pt
+from docx.oxml import parse_xml
+from docx.oxml.ns import nsdecls
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
+from openpyxl.utils import get_column_letter
 
-# ----------------------------
-# Development Settings
-# ----------------------------
-# Set to False during development to disable password protection
-ENABLE_PASSWORD_PROTECTION = False
+# Optional pandas (used for table processing on Conduit page)
+try:
+    import pandas as pd  # type: ignore
+except ImportError:
+    pd = None  # type: ignore
 
-# --- Keep your import, but prevent the whole app from crashing if packaging is wrong ---
+# Local application imports
 try:
     from lib.theory import render_md  # type: ignore
     _THEORY_IMPORT_ERROR = None
@@ -18,7 +32,6 @@ except Exception as e:
     render_md = None  # type: ignore
     _THEORY_IMPORT_ERROR = str(e)
 
-# Optional: OESC table library (for Table Library page)
 try:
     from lib import oesc_tables  # type: ignore
     _TABLES_IMPORT_ERROR = None
@@ -26,18 +39,23 @@ except Exception as e:
     oesc_tables = None  # type: ignore
     _TABLES_IMPORT_ERROR = str(e)
 
+# Set to False during development to disable password protection
+ENABLE_PASSWORD_PROTECTION = False
+
 # ----------------------------
-# Page config
+# Global Variables
 # ----------------------------
+PROJECT_NUMBER = ""
+DESIGNER_NAME = ""
+
+
 st.set_page_config(
     page_title="Electrical Calculations Hub",
     page_icon="⚡",
     layout="wide",
 )
 
-# ----------------------------
-# Global styling
-# ----------------------------
+
 # Center all images (both st.image and markdown-rendered images)
 st.markdown(
     """
@@ -124,6 +142,7 @@ def select_table9_fill_rule(num_cables: int):
             "tables": ["G", "H"],
             "label": "40% fill (3+ cables – Tables G/H)"
         }
+
 
 def fmt(x, unit=""):
     if x is None:
@@ -315,7 +334,13 @@ with st.sidebar:
     code_mode = st.selectbox("Select electrical code", ["NEC", "OESC"], index=1)
 
     st.divider()
+    st.header("Report Information")
+    PROJECT_NUMBER = st.text_input("Project number", value=PROJECT_NUMBER, key="project_number")
+    DESIGNER_NAME = st.text_input("Designer name", value=DESIGNER_NAME, key="designer_name")    
+
+    st.divider()
     st.caption("This portal is provided for educational purposes only and is intended to support the understanding of engineering concepts. The tutorials, examples, and tools are not a substitute for professional judgment. Always consult applicable codes, regulations, and qualified engineers before making design or compliance decisions.")
+
 
 # ----------------------------
 # Page shell with Theory/Calculator tabs
@@ -938,7 +963,6 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
 # ============================
 # 7) Conduit Size & Fill & Bend Radius
 # ============================
-
 elif page == "Conduit Size & Fill & Bend Radius":
     with theory_tab:
         header("Conduit Size, Fill & Bend Radius — Theory")
@@ -963,11 +987,6 @@ elif page == "Conduit Size & Fill & Bend Radius":
         # ----------------------------
         # Table helpers (Table 6 + Table 9)
         # ----------------------------
-        try:
-            import pandas as pd  # type: ignore
-        except Exception:
-            pd = None  # type: ignore
-
         def _norm(s):
             return str(s).strip()
 
@@ -2569,12 +2588,8 @@ elif page == "Conduit Size & Fill & Bend Radius":
         st.markdown("### 📄 Export calculation report")
 
         def build_conduit_word_report():
-            import io
-            from docx import Document
-            from docx.shared import Pt
-            from datetime import datetime
 
-            doc = Document()
+            doc = Document("content/files/Template.docx")
             doc.add_heading("Conduit Fill Calculation Report", level=1)
 
             meta = doc.add_paragraph()
@@ -2654,11 +2669,6 @@ elif page == "Conduit Size & Fill & Bend Radius":
             return bio.getvalue()
 
         def build_conduit_excel_report():
-            import io
-            from openpyxl import Workbook
-            from openpyxl.utils import get_column_letter
-            from openpyxl.styles import Font, Alignment
-            from datetime import datetime
 
             def _safe_float(x):
                 try:
@@ -2786,7 +2796,6 @@ elif page == "Conduit Size & Fill & Bend Radius":
 
 # ============================
 # 8) Cable Tray Ampacity
-
 # ============================
 elif page == "Cable Tray Ampacity":
     with theory_tab:
@@ -2835,6 +2844,7 @@ elif page == "Demand Load":
 
         st.markdown("### Equation used")
         eq(r"P_{demand}=P_{connected}\cdot f_{demand}")
+
 
 # ============================
 # 10) Power Factor Correction
@@ -2927,26 +2937,27 @@ elif page == "Table Library":
                     st.dataframe(df, width="stretch")
 
                 # Download CSV
-                try:
-                    import pandas as _pd
-                    if isinstance(df, _pd.DataFrame):
-                        csv_bytes = df.to_csv(index=False).encode("utf-8")
-                    else:
-                        csv_bytes = _pd.DataFrame(df).to_csv(index=False).encode("utf-8")
-
+                if pd is not None and isinstance(df, pd.DataFrame):
+                    csv_bytes = df.to_csv(index=False).encode("utf-8")
                     st.download_button(
                         "Download table as CSV",
                         data=csv_bytes,
                         file_name=f"oesc_table_{str(selected).lower()}.csv",
                         mime="text/csv",
                     )
-                except Exception:
-                    st.caption("CSV download unavailable in this environment.")
+                elif pd is not None:
+                    csv_bytes = pd.DataFrame(df).to_csv(index=False).encode("utf-8")
+                    st.download_button(
+                        "Download table as CSV",
+                        data=csv_bytes,
+                        file_name=f"oesc_table_{str(selected).lower()}.csv",
+                        mime="text/csv",
+                    )
+
 
 # ============================
 # 11) Voltage Drop  (FULL BLOCK — Table D3 expander always shown; f-list filtered for DC; size order matches Table D3)
 # ============================
-
 elif page == "Voltage Drop":
     with theory_tab:
         header("Voltage Drop — Theory")
@@ -3020,19 +3031,18 @@ elif page == "Voltage Drop":
                         }
                         cu_rows_display.append(cu_row)
 
-            try:
-                import pandas as pd
+            if pd is not None:
                 df_cu = pd.DataFrame(cu_rows_display, columns=display_cols)
                 st.dataframe(df_cu, width="stretch", hide_index=True)
-            except Exception:
+            else:
                 st.dataframe(cu_rows_display, width="stretch", hide_index=True)
 
             st.markdown("### Aluminum Conductors — Table D3 (Ω/km)")
             
-            try:
+            if pd is not None:
                 df_al = pd.DataFrame(al_rows_display, columns=display_cols)
                 st.dataframe(df_al, width="stretch", hide_index=True)
-            except Exception:
+            else:
                 st.dataframe(al_rows_display, width="stretch", hide_index=True)
 
             st.caption(
@@ -3062,11 +3072,10 @@ elif page == "Voltage Drop":
                 {"System / Connection": "3-φ AC — 4-wire, line-to-line, with grounded conductor", "f (used in formula)": math.sqrt(3), "Voltage reference": "Line-to-line"},
             ]
             
-            try:
-                import pandas as pd
+            if pd is not None:
                 df_f = pd.DataFrame(system_factor_data)
                 st.dataframe(df_f, width="stretch", hide_index=True)
-            except Exception:
+            else:
                 for r in system_factor_data:
                     st.write(f"- **{r['System / Connection']}** — f = {r['f (used in formula)']} — {r['Voltage reference']}")
 
@@ -3363,7 +3372,7 @@ elif page == "Voltage Drop":
         st.markdown("### 📄 Export calculation report")
 
         assumptions = [
-            "Uses OESC Appendix D Table D3 k-values in Ω per circuit kilometre (Ω/km) as 75°C base values when Table mode is selected.",
+            "Uses OESC Table D3 k-values in Ω per circuit kilometre as 75°C base values when Table mode is selected.",
             "Applies an operating-temperature multiplier to k: 60°C → 0.95, 75°C → 1.00, 90°C → 1.05.",
             "Uses voltage-drop factor f from the Appendix D system factor list.",
             "Uses one-way length L (m) directly in the formula; table equation divides by 1000 to convert m → km.",
@@ -3449,10 +3458,6 @@ elif page == "Voltage Drop":
                 "Raceway 80%": cols.get("Raceway 80%", None),
             })
 
-        # Create report bytes (Word / Excel) on demand
-        import io
-        from datetime import datetime
-
         def _safe_float(x):
             try:
                 return None if x is None else float(x)
@@ -3472,21 +3477,131 @@ elif page == "Voltage Drop":
                 return f"{fval:g}"
             except Exception:
                 return str(val)
+            
+        def append_to_value_line(cell, value: str, paragraph_index: int = 1):
+        # Ensure the paragraph exists
+            while len(cell.paragraphs) <= paragraph_index:
+                cell.add_paragraph("")
 
-        def build_word_report_bytes():
-            from docx import Document
-            from docx.shared import Pt
+            p = cell.paragraphs[paragraph_index]
 
-            doc = Document()
-            doc.add_heading("Voltage Drop Calculation Report", level=1)
+            # Append text to existing formatting
+            p.add_run(value)
+
+        # ----------------------------
+        # Voltage drop report generation
+        # ----------------------------
+        OMML_EQUATIONS = {
+            r"I_{eff}=\frac{I}{N_{parallel}}": r"""
+        <m:sSub>
+            <m:e><m:r><m:t>I</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>eff</m:t></m:r></m:sub>
+        </m:sSub>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num><m:r><m:t>I</m:t></m:r></m:num>
+            <m:den>
+                <m:sSub>
+                    <m:e><m:r><m:t>N</m:t></m:r></m:e>
+                    <m:sub><m:r><m:t>parallel</m:t></m:r></m:sub>
+                </m:sSub>
+            </m:den>
+        </m:f>
+        """,
+            r"V_D=\frac{k\cdot f\cdot I_{eff}\cdot L}{1000}": r"""
+        <m:sSub>
+            <m:e><m:r><m:t>V</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>D</m:t></m:r></m:sub>
+        </m:sSub>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num>
+                <m:r><m:t>k</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> · </m:t></m:r>
+                <m:r><m:t>f</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> · </m:t></m:r>
+                <m:sSub>
+                    <m:e><m:r><m:t>I</m:t></m:r></m:e>
+                    <m:sub><m:r><m:t>eff</m:t></m:r></m:sub>
+                </m:sSub>
+                <m:r><m:t xml:space="preserve"> · </m:t></m:r>
+                <m:r><m:t>L</m:t></m:r>
+            </m:num>
+        <m:den><m:r><m:t>1000</m:t></m:r></m:den>
+        </m:f>
+        """,
+            r"\%\Delta V = 100\cdot\frac{V_D}{V_{nom}}": r"""
+        <m:r><m:t>%ΔV</m:t></m:r>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:r><m:t>100</m:t></m:r>
+        <m:r><m:t xml:space="preserve"> · </m:t></m:r>
+        <m:f>
+            <m:num>
+                <m:sSub>
+                    <m:e><m:r><m:t>V</m:t></m:r></m:e>
+                    <m:sub><m:r><m:t>D</m:t></m:r></m:sub>
+                </m:sSub>
+            </m:num>
+            <m:den>
+                <m:sSub>
+                    <m:e><m:r><m:t>V</m:t></m:r></m:e>
+                    <m:sub><m:r><m:t>nom</m:t></m:r></m:sub>
+                </m:sSub>
+            </m:den>
+        </m:f>
+        """,
+        }
+
+
+        def add_omml_equation_to_paragraph(p, omml_inner: str) -> None:
+            """
+            Appends an inline Word equation (<m:oMath>) to an existing paragraph.
+            `omml_inner` is the content inside <m:oMath>...</m:oMath>.
+            """
+            xml = f'<m:oMath {nsdecls("m")}>{omml_inner}</m:oMath>'
+            p._p.append(parse_xml(xml))
+
+
+        def set_table_borders(table):
+            tbl = table._tbl
+            tblPr = tbl.tblPr
+
+            borders = OxmlElement('w:tblBorders')
+
+            for border_name in (
+                'top', 'left', 'bottom', 'right',
+                'insideH', 'insideV'
+            ):
+                border = OxmlElement(f'w:{border_name}')
+                border.set(qn('w:val'), 'single')   # line style
+                border.set(qn('w:sz'), '8')         # thickness (8 = 1pt)
+                border.set(qn('w:space'), '0')
+                border.set(qn('w:color'), '000000') # black
+                borders.append(border)
+
+            tblPr.append(borders)
+
+
+        def build_vd_word_report():
+
+            doc = Document("content/files/Template.docx")
+
+            table = doc.sections[0].header.tables[0]
+
+            append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
+            append_to_value_line(table.cell(0, 4), "#")
+            append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
+            append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
+            append_to_value_line(table.cell(3, 3), "checked by")
+            append_to_value_line(table.cell(3, 4), "checked date")
+            append_to_value_line(table.cell(3, 2), "Voltage Drop Calculation Report")
 
             meta = doc.add_paragraph()
-            meta.add_run(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n").bold = True
             meta.add_run(f"k-mode: {k_mode}\n")
             meta.add_run(f"Conductor operating temperature: {operating_temp_c}°C\n")
-            meta.add_run(f"k multiplier: {k_temp_multiplier:.2f}\n")
             meta.add_run(f"Parallel conductors per phase/pole: {n_parallel_vd}\n")
             meta.add_run(f"Selected f-factor option: {f_label}\n")
+
             if use_table:
                 meta.add_run(f"Material: {mat}\n")
                 meta.add_run(f"Installation: {location}\n")
@@ -3494,30 +3609,47 @@ elif page == "Voltage Drop":
                     meta.add_run(f"Power factor column: {pf_choice}\n")
                 meta.add_run(f"Conductor size: {size}\n")
                 meta.add_run(f"Selected Table D3 column: {selected_col_suffix}\n")
-                meta.add_run(f"Base k-value (75°C): {k_base:.6g} Ω/km\n")
             else:
-                meta.add_run("Material/Installation/Size selection: (not used; manual k-value mode)\n")
-                meta.add_run("k source: Manual entry\n")
-                meta.add_run(f"Base k-value (75°C): {k_base:.6g} Ω/km\n")
-            meta.add_run(f"Adjusted k-value used: {k_used:.6g} Ω/km\n")
+                meta.add_run("Material/Installation/Size selection: (manual k-value mode)\n")
 
-            doc.add_heading("Equations", level=2)
-            for title, latex in equations_text:
+            meta.add_run(f"Adjusted k-value used: {k_used:.6g} Ω/km")
+
+            # -------------------------
+            # Equations
+            # -------------------------
+            doc.add_heading("Equations", level=1)
+
+            for title, equation in equations_text:
                 p = doc.add_paragraph()
                 p.add_run(f"{title}: ").bold = True
-                # Word doesn't render LaTeX natively; we include readable LaTeX + plain-text form
-                p.add_run(latex)
 
-            doc.add_heading("Assumptions", level=2)
+                omml = OMML_EQUATIONS.get(equation)
+                if omml is not None:
+                    add_omml_equation_to_paragraph(p, omml)
+                else:
+                    # fallback if you add more equations later
+                    p.add_run(equation)
+
+
+            # -------------------------
+            # Assumptions
+            # -------------------------
+            doc.add_heading("Assumptions", level=1)
+
             for a in assumptions:
-                doc.add_paragraph(a, style="List Bullet")
+                doc.add_paragraph(a, style="CalcBullet")
 
-            doc.add_heading("Variables (inputs and results)", level=2)
+            # -------------------------
+            # Variables
+            # -------------------------
+            doc.add_heading("Variables (inputs and results)", level=1)
+
             t = doc.add_table(rows=1, cols=3)
             hdr = t.rows[0].cells
             hdr[0].text = "Symbol"
             hdr[1].text = "Description"
             hdr[2].text = "Value"
+
             for v in variables:
                 row = t.add_row().cells
                 row[0].text = str(v["Symbol"])
@@ -3528,12 +3660,19 @@ elif page == "Voltage Drop":
                 except Exception:
                     row[2].text = "—" if val is None else str(val)
 
-            doc.add_heading("Constants", level=2)
+            set_table_borders(t)
+
+            # -------------------------
+            # Constants
+            # -------------------------
+            doc.add_heading("Constants", level=1)
+
             tc = doc.add_table(rows=1, cols=3)
             hdr = tc.rows[0].cells
             hdr[0].text = "Name"
             hdr[1].text = "Meaning"
             hdr[2].text = "Value"
+
             for c in constants:
                 row = tc.add_row().cells
                 row[0].text = str(c["Name"])
@@ -3542,20 +3681,18 @@ elif page == "Voltage Drop":
                     row[2].text = f'{float(c["Value"]):.6g}'
                 except Exception:
                     row[2].text = str(c["Value"])
+            
+            set_table_borders(tc)
 
-            # basic style tweak
-            style = doc.styles["Normal"]
-            style.font.name = "Calibri"
-            style.font.size = Pt(11)
-
+            # -------------------------
+            # Return Bytes
+            # -------------------------
             bio = io.BytesIO()
             doc.save(bio)
             return bio.getvalue()
 
-        def build_excel_report_bytes():
-            from openpyxl import Workbook
-            from openpyxl.utils import get_column_letter
-            from openpyxl.styles import Font, Alignment
+
+        def build_vd_excel_report():
 
             wb = Workbook()
 
@@ -3675,7 +3812,7 @@ elif page == "Voltage Drop":
         with exp_c1:
             if st.button("Prepare Word report (.docx)", key="vd_build_docx"):
                 try:
-                    st.session_state["vd_docx_bytes"] = build_word_report_bytes()
+                    st.session_state["vd_docx_bytes"] = build_vd_word_report()
                     st.success("Word report prepared. Use the download button below.")
                 except Exception as e:
                     st.error(f"Failed to build Word report: {e}")
@@ -3693,7 +3830,7 @@ elif page == "Voltage Drop":
         with exp_c2:
             if st.button("Prepare Excel report (.xlsx)", key="vd_build_xlsx"):
                 try:
-                    st.session_state["vd_xlsx_bytes"] = build_excel_report_bytes()
+                    st.session_state["vd_xlsx_bytes"] = build_vd_excel_report()
                     st.success("Excel report prepared. Use the download button below.")
                 except Exception as e:
                     st.error(f"Failed to build Excel report: {e}")
@@ -3709,8 +3846,7 @@ elif page == "Voltage Drop":
             )
 
         st.caption(
-            "Export includes: equations (LaTeX), assumptions, variables/inputs/results, constants, the full Table D3 (Cu/Al), "
-            "and the full system factor (f) reference table. (Word stores equations as LaTeX text; Excel stores them as text.)"
+            "Export includes: equations, assumptions, variables/inputs/results, constants, "
         )
 
         # -------------------------------------------------
@@ -3748,11 +3884,10 @@ elif page == "Voltage Drop":
                 }
                 cu_rows_display.append(row)
 
-            try:
-                import pandas as pd
+            if pd is not None:
                 df_cu = pd.DataFrame(cu_rows_display, columns=display_cols)
                 st.dataframe(df_cu, width="stretch", hide_index=True)
-            except Exception:
+            else:
                 st.dataframe(cu_rows_display, width="stretch", hide_index=True)
 
             st.markdown("### Aluminum Conductors — Table D3 (Ω/km)")
@@ -3770,10 +3905,10 @@ elif page == "Voltage Drop":
                 }
                 al_rows_display.append(row)
 
-            try:
+            if pd is not None:
                 df_al = pd.DataFrame(al_rows_display, columns=display_cols)
                 st.dataframe(df_al, width="stretch", hide_index=True)
-            except Exception:
+            else:
                 st.dataframe(al_rows_display, width="stretch", hide_index=True)
 
             st.caption(
@@ -3786,9 +3921,7 @@ elif page == "Voltage Drop":
         # Display the F-factor lookup table used by the calculator
         # -------------------------------------------------
         with st.expander("📐 Show system factor (f) table used in calculations", expanded=False):
-            try:
-                import pandas as pd
-
+            if pd is not None:
                 df_f = pd.DataFrame(f_table_rows)
                 st.markdown("### System factor (f) — reference table (from Appendix D)")
                 st.dataframe(df_f, width="stretch", hide_index=True)
@@ -3803,11 +3936,12 @@ elif page == "Voltage Drop":
                 st.caption(
                     "Notes: The 'Voltage reference' column shows whether the VD is line-to-line or line-to-ground for that circuit type."
                 )
-            except Exception:
+            else:
                 st.markdown("### System factor (f) — reference (plain)")
                 for r in f_table_rows:
                     st.write(f"- **{r['System / Connection']}** — f = {r['f (used in formula)']} — {r['Voltage reference']}")
                 st.caption("Pandas not available; shown as plaintext.")
+
 
 # ============================
 # 12) Conductors
@@ -4483,5 +4617,3 @@ digraph G {
         eq(r"I_{per\_set} = \frac{I_{design}}{N_{parallel}}")
         eq(r"k_{total} = k_{corr}\cdot k_{temp}")
         eq(r"I_{table} = \frac{I_{per\_set}}{k_{total}}")
-
-# End of app
