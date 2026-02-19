@@ -18,11 +18,13 @@ except Exception as e:
 #   \[ ... \]  -> $$ ... $$
 #   \( ... \)  -> $ ... $
 _LATEX_BLOCK_PATTERNS = [
-    (re.compile(r"\\\[(.*)\\\]", flags=re.DOTALL), r"$$\1$$"),
+    (re.compile(r"\\\[(.*?)\\\]", flags=re.DOTALL), r"$$\1$$"),
+    (re.compile(r"<div class=.*?align.*?>\s*\$\$(.*?)\$\$\s*</div>", flags=re.DOTALL), r"$$\1$$"),
 ]
 
 _LATEX_INLINE_PATTERNS = [
-    (re.compile(r"\\\((.*)\\\)", flags=re.DOTALL), r"$\1$"),
+    (re.compile(r"\\\((.*?)\\\)", flags=re.DOTALL), r"$\1$"),
+    (re.compile(r"<span class=.*?>\s*\$\$(.*?)\$\$\s*</span>", flags=re.DOTALL), r"$\1$"),
 ]
 
 
@@ -63,49 +65,44 @@ def _inject_css():
     )
 
 
-def _resolve_image_paths(md: str, md_dir: Path) -> str:
+def _extract_images(md: str, md_dir: Path) -> tuple[str, list[tuple[str, str, str]]]:
     """
-    Convert relative image paths in markdown to absolute paths.
-    This fixes image rendering in Streamlit by converting:
-      ![alt](image.jpg) -> ![alt](/absolute/path/to/image.jpg)
-    """
-    def replace_image_path(match):
-        alt_text = match.group(1)
-        image_path = match.group(2)
-        
-        # Skip if already absolute or a URL
-        if image_path.startswith(('/', 'http://', 'https://')):
-            return match.group(0)
-        
-        # Resolve relative path
-        resolved_path = (md_dir / image_path).resolve()
-        return f"![{alt_text}]({resolved_path})"
-    
-    # Match ![alt](path) pattern
-    md = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', replace_image_path, md)
-    return md
-
-
-def _extract_and_render_images(md: str, md_dir: Path) -> str:
-    """
-    Extract image markdown syntax and return markdown without images.
+    Extract image markdown syntax and return markdown without images + image list.
     Images will be rendered separately using st.image().
+    
+    Returns: (markdown_without_images, [(image_path, alt_text, is_local), ...])
     """
+    images = []
+    
     def replace_with_marker(match):
         alt_text = match.group(1)
         image_path = match.group(2)
         
-        # Skip if already absolute or a URL
-        if not image_path.startswith(('/', 'http://', 'https://')):
-            image_path = str((md_dir / image_path).resolve())
+        # Skip if empty path
+        if not image_path.strip():
+            return match.group(0)
         
-        # Create a marker to know where images should be placed
-        # Use || as delimiter to avoid issues with colons in paths
-        return f"\n<!-- IMAGE_MARKER||{image_path}||{alt_text} -->\n"
+        # Check if local or remote
+        is_local = not image_path.startswith(('/', 'http://', 'https://'))
+        
+        # Resolve path if relative
+        if is_local:
+            image_path = str((md_dir / image_path).resolve())
+            image_path = image_path.replace('\\', '/')
+        
+        # Store image info and return a unique marker
+        image_id = len(images)
+        images.append((image_path, alt_text, image_id))
+        return f"\n<!-- IMAGE_MARKER_{image_id} -->\n"
     
-    # Match ![alt](path) pattern and replace with markers
-    md = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', replace_with_marker, md)
-    return md
+    # Match ![alt](path) pattern
+    md = re.sub(
+        r'!\[([^\[\]]*)\]\(([^\s)]+)\)',
+        replace_with_marker,
+        md
+    )
+    
+    return md, images
 
 
 def _render_markdown_with_images(md: str, md_dir: Path, wrap: bool = True):
@@ -113,37 +110,49 @@ def _render_markdown_with_images(md: str, md_dir: Path, wrap: bool = True):
     Render markdown with embedded images using st.image() for image display.
     """
     # Extract images and get markdown without image syntax
-    md = _extract_and_render_images(md, md_dir)
-
-    # Match either image markers or flowchart markers
-    marker_rx = re.compile(
-        r"<!-- IMAGE_MARKER\|\|(.+)\|\|(.+) -->|<!-- FLOWCHART_([A-Z0-9_]+) -->",
-        flags=re.DOTALL,
-    )
+    md, images = _extract_images(md, md_dir)
+    
+    # Build lookup for faster access
+    image_lookup = {image_id: (image_path, alt_text) for image_path, alt_text, image_id in images}
+    
+    # Marker pattern for images and flowcharts
+    marker_rx = re.compile(r"<!-- (IMAGE_MARKER_\d+|FLOWCHART_[A-Z0-9_]+) -->")
 
     if wrap:
         st.markdown("<div class='jne-theory-wrap'>", unsafe_allow_html=True)
 
     cursor = 0
     for match in marker_rx.finditer(md):
+        marker_text = match.group(1)
+        
         # Render markdown chunk before marker
         chunk = md[cursor:match.start()]
         if chunk.strip():
             st.markdown(chunk, unsafe_allow_html=True)
 
-        image_path, alt_text, flow_id = match.groups()
-        if image_path is not None:
-            try:
-                left, center, right = st.columns([1, 2, 1], gap="small")
-                with center:
-                    st.image(
-                        image_path,
-                        caption=alt_text if alt_text else None,
-                        width="stretch",
-                    )
-            except Exception as e:
-                st.warning(f"Failed to load image: {image_path}\n\n{e}")
-        elif flow_id is not None:
+        # Handle image markers
+        if marker_text.startswith("IMAGE_MARKER_"):
+            image_id = int(marker_text.split("_")[2])
+            if image_id in image_lookup:
+                image_path, alt_text = image_lookup[image_id]
+                try:
+                    # Check if file exists before trying to display
+                    if Path(image_path).exists():
+                        left, center, right = st.columns([1, 2, 1], gap="small")
+                        with center:
+                            st.image(
+                                image_path,
+                                caption=alt_text if alt_text else None,
+                                width="stretch",
+                            )
+                    else:
+                        st.warning(f"Image file not found: {image_path}")
+                except Exception as e:
+                    st.warning(f"Failed to load image: {image_path}\n\nError: {e}")
+        
+        # Handle flowchart markers
+        elif marker_text.startswith("FLOWCHART_"):
+            flow_id = marker_text.replace("FLOWCHART_", "")
             _render_flowchart(flow_id)
 
         cursor = match.end()
