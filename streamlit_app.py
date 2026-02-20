@@ -2731,8 +2731,14 @@ elif page == "Conduit Size & Fill & Bend Radius":
             
             t = doc.add_table(rows=1, cols=2)
             hdr = t.rows[0].cells
-            hdr[0].text = "Parameter"
-            hdr[1].text = "Value"
+            p = hdr[0].paragraphs[0]
+            p.clear()
+            r = p.add_run("Parameter")
+            r.bold = True
+            p = hdr[1].paragraphs[0]
+            p.clear()
+            r = p.add_run("Value")
+            r.bold = True
             for param, val in summary_data:
                 row = t.add_row().cells
                 row[0].text = str(param)
@@ -2748,7 +2754,11 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 
                 t_cables = doc.add_table(rows=1, cols=len(available_cols))
                 for j, col in enumerate(available_cols):
-                    t_cables.rows[0].cells[j].text = col
+                    cell = t_cables.rows[0].cells[j]
+                    p = cell.paragraphs[0]
+                    p.clear()
+                    r = p.add_run(col)
+                    r.bold = True
                 
                 for _, row_data in show_df.iterrows():
                     rr = t_cables.add_row().cells
@@ -3508,7 +3518,7 @@ elif page == "Voltage Drop":
         ]
 
         variables = [
-            {"Symbol": "k_base", "Description": "Base voltage-drop factor at 75°C from Table D3 or manual entry (Ω/km)", "Value": k_base},
+            {"Symbol": "k_base", "Description": "Base voltage-drop factor at 75°C (Ω/km)", "Value": k_base},
             {"Symbol": "k_mult", "Description": "Operating-temperature multiplier applied to k_base", "Value": k_temp_multiplier},
             {"Symbol": "f-factor option", "Description": "System/connection factor from Appendix D", "Value": f_label},
             {"Symbol": "k", "Description": "Adjusted voltage-drop factor used in calculation (Ω/km)", "Value": k_used},
@@ -3678,23 +3688,6 @@ elif page == "Voltage Drop":
             append_to_value_line(table.cell(3, 4), "")
             append_to_value_line(table.cell(3, 2), "Voltage Drop Calculation Report")
 
-            meta = doc.add_paragraph()
-            meta.add_run(f"k-mode: {k_mode}\n")
-            meta.add_run(f"Conductor operating temperature: {operating_temp_c}°C\n")
-            meta.add_run(f"Parallel conductors per phase/pole: {n_parallel_vd}\n")
-            meta.add_run(f"Selected f-factor option: {f_label}\n")
-
-            if use_table:
-                meta.add_run(f"Material: {mat}\n")
-                meta.add_run(f"Installation: {location}\n")
-                if location != "DC":
-                    meta.add_run(f"Power factor column: {pf_choice}\n")
-                meta.add_run(f"Conductor size: {size}\n")
-                meta.add_run(f"Selected Table D3 column: {selected_col_suffix}\n")
-            else:
-                meta.add_run("Material/Installation/Size selection: (manual k-value mode)\n")
-
-            meta.add_run(f"Adjusted k-value used: {k_used:.6g} Ω/km")
 
             # -------------------------
             # Equations
@@ -3722,35 +3715,48 @@ elif page == "Voltage Drop":
                 doc.add_paragraph(a, style="CalcBullet")
 
 
-            doc.add_heading("Variables (inputs and results)", level=1)
+            # -------------------------
+            # Inputs
+            # -------------------------
+            doc.add_heading("Inputs", level=1)
 
-            t = doc.add_table(rows=1, cols=1)
-            hdr = t.rows[0].cells
-            hdr[0].text = "Name"
-            hdr[2].text = "Value"
+            t_inputs = doc.add_table(rows=1, cols=2)
+            hdr = t_inputs.rows[0].cells
+            p = hdr[0].paragraphs[0]
+            p.clear()
+            r = p.add_run("Parameter")
+            r.bold = True
+            p = hdr[1].paragraphs[0]
+            p.clear()
+            r = p.add_run("Value")
+            r.bold = True
 
-            for v in variables:
-                row = t.add_row().cells
-                row[0].text = str(v["Symbol"])
-                row[1].text = str(v["Description"])
-                val = v["Value"]
-                try:
-                    row[2].text = "—" if val is None else f"{float(val):.6g}"
-                except Exception:
-                    row[2].text = "—" if val is None else str(val)
+            for inp in inputs:
+                row = t_inputs.add_row().cells
+                row[0].text = str(inp["Name"])
+                row[1].text = _cell_text(inp["Value"])
 
-            set_table_borders(t)
+            set_table_borders(t_inputs)
 
             # -------------------------
             # Variables
             # -------------------------
-            doc.add_heading("Variables (inputs and results)", level=1)
+            doc.add_heading("Variables", level=1)
 
             t = doc.add_table(rows=1, cols=3)
             hdr = t.rows[0].cells
-            hdr[0].text = "Symbol"
-            hdr[1].text = "Description"
-            hdr[2].text = "Value"
+            p = hdr[0].paragraphs[0]
+            p.clear()
+            r = p.add_run("Symbol")
+            r.bold = True
+            p = hdr[1].paragraphs[0]
+            p.clear()
+            r = p.add_run("Description")
+            r.bold = True
+            p = hdr[2].paragraphs[0]
+            p.clear()
+            r = p.add_run("Value")
+            r.bold = True
 
             for v in variables:
                 row = t.add_row().cells
@@ -3771,9 +3777,18 @@ elif page == "Voltage Drop":
 
             tc = doc.add_table(rows=1, cols=3)
             hdr = tc.rows[0].cells
-            hdr[0].text = "Name"
-            hdr[1].text = "Meaning"
-            hdr[2].text = "Value"
+            p = hdr[0].paragraphs[0]
+            p.clear()
+            r = p.add_run("Name")
+            r.bold = True
+            p = hdr[1].paragraphs[0]
+            p.clear()
+            r = p.add_run("Meaning")
+            r.bold = True
+            p = hdr[2].paragraphs[0]
+            p.clear()
+            r = p.add_run("Value")
+            r.bold = True
 
             for c in constants:
                 row = tc.add_row().cells
