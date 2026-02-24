@@ -9,7 +9,7 @@ Conduit fill percentage is determined by the number of cables/conductors inside.
 
 <div align="center">
   
-![Figure 1: Conduit Fill Percentages Table](images/Table 8.png)
+![Figure 1: Conduit Fill Percentages Table](images/Table8.png)
 
 </div>
 
