@@ -397,13 +397,14 @@ with st.sidebar:
 
 
 # ----------------------------
-# Page shell with Theory/Calculator tabs
+# Page shell with Theory/Examples/Calculator tabs
 # (Tabs are disabled ONLY on Table Library)
 # ----------------------------
 if page not in ("Table Library", "Home"):
-    theory_tab, calc_tab = st.tabs(["📚 Theory", "🧮 Calculator"])
+    theory_tab, examples_tab, calc_tab = st.tabs(["📚 Theory", "🧩 Examples", "🧮 Calculator"])
 else:
     theory_tab = None
+    examples_tab = None
     calc_tab = None
 
 
@@ -428,8 +429,9 @@ if page == "Home":
     st.markdown("### Quick start")
     st.markdown("1. Pick a topic from the sidebar.")
     st.markdown("2. Use the `Theory` tab for context and code references.")
-    st.markdown("3. Switch to `Calculator` for inputs and results.")
-    st.markdown("4. Change `Jurisdiction` to see NEC vs OESC logic.")
+    st.markdown("3. Review the `Examples` tab for worked examples.")
+    st.markdown("4. Switch to `Calculator` for inputs and results.")
+    st.markdown("5. Change `Jurisdiction` to see NEC vs OESC logic.")
 
 
 # ============================
@@ -444,6 +446,14 @@ if page == "Transformer Protection":
             render_md_safe("transformer_protection_oesc.md")
         else:
             render_md_safe("transformer_protection_nec.md")
+
+    with examples_tab:
+        header("Transformer Protection — Examples")
+        show_code_note(code_mode)
+        if code_mode == "OESC":
+            render_md_safe("transformer_protection_examples_oesc.md")
+        else:
+            render_md_safe("transformer_protection_examples_nec.md")
 
     # ----------------------------
     # Calculator tab for Transformer Protection
@@ -746,6 +756,14 @@ elif page == "Transformer Feeders":
         else:
             render_md_safe("transformer_feeders_nec.md")
 
+    with examples_tab:
+        header("Transformer Feeders — Examples")
+        show_code_note(code_mode)
+        if code_mode == "OESC":
+            render_md_safe("transformer_feeders_examples_oesc.md")
+        else:
+            render_md_safe("transformer_feeders_examples_nec.md")
+
     with calc_tab:
         header("Transformer Feeder Calculator", "Compute primary/secondary FLA, turns ratio, and transformer type.")
         show_code_note(code_mode)
@@ -859,6 +877,14 @@ elif page == "Grounding/Bonding Conductor Sizing":
         else:
             render_md_safe("grounding_bonding_nec.md")
 
+    with examples_tab:
+        header("Grounding & Bonding — Examples")
+        show_code_note(code_mode)
+        if code_mode == "OESC":
+            render_md_safe("grounding_bonding_examples_oesc.md")
+        else:
+            render_md_safe("grounding_bonding_examples_nec.md")
+
     with calc_tab:
         header("Grounding/Bonding Helper", "Simple placeholder — replace with real NEC/OESC table logic.")
         show_code_note(code_mode)
@@ -893,6 +919,14 @@ elif page == "Motor Protection":
         else:
             render_md_safe("motor_protection_nec.md")
 
+    with examples_tab:
+        header("Motor Protection — Examples")
+        show_code_note(code_mode)
+        if code_mode == "OESC":
+            render_md_safe("motor_protection_examples_oesc.md")
+        else:
+            render_md_safe("motor_protection_examples_nec.md")
+
     with calc_tab:
         header("Motor Protection Calculator", "Estimate overload and short-circuit device settings.")
         show_code_note(code_mode)
@@ -924,6 +958,14 @@ elif page == "Motor Feeder":
             render_md_safe("motor_feeder_oesc.md")
         else:
             render_md_safe("motor_feeder_nec.md")
+
+    with examples_tab:
+        header("Motor Feeder — Examples")
+        show_code_note(code_mode)
+        if code_mode == "OESC":
+            render_md_safe("motor_feeder_examples_oesc.md")
+        else:
+            render_md_safe("motor_feeder_examples_nec.md")
 
     with calc_tab:
         header("Motor Feeder Calculator", "Estimate motor I_FLA from nameplate data, then apply feeder factor.")
@@ -1006,6 +1048,14 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
         else:
             render_md_safe("cable_tray_fill_nec.md")
 
+    with examples_tab:
+        header("Cable Tray Size, Fill & Bend Radius — Examples")
+        show_code_note(code_mode)
+        if code_mode == "OESC":
+            render_md_safe("cable_tray_fill_examples_oesc.md")
+        else:
+            render_md_safe("cable_tray_fill_examples_nec.md")
+
     with calc_tab:
         header("Tray Fill & Bend Radius Calculator", "Estimate cable area + bend radius.")
         show_code_note(code_mode)
@@ -1040,6 +1090,14 @@ elif page == "Conduit Size & Fill & Bend Radius":
             render_md_safe("conduit_fill_oesc.md")
         else:
             render_md_safe("conduit_fill_nec.md")
+
+    with examples_tab:
+        header("Conduit Size, Fill & Bend Radius — Examples")
+        show_code_note(code_mode)
+        if code_mode == "OESC":
+            render_md_safe("conduit_fill_examples_oesc.md")
+        else:
+            render_md_safe("conduit_fill_examples_nec.md")
 
     with calc_tab:
         header("Conduit Fill Calculator — OESC Table 6 + Table 9 (dynamic cables)", "Select a conduit, add any number of cable groups, and the app computes conduit fill.")
@@ -2943,6 +3001,14 @@ elif page == "Cable Tray Ampacity":
         else:
             render_md_safe("cable_tray_ampacity_nec.md")
 
+    with examples_tab:
+        header("Cable Tray Ampacity — Examples")
+        show_code_note(code_mode)
+        if code_mode == "OESC":
+            render_md_safe("cable_tray_ampacity_examples_oesc.md")
+        else:
+            render_md_safe("cable_tray_ampacity_examples_nec.md")
+
     with calc_tab:
         header("Ampacity Derating Calculator", "Apply base ampacity and derating factors.")
         show_code_note(code_mode)
@@ -2970,6 +3036,14 @@ elif page == "Demand Load":
         else:
             render_md_safe("demand_load_nec.md")
 
+    with examples_tab:
+        header("Demand Load — Examples")
+        show_code_note(code_mode)
+        if code_mode == "OESC":
+            render_md_safe("demand_load_examples_oesc.md")
+        else:
+            render_md_safe("demand_load_examples_nec.md")
+
     with calc_tab:
         header("Demand Load Calculator", "Compute demand load from connected load and factor.")
         show_code_note(code_mode)
@@ -2994,6 +3068,14 @@ elif page == "Power Factor Correction":
             render_md_safe("power_factor_correction_oesc.md")
         else:
             render_md_safe("power_factor_correction_nec.md")
+
+    with examples_tab:
+        header("Power Factor Correction — Examples")
+        show_code_note(code_mode)
+        if code_mode == "OESC":
+            render_md_safe("power_factor_correction_examples_oesc.md")
+        else:
+            render_md_safe("power_factor_correction_examples_nec.md")
 
     with calc_tab:
         header("Power Factor Correction — Calculator")
@@ -3220,6 +3302,14 @@ elif page == "Voltage Drop":
                 "Notes: The 'Voltage reference' column shows whether the VD is line-to-line or line-to-ground for that circuit type. "
                 "f = √3 ≈ 1.732 for 3-phase line-to-line measurements."
             )
+
+    with examples_tab:
+        header("Voltage Drop — Examples")
+        show_code_note(code_mode)
+        if code_mode == "OESC":
+            render_md_safe("voltage_drop_examples_oesc.md")
+        else:
+            render_md_safe("voltage_drop_examples_nec.md")
 
     with calc_tab:
         header("Voltage Drop Calculator — Table D3 (OESC) + k-value helper")
@@ -4089,6 +4179,14 @@ elif page == "Conductors":
             render_md_safe("conductors_oesc.md")
         else:
             render_md_safe("conductors_nec.md")
+
+    with examples_tab:
+        header("Conductors — Examples")
+        show_code_note(code_mode)
+        if code_mode == "OESC":
+            render_md_safe("conductors_examples_oesc.md")
+        else:
+            render_md_safe("conductors_examples_nec.md")
 
     with calc_tab:
         header("Conductors — Calculator", "Workflow helper: design current, table selection, correction-factor math, and k-value voltage drop check.")
