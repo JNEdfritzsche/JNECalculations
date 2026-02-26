@@ -972,8 +972,13 @@ elif page == "Motor Feeder":
             denom = (math.sqrt(3) if phase == "3-phase" else 1.0) * volts * pf * (eff / 100.0)
         ifla = (hp * 745.7) / denom if denom > 0 else None
 
-        cont = st.checkbox("Apply 125% factor", value=True, key="mf_125")
-        target = ifla * (1.25 if cont else 1.0) if ifla is not None else None
+        sizing_mult = st.selectbox(
+            "Conductor sizing factor",
+            ["1.00", "1.15", "1.25"],
+            index=2,
+            key="mf_mult",
+        )
+        target = ifla * float(sizing_mult) if ifla is not None else None
 
         c1, c2 = st.columns(2)
         c1.metric("Calculated I_FLA (A)", fmt(ifla, "A"))
@@ -986,7 +991,7 @@ elif page == "Motor Feeder":
             eq(r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \cos\theta\cdot \eta}")
         else:
             eq(r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \eta}")
-        eq(r"I_{target}=1.25\cdot I_{FLA}")
+        eq(r"I_{target}=k\cdot I_{FLA}")
 
 
 # ============================
