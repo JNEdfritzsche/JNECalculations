@@ -3994,6 +3994,13 @@ digraph G {
 
         st.markdown("## 1) Ampacity workflow helper (service factor + table selection)")
 
+        cable_name = st.text_input(
+            "Cable name / tag",
+            value="",
+            key="cond_cable_name",
+            help="Identifier used in the export report (for example: Feeder FDR-1).",
+        )
+
         c1, c2, c3 = st.columns([1, 1, 1], gap="large")
         with c1:
             I_load = st.number_input("Load current (A)", min_value=0.0, value=100.0, step=1.0, key="cond_I_load")
@@ -4381,6 +4388,11 @@ digraph G {
         st.metric("Minimum base-table ampacity to look for", fmt(I_table_required, "A"))
 
         st.markdown("### Auto-select conductor from ampacity table")
+        recommended_size_display = None
+        recommended_source_table = None
+        recommended_temp_col_c = None
+        recommended_base_ampacity = None
+        recommended_adjusted_ampacity_per_set = None
         def _to_float_local(x):
             try:
                 if x is None or x in ("—", "-"):
@@ -4450,6 +4462,11 @@ digraph G {
                     selected_size = str(selected_row.get(size_key, "(size not found)"))
                     adjusted_ampacity = selected_base * float(k_total) if k_total is not None else None
                     selected_size_display = format_cond_size(selected_size)
+                    recommended_size_display = selected_size_display
+                    recommended_source_table = amp_table
+                    recommended_temp_col_c = temp_choice
+                    recommended_base_ampacity = selected_base
+                    recommended_adjusted_ampacity_per_set = adjusted_ampacity
                     st.markdown("### Recommended conductor size")
                     st.markdown(f"## **{selected_size_display}**")
                     st.caption(f"From {amp_table}")
@@ -4612,8 +4629,259 @@ digraph G {
                 else:
                     st.success("Adjusted ampacity per set meets or exceeds the load current per set.")
 
+        st.markdown("### 📄 Export calculation report")
+
+        def append_to_value_line(cell, value: str, paragraph_index: int = 1):
+            if len(cell.paragraphs) > paragraph_index:
+                p = cell.paragraphs[paragraph_index]
+            else:
+                p = cell.add_paragraph()
+            p.add_run(f" {value}")
+
+        def set_table_borders(table):
+            tbl = table._tbl
+            tblPr = tbl.tblPr
+            borders = OxmlElement("w:tblBorders")
+            for border_name in ("top", "left", "bottom", "right", "insideH", "insideV"):
+                border = OxmlElement(f"w:{border_name}")
+                border.set(qn("w:val"), "single")
+                border.set(qn("w:sz"), "8")
+                border.set(qn("w:space"), "0")
+                border.set(qn("w:color"), "000000")
+                borders.append(border)
+            tblPr.append(borders)
+
+        corr_math = "Adjusted ampacity = Base ampacity x k_corr x k_temp"
+        if recommended_base_ampacity is not None and corr_factor is not None and temp_factor is not None:
+            corr_math = (
+                f"Adjusted ampacity = {float(recommended_base_ampacity):.6g} x "
+                f"{float(corr_factor):.6g} x {float(temp_factor):.6g} = "
+                f"{float(recommended_adjusted_ampacity_per_set):.6g} A"
+            )
+
+        inputs_rows = [
+            ("Cable Name", cable_name.strip() if cable_name and cable_name.strip() else "(not provided)"),
+            ("Load current I_load (A)", fmt(I_load, "A")),
+            ("Service factor SF", fmt(sf)),
+            ("Design current I_design (A)", fmt(I_design_total, "A")),
+            ("Parallel sets N_parallel", str(n_parallel)),
+            ("Design current per set I_per_set (A)", fmt(I_per_set, "A")),
+            ("Conductor material", mat),
+            ("Conductor construction", construction),
+            ("Installation path", install),
+        ]
+        if use_temp_corr:
+            inputs_rows.extend([
+                ("Ambient temperature (°C)", fmt(st.session_state.get("cond_ambient_temp"), "°C")),
+                ("Insulation temp rating column", str(st.session_state.get("cond_temp_rating", "—"))),
+            ])
+
+        table_rows = [
+            ("Subrule path", subrule),
+            ("Ampacity table used", amp_table),
+            ("Correction table used", corr_table if corr_table else "(none)"),
+            ("Temperature correction table", "Table 5A" if use_temp_corr else "(none)"),
+        ]
+
+        factor_rows = [
+            ("k_corr", fmt(corr_factor), corr_factor_source),
+            ("k_temp", fmt(temp_factor), temp_factor_source),
+            ("k_total = k_corr x k_temp", fmt(k_total), "Calculated"),
+            ("Required base ampacity I_table = I_per_set / k_total", fmt(I_table_required, "A"), "Calculated"),
+        ]
+
+        def build_cond_word_report():
+            doc = Document("content/files/Template.docx")
+            table = doc.sections[0].header.tables[0]
+
+            append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
+            append_to_value_line(table.cell(0, 4), "#")
+            append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
+            append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
+            append_to_value_line(table.cell(3, 3), "checked by")
+            append_to_value_line(table.cell(3, 4), "checked date")
+            append_to_value_line(table.cell(3, 2), "Conductor Cable Size Report")
+
+            doc.add_heading("Cable Name", level=1)
+            doc.add_paragraph(cable_name.strip() if cable_name and cable_name.strip() else "(not provided)")
+
+            doc.add_heading("Input Parameters", level=1)
+            t_inputs = doc.add_table(rows=1, cols=2)
+            t_inputs.rows[0].cells[0].text = "Parameter"
+            t_inputs.rows[0].cells[1].text = "Value"
+            for label, value in inputs_rows:
+                r = t_inputs.add_row().cells
+                r[0].text = str(label)
+                r[1].text = str(value)
+            set_table_borders(t_inputs)
+
+            doc.add_heading("Which Tables Were Used", level=1)
+            t_tables = doc.add_table(rows=1, cols=2)
+            t_tables.rows[0].cells[0].text = "Item"
+            t_tables.rows[0].cells[1].text = "Selection"
+            for label, value in table_rows:
+                r = t_tables.add_row().cells
+                r[0].text = str(label)
+                r[1].text = str(value)
+            set_table_borders(t_tables)
+
+            doc.add_heading("Correction Factors Applied", level=1)
+            t_factors = doc.add_table(rows=1, cols=3)
+            t_factors.rows[0].cells[0].text = "Factor"
+            t_factors.rows[0].cells[1].text = "Value"
+            t_factors.rows[0].cells[2].text = "Source"
+            for label, value, source in factor_rows:
+                r = t_factors.add_row().cells
+                r[0].text = str(label)
+                r[1].text = str(value)
+                r[2].text = str(source)
+            set_table_borders(t_factors)
+
+            doc.add_heading("Math Showing Correction Factors on Ampacity", level=1)
+            doc.add_paragraph("k_total = k_corr x k_temp")
+            doc.add_paragraph(corr_math)
+
+            doc.add_heading("Recommended Cable Size", level=1)
+            p = doc.add_paragraph()
+            p.add_run(
+                recommended_size_display
+                if recommended_size_display
+                else "(not auto-selected in this run)"
+            ).bold = True
+            if recommended_source_table:
+                doc.add_paragraph(f"Source: {recommended_source_table}")
+            if recommended_temp_col_c is not None:
+                doc.add_paragraph(f"Table column: {recommended_temp_col_c}°C")
+            if recommended_base_ampacity is not None:
+                doc.add_paragraph(f"Base ampacity: {fmt(recommended_base_ampacity, 'A')}")
+            if recommended_adjusted_ampacity_per_set is not None:
+                doc.add_paragraph(f"Adjusted ampacity per set: {fmt(recommended_adjusted_ampacity_per_set, 'A')}")
+
+            bio = io.BytesIO()
+            doc.save(bio)
+            return bio.getvalue()
+
+        def build_cond_excel_report():
+            wb = Workbook()
+            def _cond_safe_float(x):
+                try:
+                    return None if x is None else float(x)
+                except Exception:
+                    return None
+
+            def autosize(ws):
+                for col in ws.columns:
+                    max_len = 0
+                    col_letter = get_column_letter(col[0].column)
+                    for cell in col:
+                        try:
+                            v = "" if cell.value is None else str(cell.value)
+                            max_len = max(max_len, len(v))
+                        except Exception:
+                            pass
+                    ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
+
+            ws = wb.active
+            ws.title = "Summary"
+            ws["A1"] = "Conductor Cable Size Report"
+            ws["A1"].font = Font(bold=True, size=14)
+            ws["A3"] = "Generated"
+            ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            ws["A4"] = "Cable Name"
+            ws["B4"] = cable_name.strip() if cable_name and cable_name.strip() else "(not provided)"
+
+            row = 6
+            for label, value in inputs_rows:
+                ws[f"A{row}"] = label
+                ws[f"B{row}"] = value
+                row += 1
+
+            row += 1
+            ws[f"A{row}"] = "Recommended cable size"
+            ws[f"A{row}"].font = Font(bold=True)
+            ws[f"B{row}"] = recommended_size_display if recommended_size_display else "(not auto-selected in this run)"
+            row += 1
+            ws[f"A{row}"] = "Recommended source table"
+            ws[f"B{row}"] = recommended_source_table if recommended_source_table else "—"
+            row += 1
+            ws[f"A{row}"] = "Recommended table column (°C)"
+            ws[f"B{row}"] = recommended_temp_col_c if recommended_temp_col_c is not None else "—"
+            row += 1
+            ws[f"A{row}"] = "Base ampacity (A)"
+            ws[f"B{row}"] = _cond_safe_float(recommended_base_ampacity)
+            row += 1
+            ws[f"A{row}"] = "Adjusted ampacity per set (A)"
+            ws[f"B{row}"] = _cond_safe_float(recommended_adjusted_ampacity_per_set)
+            autosize(ws)
+
+            ws = wb.create_sheet("Tables Used")
+            ws.append(["Item", "Selection"])
+            for c in ws[1]:
+                c.font = Font(bold=True)
+            for label, value in table_rows:
+                ws.append([label, value])
+            autosize(ws)
+
+            ws = wb.create_sheet("Correction Factors")
+            ws.append(["Factor", "Value", "Source"])
+            for c in ws[1]:
+                c.font = Font(bold=True)
+            for label, value, source in factor_rows:
+                ws.append([label, value, source])
+            ws.append([])
+            ws.append(["Ampacity math", corr_math, ""])
+            autosize(ws)
+
+            bio = io.BytesIO()
+            wb.save(bio)
+            return bio.getvalue()
+
+        can_export_cond = (I_table_required is not None) and (k_total is not None)
+
+        exp_c1, exp_c2 = st.columns([1, 1], gap="large")
+        with exp_c1:
+            if st.button("Prepare Word report (.docx)", key="cond_build_docx"):
+                try:
+                    st.session_state["cond_docx_bytes"] = build_cond_word_report()
+                    st.success("Word report prepared. Use the download button below.")
+                except Exception as e:
+                    st.error(f"Failed to build Word report: {e}")
+
+            cond_docx_bytes = st.session_state.get("cond_docx_bytes", None)
+            st.download_button(
+                "⬇️ Download Word report (.docx)",
+                data=cond_docx_bytes if cond_docx_bytes else b"",
+                file_name="Conductor_Cable_Size_Report.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                disabled=(not can_export_cond) or (cond_docx_bytes is None),
+                key="cond_download_docx",
+            )
+
+        with exp_c2:
+            if st.button("Prepare Excel report (.xlsx)", key="cond_build_xlsx"):
+                try:
+                    st.session_state["cond_xlsx_bytes"] = build_cond_excel_report()
+                    st.success("Excel report prepared. Use the download button below.")
+                except Exception as e:
+                    st.error(f"Failed to build Excel report: {e}")
+
+            cond_xlsx_bytes = st.session_state.get("cond_xlsx_bytes", None)
+            st.download_button(
+                "⬇️ Download Excel report (.xlsx)",
+                data=cond_xlsx_bytes if cond_xlsx_bytes else b"",
+                file_name="Conductor_Cable_Size_Report.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                disabled=(not can_export_cond) or (cond_xlsx_bytes is None),
+                key="cond_download_xlsx",
+            )
+
+        st.caption(
+            "Export includes: cable name, inputs, correction factors, ampacity correction math, tables used, and recommended cable size."
+        )
+
         st.markdown("### Equations used")
         eq(r"I_{design} = I_{load}\times SF")
         eq(r"I_{per\_set} = \frac{I_{design}}{N_{parallel}}")
         eq(r"k_{total} = k_{corr}\cdot k_{temp}")
         eq(r"I_{table} = \frac{I_{per\_set}}{k_{total}}")
+
