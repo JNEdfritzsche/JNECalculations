@@ -931,7 +931,7 @@ elif page == "Motor Feeder":
 
         c1, c2, c3, c4 = st.columns(4, gap="large")
         with c1:
-            phase = st.selectbox("System", ["3-phase", "1-phase"], index=0, key="mf_phase")
+            phase = st.selectbox("System", ["3-phase", "1-phase", "DC motor"], index=0, key="mf_phase")
         with c2:
             hp = st.number_input("Motor power (HP)", min_value=0.1, value=25.0, step=0.1, key="mf_hp")
         with c3:
@@ -944,14 +944,18 @@ elif page == "Motor Feeder":
                 key="mf_volts",
             )
         with c4:
-            pf = st.number_input(
-                "Power factor (cosθ)",
-                min_value=0.10,
-                max_value=1.00,
-                value=0.90,
-                step=0.01,
-                key="mf_pf",
-            )
+            if phase == "DC motor":
+                pf = 1.0
+                st.text_input("Power factor (cosθ)", value="N/A (DC)", disabled=True, key="mf_pf_dc")
+            else:
+                pf = st.number_input(
+                    "Power factor (cosθ)",
+                    min_value=0.10,
+                    max_value=1.00,
+                    value=0.90,
+                    step=0.01,
+                    key="mf_pf",
+                )
 
         eff = st.number_input(
             "Efficiency (%)",
@@ -962,7 +966,10 @@ elif page == "Motor Feeder":
             key="mf_eff",
         )
 
-        denom = (math.sqrt(3) if phase == "3-phase" else 1.0) * volts * pf * (eff / 100.0)
+        if phase == "DC motor":
+            denom = volts * (eff / 100.0)
+        else:
+            denom = (math.sqrt(3) if phase == "3-phase" else 1.0) * volts * pf * (eff / 100.0)
         ifla = (hp * 745.7) / denom if denom > 0 else None
 
         cont = st.checkbox("Apply 125% factor", value=True, key="mf_125")
@@ -975,8 +982,10 @@ elif page == "Motor Feeder":
         st.markdown("### Equation used")
         if phase == "3-phase":
             eq(r"I_{FLA}=\frac{HP\cdot 745.7}{\sqrt{3}\cdot V_{LL}\cdot \cos\theta\cdot \eta}")
-        else:
+        elif phase == "1-phase":
             eq(r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \cos\theta\cdot \eta}")
+        else:
+            eq(r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \eta}")
         eq(r"I_{target}=1.25\cdot I_{FLA}")
 
 
