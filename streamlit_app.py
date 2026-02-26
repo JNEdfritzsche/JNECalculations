@@ -2703,12 +2703,17 @@ elif page == "Conduit Size & Fill & Bend Radius":
         def build_conduit_word_report():
 
             doc = Document("content/files/Template.docx")
-            doc.add_heading("Conduit Fill Calculation Report", level=1)
+            remove_leading_blank_paragraphs(doc)
 
-            meta = doc.add_paragraph()
-            meta.add_run(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n").bold = True
-            meta.add_run(f"Conduit type: {conduit_type}\n")
-            meta.add_run(f"Trade size: {conduit_trade}\n")
+            table = doc.sections[0].header.tables[0]
+
+            append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
+            append_to_value_line(table.cell(0, 4), "#")
+            append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
+            append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
+            append_to_value_line(table.cell(3, 3), "")
+            append_to_value_line(table.cell(3, 4), "")
+            append_to_value_line(table.cell(3, 2), "Conduit Fill Calculation Report")
 
             doc.add_heading("Equations", level=1)
             p = doc.add_paragraph()
