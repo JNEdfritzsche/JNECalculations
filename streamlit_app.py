@@ -4349,6 +4349,82 @@ digraph G {
                         help=corr_hint,
                     )
                     corr_factor_source = "Manual (Table 5B)"
+            elif corr_table == "Table 5D":
+                if oesc_tables is None:
+                    st.warning("Table 5D lookup unavailable; enter the factor manually.")
+                    corr_factor = st.number_input(
+                        f"Correction factor k_corr ({corr_table})",
+                        min_value=0.01,
+                        max_value=1.00,
+                        value=0.80,
+                        step=0.01,
+                        key="cond_corr_factor_5d_manual",
+                        help=corr_hint,
+                    )
+                    corr_factor_source = "Manual (Table 5D)"
+                else:
+                    rows_5d = oesc_tables.get_table_rows("5D") or []
+                    options_5d = []
+                    for r in rows_5d:
+                        h = r.get("Horizontal count")
+                        v = r.get("Vertical layers")
+                        f = r.get("Correction factor")
+                        try:
+                            h_i = int(h)
+                            v_i = int(v)
+                            f_f = float(f)
+                            options_5d.append((h_i, v_i, f_f))
+                        except Exception:
+                            continue
+
+                    if not options_5d:
+                        st.warning("Table 5D rows not available; enter the factor manually.")
+                        corr_factor = st.number_input(
+                            f"Correction factor k_corr ({corr_table})",
+                            min_value=0.01,
+                            max_value=1.00,
+                            value=0.80,
+                            step=0.01,
+                            key="cond_corr_factor_5d_manual_fallback",
+                            help=corr_hint,
+                        )
+                        corr_factor_source = "Manual (Table 5D)"
+                    else:
+                        options_5d = sorted(options_5d, key=lambda x: (x[1], x[0]))
+                        vertical_choices = sorted({opt[1] for opt in options_5d})
+                        selected_v_5d = st.selectbox(
+                            "Vertical layers (Table 5D)",
+                            vertical_choices,
+                            index=0,
+                            key="cond_table5d_vertical",
+                        )
+
+                        horizontal_choices = sorted({opt[0] for opt in options_5d if opt[1] == selected_v_5d})
+                        selected_h_5d = st.selectbox(
+                            "Horizontal count (Table 5D)",
+                            horizontal_choices,
+                            index=0,
+                            key="cond_table5d_horizontal",
+                        )
+
+                        selected_5d = next(
+                            (opt for opt in options_5d if opt[0] == selected_h_5d and opt[1] == selected_v_5d),
+                            None,
+                        )
+                        if selected_5d is None:
+                            corr_factor = st.number_input(
+                                f"Correction factor k_corr ({corr_table})",
+                                min_value=0.01,
+                                max_value=1.00,
+                                value=0.80,
+                                step=0.01,
+                                key="cond_corr_factor_5d_manual_unmatched",
+                                help=corr_hint,
+                            )
+                            corr_factor_source = "Manual (Table 5D)"
+                        else:
+                            corr_factor = float(selected_5d[2])
+                            corr_factor_source = f"Table 5D (Horizontal {selected_h_5d}, Vertical {selected_v_5d})"
             else:
                 corr_factor = st.number_input(
                     f"Correction factor k_corr ({corr_table})",
