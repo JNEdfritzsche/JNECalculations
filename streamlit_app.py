@@ -439,7 +439,7 @@ if page == "Home":
 # ============================
 if page == "Transformer Protection":
     with theory_tab:
-        header("Transformer Protection", "Code-focused theory and worked examples (moved to Markdown).")
+        header("Transformer Protection")
         show_code_note(code_mode)
 
         if code_mode == "OESC":
@@ -928,136 +928,23 @@ elif page == "Motor Protection":
             render_md_safe("motor_protection_examples_nec.md")
 
     with calc_tab:
-        header("Motor Protection Calculator", "Flowchart-based sizing for conductors, overload, and overcurrent devices.")
+        header("Motor Protection Calculator", "Estimate overload and short-circuit device settings.")
         show_code_note(code_mode)
-        if code_mode == "NEC":
-            st.info("Note: This calculator mirrors the OESC flowchart shown in the theory tab. Verify NEC requirements separately.")
 
-        def _prev_standard(value, standard_list):
-            try:
-                v = float(value)
-            except Exception:
-                return None
-            candidates = [s for s in standard_list if s <= v]
-            return max(candidates) if candidates else None
+        fla = st.number_input("Motor full-load amps (FLA)", min_value=0.1, value=28.0, step=0.1)
+        ol_mult = st.selectbox("Overload multiplier (k)", ["1.15", "1.25"], index=1)
+        sc_mult = st.selectbox("Short-circuit multiplier (m)", ["1.75", "2.50"], index=0)
 
-        st.markdown("### Inputs")
-        system = st.selectbox(
-            "Motor system",
-            ["1Φ AC", "3Φ AC", "DC"],
-            index=1,
-            key="mp_system",
-        )
-        flc = st.number_input("Full-load current (FLC)", min_value=0.1, value=28.0, step=0.1, key="mp_flc")
-        service_factor = st.number_input("Service factor (SF)", min_value=0.0, value=1.15, step=0.05, key="mp_sf")
+        ol = fla * float(ol_mult)
+        sc = fla * float(sc_mult)
 
-        table29 = getattr(oesc_tables, "TABLE_29", None) if oesc_tables is not None else None
-        rows = table29.get("rows", []) if isinstance(table29, dict) else []
-        table29_fallback = {
-            1: {"Time-delay": 175, "Non-time-delay": 300, "Inverse-time": 250},
-            2: {"Time-delay": 175, "Non-time-delay": 300, "Inverse-time": 250},
-            3: {"Time-delay": 175, "Non-time-delay": 250, "Inverse-time": 200},
-            4: {"Time-delay": 175, "Non-time-delay": 200, "Inverse-time": 200},
-            5: {"Time-delay": 150, "Non-time-delay": 150, "Inverse-time": 150},
-            6: {"Time-delay": 150, "Non-time-delay": 150, "Inverse-time": 150},
-        }
-
-        row_num = None
-        row_label = None
-
-        if system == "1Φ AC":
-            row_num = 1
-        elif system == "DC":
-            row_num = 6
-        else:
-            motor_type = st.selectbox(
-                "Motor type",
-                ["Squirrel-cage or synchronous", "Wound rotor"],
-                index=0,
-                key="mp_motor_type",
-            )
-            if motor_type == "Wound rotor":
-                row_num = 5
-            else:
-                starter = st.selectbox(
-                    "Starter / controller type",
-                    ["Full-voltage, resistor, or reactor (FV&R)", "Auto-transformer or star-delta"],
-                    index=0,
-                    key="mp_starter",
-                )
-                if starter.startswith("Full-voltage"):
-                    row_num = 2
-                else:
-                    flc_gt_30_default = "Yes" if flc > 30.0 else "No"
-                    flc_gt_30 = st.selectbox(
-                        "FLC > 30 A?",
-                        ["Yes", "No"],
-                        index=0 if flc_gt_30_default == "Yes" else 1,
-                        key="mp_flc_gt_30",
-                    )
-                    row_num = 4 if flc_gt_30 == "Yes" else 3
-
-        if rows and row_num is not None and row_num <= len(rows):
-            row_label = rows[row_num - 1].get("Type of motor")
-
-        oc_device = st.selectbox(
-            "Overcurrent device type",
-            ["Time-delay fuse", "Non-time-delay fuse", "Inverse-time circuit breaker"],
-            index=0,
-            key="mp_oc_device",
-        )
-
-        st.markdown("### Results")
-        cond_min = 1.25 * flc
-        ol_mult = 1.25 if service_factor >= 1.15 else 1.15
-        ol_target = ol_mult * flc
-
-        if rows and row_num is not None and row_num <= len(rows):
-            row = rows[row_num - 1]
-            if oc_device.startswith("Time-delay"):
-                pct = row.get("Maximum fuse rating — Time-delay* fuses", None)
-            elif oc_device.startswith("Non-time-delay"):
-                pct = row.get("Maximum fuse rating — Non-time-delay", None)
-            else:
-                pct = row.get("Maximum setting — Inverse-time circuit breaker", None)
-        else:
-            fallback_key = "Time-delay" if oc_device.startswith("Time-delay") else "Non-time-delay" if oc_device.startswith("Non-time-delay") else "Inverse-time"
-            pct = table29_fallback.get(row_num, {}).get(fallback_key, None)
-
-        oc_target = (float(pct) / 100.0) * flc if pct is not None else None
-
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Conductor ampacity (min)", fmt(cond_min, "A"))
-        c2.metric("Overload device target", fmt(ol_target, "A"))
-        c3.metric("Overcurrent device target", fmt(oc_target, "A"))
-
-        if row_num is not None:
-            st.caption(f"Table 29 row selected: Row {row_num}" + (f" — {row_label}" if row_label else ""))
-
-        if oc_target is not None:
-            std_oc = _prev_standard(oc_target, OESC_TABLE13_STANDARD)
-            if std_oc is not None:
-                st.success(f"Suggested standard OCPD (Table 13, not exceeding): **{fmt(std_oc,'A')}**")
-            else:
-                st.warning("No standard OCPD size found at or below target. Select a device per code/manufacturer.")
-        else:
-            st.warning("OCPD target could not be computed. Check Table 29 data or selections.")
-
-        with st.expander("Optional: instantaneous-trip breaker check (Rule 28-210)", expanded=False):
-            lrc = st.number_input("Locked rotor current (LRC)", min_value=0.0, value=0.0, step=0.1, key="mp_lrc")
-            lrc = lrc if lrc > 0 else None
-            oc_flc = 13.0 * flc
-            st.write(f"Instantaneous-trip size by FLC: **{fmt(oc_flc,'A')}**")
-            if lrc is not None:
-                oc_lrc = 2.15 * lrc
-                st.write(f"Instantaneous-trip size by LRC: **{fmt(oc_lrc,'A')}**")
-            else:
-                st.caption("Enter LRC to compute the 2.15 × LRC option.")
+        c1, c2 = st.columns(2)
+        c1.metric("Overload setting (A)", fmt(ol, "A"))
+        c2.metric("Short-circuit device (A)", fmt(sc, "A"))
 
         st.markdown("### Equations used")
-        eq(r"I_{cond}=1.25\cdot I_{FLC}")
-        eq(r"I_{OL}=(1.25 \text{ or } 1.15)\cdot I_{FLC}")
-        eq(r"I_{ocpd}=m\cdot I_{FLC}")
+        eq(r"I_{OL}=k\cdot I_{FLA}")
+        eq(r"I_{SC}=m\cdot I_{FLA}")
 
 
 # ============================
