@@ -4173,7 +4173,7 @@ elif page == "Voltage Drop":
 # ============================
 elif page == "Conductors":
     with theory_tab:
-        header("Conductors — Theory", "OESC Section 4 (Rule 4-004) workflow + worked example case study.")
+        header("Conductors — Theory")
         show_code_note(code_mode)
         if code_mode == "OESC":
             render_md_safe("conductors_oesc.md")
