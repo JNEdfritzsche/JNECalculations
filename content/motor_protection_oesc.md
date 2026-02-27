@@ -1,6 +1,6 @@
 ## Overview
 
-Once motor feeder size has been determined, our next consideration is motor protection devices. Motor protection consists of three primary functions:
+Once motor feeder size has been determined, our next step is the selection of motor protection devices. Motor protection consists of three primary functions:
 
 - Overcurrent protection
 - Overload and overheating protection
@@ -15,13 +15,13 @@ When motors start, they pull a large inrush current, typically six times the Ful
 - Inverse-time (thermal-magnetic) circuit breakers, and 
 - instantaneous (magnetic-only) circuit breakers. 
 
-As per Rules 28-200 & 28-204, we generally size overcurrent device by Table 29 (and Table D16 which is based on Table 29) to a maximum of 300%, selecting the closest standard fuse size not exceeding the calcualted value. A list of common/standard fuse sizes can be found in Table 13.
+As per Rules 28-200 & 28-204, we generally size overcurrent device by Table 29 (and Table D16 which is based on Table 29), selecting the closest standard fuse size not exceeding the calcualted value. A list of common/standard fuse sizes can be found in Table 13.
 
 Below is a general flow to follow for sizing overcurrent devices based on available information. Note that for **any type of motor** protected by an **instantaneous trip** circuit breaker, the size must be circuit breaker must be sized to either the FLC by 1300% or Locked Rotor Current (LRC) by 215%.
 
 <!-- FLOWCHART_MOTOR_PROTECTION -->
 
-For sizing the overcurrent device for a feeder supplying multiple motors, the methodology is similar to conductor sizing feeders. You adjust the largest FLC accordingly to Table 29, then sum that adjusted FLC with the remaining nominal FLCs to size the main feeder. 
+For sizing the overcurrent device for a feeder supplying multiple motors, the methodology is similar to sizing feeders for mutiple motors. You adjust the largest FLC accordingly to Table 29, then add the remaining nominal FLCs to size the main feeder. 
 
 For example, say you have three motors, with the following characteristics
 
@@ -49,7 +49,7 @@ To size the feeder supplying all these motors, we adjust the largest FLC in the 
 ---
 ## Overload & Overheating Protection
 
-Overloading and overheating protection devices are sized according to motor's nameplate current rating. In general, if the service rating is greater than 1.15 then size by a factor 1.25, otherwise size by factor of 1.15. Consult Table 25 for the number of and where to places devices based on the system.
+Overloading and overheating protection is intended to protect the motor from things such as sustained overload and excessive heating, these devices respond to current over time and are normally integrated into the starter or controller.  As seperate devices, they are sized according to motor's nameplate current rating. In general, if the service rating is greater than 1.15 then size by a factor 1.25, otherwise size by factor of 1.15. Consult Table 25 for the number of and where to places devices based on the system.
 
 ---
 ## Control & Starters
@@ -59,7 +59,11 @@ All motors require starters/controllers, they must be of the correct rating in H
 ---
 ## Disconnecting Means
 
-The rules generally cover different situations and cases where starters and disconnects are used interchangeably, e.g. using a starter as a the sole  disconnect if the situation meets a certain criteria. In general it is best to have a dedicated disconnect for each motor/motor group. Location is the main focus, when typically placed at the distribution centre, they can serve as the main source of de-energizing the circuit when; within sight of, and 9 metres of the motor or machinery driven by the motor, or be able to be locked in the open position and is labelled with the loads connected to it.
+The rules generally cover different situations and cases where starters and disconnects are used interchangeably, e.g. using a starter as a the sole  disconnect if the situation meets a certain criteria. In general it is best to have a dedicated disconnect for each motor/motor group. 
+
+Location is the main focus, when typically placed at the distribution centre, they can serve as the main source of de-energizing the circuit when; 
+- within sight of, and 9 metres of the motor or machinery driven by the motor, or
+- be able to be locked in the open position and is labelled with the loads connected to it.
 
 <!--
 ## Motor not starting
