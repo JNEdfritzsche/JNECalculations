@@ -1,8 +1,9 @@
-# Overview
+## Overview
 
-The Transformer Feeder section describes the code intent and design principles for supplying transformers under the OESC. Unlike utilization equipment, transformers are passive devices that can deliver their full rated output continuously, so feeder sizing is based on transformer nameplate kVA and voltage rather than downstream load diversity. For this reason, transformer feeders are generally treated as continuous and must be selected to remain within allowable temperature limits after applying ambient, grouping, installation, and termination corrections.
+Transformers are passive devices that can deliver their full rated output continuously, so feeder sizing is based on transformer nameplate kVA and voltage rather than downstream load diversity. For this reason, transformer feeders are generally treated as continuous and must be selected to remain within allowable temperature limits after applying ambient, grouping, installation, and termination corrections. This section will cover the main aspects of sizing transformer feeders as well as cover a general methodology.
 
-This section also highlights the role of the transformer feeder in overall system performance. Because the feeder sits at the interface between primary and secondary systems, its sizing and configuration affect grounding, fault behavior, and overcurrent protection coordination. The intent is to ensure that transformers are supplied in a conservative and predictable manner that supports long-term reliability and safe operation of the electrical system.
+<!-- Can just take this out
+This section also highlights the role of the transformer feeder in overall system performance. Because the feeder sits at the interface between primary and secondary systems, its sizing and configuration affect grounding, fault behavior, and overcurrent protection coordination. The intent is to ensure that transformers are supplied in a conservative and predictable manner that supports long-term reliability and safe operation of the electrical system. -->
 
 Transformers differ fundamentally from utilization equipment such as motors, heaters, or lighting loads:
 
@@ -13,55 +14,42 @@ Transformers differ fundamentally from utilization equipment such as motors, hea
 - Because of this, the OESC treats the transformer feeder as part of the transformer system, not a supply conductor
 - The feeder must therefore be sized assuming the transformer can and may operate at its nameplate rating indefinitely
 
-## 1. Design Methodology
+## Design Methodology
 
-### a. Base Current Determination
+### Base Current Determination
 
-Conductor sizing begins with the transformer **nominal full-load current (FLA)** on both sides of the transformer:
+Conductor sizing begins with the transformer's nominal full-load current (FLC) on both sides of the transformer, it can be calcualted using the following equation:
 
-- High-Voltage (Primary)  
-- Low-Voltage (Secondary)
+$$ I_{\text{Pri./Sec.}} = \frac{VA}{\sqrt{3} \cdot V_{\text{Pri./Sec.}}} $$
 
-### b. Continuous Load Adjustment
+### Continuous Load Adjustment
 
 Where the transformer supplies a continuous load, conductors shall be sized at **125% of the calculated FLA**, as required by **OESC Rule 26-256**.
 
-### c. Ampacity Corrections
+$$ I = 1.25 \cdot I_{\text{Pri./Sec.}} $$
+
+### Ampacity Corrections/Derating
 
 After applying the continuous load factor, conductor ampacity shall be corrected for:
 
 - Ambient temperature  
 - Number of current-carrying conductors  
 - Conductor insulation temperature rating  
-- Installation method (conduit, tray, free air, etc.)
+- Installation path (conduit, tray, free air, etc.)
 
-### d. Protection and Performance Verification
+<!--
+### Protection and Performance Verification
 
 Final design checks shall include:
 
 - Coordination with upstream overcurrent protective devices  
 - Voltage drop compliance  
 - Adequate fault-clearing capability
+-->
 
-## 2. Governing Equations
+## Worked Example (High-Voltage Side)
 
-Full-Load Current (3Φ):
-
-$$
-I_{\text{x}}
-=
-\frac{S}{\sqrt{3}\,V_{\text{x}}}
-$$
-
-Suggested continuous Ampacity rating using the 125% correction:
-
-$$
-I'_{\text{x}}
-=
-1.25\, I_{\text{x}}
-$$
-
-## 3. Worked Example (High-Voltage Side)
+Consider a transformer with the following nameplate
 
 ### Given Data
 
@@ -74,29 +62,13 @@ $$
 - Cable length: **50 m**
 - 3 conductors per cable
 
-### a. Primary Full-Load Current
+### Primary Full-Load Current
 
-$$
-\begin{aligned}
-I_{\text{prim}}
-&=
-\frac{75{,}000}{\sqrt{3}\cdot 600}
-&\approx\;
-73.3\ \text{A}
-\end{aligned}
-$$
+$$ \begin{aligned} I_{\text{prim}} &= \frac{75{,}000}{\sqrt{3}\cdot 600} &\approx\; 73.3\ \text{A} \end{aligned} $$
 
 #### Continuous Load Ampacity Target
 
-$$
-\begin{aligned}
-I_{\text{prim}}'
-&=
-1.25\, I_{\text{prim}}
-&\approx\;
-90.32\ \text{A}
-\end{aligned}
-$$
+$$ \begin{aligned} I_{\text{prim}}' &= 1.25\, I_{\text{prim}} &\approx\; 90.32\ \text{A} \end{aligned} $$
 
 ### Correction / Derating Summary
 
@@ -111,57 +83,22 @@ $$
 
 ### Calculations
 
-$$
-\begin{aligned}
-C
-&=
-A\cdot B\cdot U
-=
-(0.91)(140)(0.85)
-\\
-&\approx
-108.3\ \text{A}
-\end{aligned}
-$$
+$$ \begin{aligned} C &= A\cdot B\cdot U = (0.91)(140)(0.85) \\ &\approx 108.3\ \text{A} \end{aligned} $$
 
-$$
-\begin{aligned}
-F
-&=
-D\cdot U
-=
-(125)(0.85)
-\\
-&\approx
-106.3\ \text{A}
-\end{aligned}
-$$
+$$ \begin{aligned} F &= D\cdot U = (125)(0.85) \\ &\approx 106.3\ \text{A} \end{aligned} $$
 
 **Apply the lesser corrected ampacity**:
 
-$$
-I_{\text{min}}
-=
-\min(C,F)
-=
-106.3\ \text{A}
-$$
+$$ I_{\text{min}} = \min(C,F) = 106.3\ \text{A} $$
 
+<!-- Voltage drop covered in seperate section
 ## Voltage Drop
 
 Use the 3-phase voltage drop check to confirm the feeder run meets the allowable voltage drop for the used distance.
 
-$$
-VD
-=
-\frac{K\cdot f \cdot I \cdot L}{1000}
-$$
+$$ VD = \frac{K\cdot f \cdot I \cdot L}{1000} $$
 
-$$
-VD\%
-=
-\frac{VD}{V_n}\cdot 100\%
-$$
+$$ VD\% = \frac{VD}{V_n}\cdot 100\% $$
 
 Where:
 - $VD$ = voltage drop (V)  
@@ -177,17 +114,16 @@ Where:
 | 4 | 50 | 1.01 | 90.32 | 2 | **1.52** |
 
 **Since the voltage drop is less than 3% and near our target of 1% this size is feasible. If $VD\%$ is larger than 3%, increase cable size and recalculate.**
+-->
+## Appendix
 
-# Appendix
+### Related Knowledge Files:
+Knowlede File 4 <br/>
+Knowledge File 26 <br/>
+Transformer Feeder Calculations
 
-## Related Knowledge Files:
-Knowlede File 4<br/>
-Knowledge File 26<br/>
-Tranformer Feeder Calculations
-
-## Related OESC Tables
+### Related OESC Tables
 Table 1<br/>
 Table 2<br/>
 Table 5A<br/>
 Table 5B<br/>
-Table D3
