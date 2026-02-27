@@ -81,11 +81,11 @@ We only upsize the largest continuous FLA motor and apply the applicable factors
 
 ## Appendix
 
-### Related Knowledge File
+### Related Knowledge Files
 
-[Design Basis – Calculations: Motor Feeder]()
-
-[Knowledge File – OESC: Section 28 Motor and Generators]()
+[Design Basis — Calculations: Motor Feeder]()<br/>
+[Knowledge File — OESC: Section 28 Motor and Generators]()<br/>
+[Knowledge File — Cable Sizing for a motor]()
 
 ### Related OESC Rules
 
