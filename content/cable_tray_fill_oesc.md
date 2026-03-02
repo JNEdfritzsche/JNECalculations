@@ -56,15 +56,13 @@ There is no regulation explicitly stating the allowable limit of a cable tray fi
 
 Cables Trays can be fitted with dividers, effectively dividing the area into smaller sections for multiple runs. This division **does not allow** us to mix HV and LV runs in the same tray. We usually lay cables at 100% spacing or 0% spacing for the duration of the run as either; single layer spaced or trefoil configuration. 
 
-Below are examples of cable tray filling. 
-
 ### Example: Single Layer Power Runs
 
 We're running the following cables, evenly spaced in a horizontal layer, in a 4" cable tray. We need to determine the minimum width and fill percentage.
 
-| Quantity | Gauge     | Conductors | Approximate OD [mm] |
-|----------|-----------|------------|---------------------|
-|     9    | # 1/0 AWG |  1/C       |         13.23       |
+| Voltage | Quantity | Gauge     | Conductors | Approximate OD [mm] |
+|---------|----------|-----------|------------|---------------------|
+| 600 V   |     9    | # 1/0 AWG |  1/C       |         13.23       |
 
 Since they're being placed in a single layer, we sum the cable diameters and the even spacing between giving us;
 
@@ -97,10 +95,10 @@ $$ \text{Tray fill \%} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}}
 We're running the the following cables in a 4"x12" cable tray divided into two section
 
 
-| Quantity | Gauge   | Conductors | Approximate OD [mm] |
-|----------|---------|------------|---------------------|
-|     9    | # 2 AWG |  3/C       |       26.46         |
-|     9    | #14 AWG |  12/C      |       30.88         |
+| Voltage | Quantity | Gauge    | Conductors | Approximate OD [mm] |
+|---------|----------|----------|------------|---------------------|
+|  277 V  |     9    | # 2 AWG  |  3/C       |       26.46         |
+|  24 VDC |     9    | # 14 AWG |  12/C      |       30.88         |
 
 Since these cables have already been derated appropriately for <25% spacing, we can just arrange them in a neat configuration. 
 
