@@ -112,9 +112,9 @@ Since these cables have already been derated accordingyl for <25% spacing, we ca
 
 Finding the fill is the same, except we divide them into sections to determine if we can fit more cables in the future.
 
-$$ \text{Section 1} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} = \frac{9 \cdot \pi(13.23)^2}{77.22 \cdot 119.38} = \frac{4948.94}{9216.136} = 53.7 \% $$  
-$$ \text{Section 2} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} = \frac{9 \cdot \pi(15.443)^2}{77.22 \cdot 183.92} = \frac{6743.04}{14202.3} = 47.48 \% $$
-$$ \text{Total fill} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} = \frac{11691.98}{23418.44} = 50 \% $$
+$$ \text{Section 1} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} = \frac{9 \cdot \pi(13.23)^2}{77.22 \cdot 119.38} = \frac{4948.94}{9216.136} = 53.7 \% $$ <br/>
+$$ \text{Section 2} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} = \frac{9 \cdot \pi(15.443)^2}{77.22 \cdot 183.92} = \frac{6743.04}{14202.3} = 47.48 \% $$ <br/>
+$$ \text{Total fill} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} = \frac{11691.98}{23418.44} = 50 \% $$ <br/>
 
 ---
 ## Appendix
