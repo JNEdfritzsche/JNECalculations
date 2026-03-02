@@ -86,7 +86,7 @@ $$ \text{Tray fill \%} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}}
 
 <div align="center">
 
-![Same nine conductors, in a trefoil configuration, in a 4"x6" Tray](images/CableTrayEx1b.png)
+![](images/CableTrayEx1b.png)
 
 </div>
 
