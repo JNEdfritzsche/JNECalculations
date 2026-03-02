@@ -97,7 +97,7 @@ We're running the the following cables in a 4"x12" cable tray divided into two s
 
 | Voltage | Quantity | Gauge    | Conductors | Approximate OD [mm] |
 |---------|----------|----------|------------|---------------------|
-|  277 V  |     9    | # 2 AWG  |  3/C       |       26.46         |
+|  347 V  |     9    | # 2 AWG  |  3/C       |       26.46         |
 |  24 VDC |     9    | # 14 AWG |  12/C      |       30.88         |
 
 Since these cables have already been derated appropriately for <25% spacing, we can just arrange them in a neat configuration. 
