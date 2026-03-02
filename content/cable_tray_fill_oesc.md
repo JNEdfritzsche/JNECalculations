@@ -60,7 +60,7 @@ Below are examples of cable tray filling.
 
 ### Example: Single Layer Power Runs
 
-We're running the following cables, evenly spaced in a single layer, in a 4" cable tray. We need to determine the minimum width and fill percentage.
+We're running the following cables, evenly spaced in a horizontal layer, in a 4" cable tray. We need to determine the minimum width and fill percentage.
 
 | Quantity | Gauge     | Conductors | Approximate OD [mm] |
 |----------|-----------|------------|---------------------|
@@ -84,17 +84,17 @@ To determine tray we simply divide total cable area by usable tray area. Practic
 
 $$ \text{Tray fill \%} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} = \frac{9 \cdot \pi (6.615)^2}{77.22 \cdot 228.6}  = \frac{1237.24}{17652.492} = 7 \% $$
 
-*NOTE*: To save more space, we can run them in a trefoil arrangment, like below. These are the same conductors but in a 6" tray.
+**NOTE**: To save more space, we can run them in a trefoil arrangment, like below. These are the same conductors but in a 6" tray.
 
 <div align="center">
 
-![Same nine conductors, in a trefoil configuration, in a 6" Tray](images/CableTrayEx1b.png)
+![Same nine conductors, in a trefoil configuration, in a 4"x6" Tray](images/CableTrayEx1b.png)
 
 </div>
 
 ### Example: Sectioned Runs
 
-Were running the the following cables in a 12" cable tray divided into two section
+We're running the the following cables in a 4"x12" cable tray divided into two section
 
 
 | Quantity | Gauge   | Conductors | Approximate OD [mm] |
@@ -102,7 +102,7 @@ Were running the the following cables in a 12" cable tray divided into two secti
 |     9    | # 2 AWG |  3/C       |       26.46         |
 |     9    | #14 AWG |  12/C      |       30.88         |
 
-Since these cables have already been derated accordingyl for <25% spacing, we can just arrange them in a neat configuration. 
+Since these cables have already been derated appropriately for <25% spacing, we can just arrange them in a neat configuration. 
 
 <div align="center">
 
