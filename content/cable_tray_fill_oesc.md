@@ -124,7 +124,7 @@ $$ \text{Total fill} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} =
 ### Related Knowledge File 
 
 <mark>[Knowledge File: Electrical Cable Tray Basics]()</mark> <br/>
-[Knowledge File: Cable Tray Fill Calculations]()
+[Knowledge File: Cable Tray Fill Calculations]() <br/>
 [Design Basis — Calculations: Cable Tray]() <br/>
 [Knowledge File Sharing Session: Cable Tray Supports]()
 
