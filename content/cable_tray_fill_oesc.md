@@ -82,7 +82,7 @@ A 9" tray will suffice.
 
 To determine tray we simply divide total cable area by usable tray area. Practical dimensions can be found from the manufacturer's catalogue as often a 4" height tray will have a smaller usable area due to the rails (say 3.04").
 
-$$ \text{Tray fill %} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} = \frac{9 \cdot \pi (6.615)^2}{77.22 \cdot 228.6}  = \frac{1237.24}{17652.492} = 7 \% $$
+$$ \text{Tray fill \%} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} = \frac{9 \cdot \pi (6.615)^2}{77.22 \cdot 228.6}  = \frac{1237.24}{17652.492} = 7 \% $$
 
 *NOTE*: To save more space, we can run them in a trefoil arrangment, like below. These are the same conductors but in a 6" tray.
 
@@ -112,9 +112,9 @@ Since these cables have already been derated accordingyl for <25% spacing, we ca
 
 Finding the fill is the same, except we divide them into sections to determine if we can fit more cables in the future.
 
-$$ \text{Section 1} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} = \frac{9 \cdot \pi(13.23)^2}{77.22 \cdot 119.38} = \frac{4948.94}{9216.136} = 53.7 \% $$ <br/>
-$$ \text{Section 2} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} = \frac{9 \cdot \pi(15.443)^2}{77.22 \cdot 183.92} = \frac{6743.04}{14202.3} = 47.48 \% $$ <br/>
-$$ \text{Total fill} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} = \frac{11691.98}{23418.44} = 50 \% $$ <br/>
+$$ \text{Section 1} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} = \frac{9 \cdot \pi(13.23)^2}{77.22 \cdot 119.38} = \frac{4948.94}{9216.136} = 53.7 \% $$
+$$ \text{Section 2} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} = \frac{9 \cdot \pi(15.443)^2}{77.22 \cdot 183.92} = \frac{6743.04}{14202.3} = 47.48 \% $$
+$$ \text{Total fill} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} = \frac{11691.98}{23418.44} = 50 \% $$
 
 ---
 ## Appendix
