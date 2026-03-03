@@ -1,6 +1,3 @@
-
-Cable Trays
-
 ## Overview
 
 Cable trays comprise a large portion of installation paths in industrial projects. They provide a large area to carry multiple conductors/cables while being less labour-intensive than conduit. This section will cover general characteristics, considerations, and some basic examples of filling/bending cable trays.
@@ -37,11 +34,10 @@ Trays come in many different manufactured size. Heights, lengths, useable length
 
 ## Clearances
 
-
-
-## Bending
-
-
+<div align="center">
+  
+![](images/CableTrayClearances.png)
+</div>
 
 ---
 ## Cable Tray fill
@@ -129,9 +125,12 @@ $$ \text{Total fill} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} =
 ### Related OESC Rules
 
 Rule 4-004 — Ampacity of Wires and Cables<br/>
-12-2200
-12-904
+Rule 12-904 — Conductors in Raceway (Barrier Strips)<br/>
+Rule 12-2200 — Conductors/Cables installation methods (Clearances)<br/>
+Rule 12-2202 — Insulated Conductors/Cables in Cable trays<br/>
+Rule 12-2208 — Cable tray Bonding
+
 
 ### Related OESC Tables
 
-Tables 9A-9G — Conduit areas at various percentages<br/>
+Tables 15 — Bending Radii: High-Voltage Cables<br/>
