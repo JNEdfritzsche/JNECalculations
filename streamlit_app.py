@@ -371,7 +371,7 @@ PAGES = [
     "Motor Feeder",
     "Cable Tray Size & Fill & Bend Radius",
     "Conduit Size & Fill & Bend Radius",
-    "Cable Tray Ampacity",
+    "Heat Trace",
     "Demand Load",
     "Power Factor Correction",
     "Voltage Drop",
@@ -2990,38 +2990,40 @@ elif page == "Conduit Size & Fill & Bend Radius":
 
 
 # ============================
-# 8) Cable Tray Ampacity
+# 8) Heat Trace
 # ============================
-elif page == "Cable Tray Ampacity":
+elif page == "Heat Trace":
     with theory_tab:
-        header("Cable Tray Ampacity — Theory")
+        header("Heat Trace — Theory")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("cable_tray_ampacity_oesc.md")
+            render_md_safe("heat_trace_oesc.md")
         else:
-            render_md_safe("cable_tray_ampacity_nec.md")
+            render_md_safe("heat_trace_nec.md")
 
     with examples_tab:
-        header("Cable Tray Ampacity — Examples")
+        header("Heat Trace — Examples")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("cable_tray_ampacity_examples_oesc.md")
+            render_md_safe("heat_trace_examples_oesc.md")
         else:
-            render_md_safe("cable_tray_ampacity_examples_nec.md")
+            render_md_safe("heat_trace_examples_nec.md")
 
     with calc_tab:
-        header("Ampacity Derating Calculator", "Apply base ampacity and derating factors.")
+        header("Heat Trace Load Calculator", "Estimate circuit load from length and heat trace rating.")
         show_code_note(code_mode)
 
-        base = st.number_input("Base ampacity (A)", min_value=0.1, value=200.0, step=1.0)
-        grouping = st.number_input("Grouping factor", min_value=0.0, max_value=1.0, value=0.80, step=0.01)
-        ambient = st.number_input("Ambient factor", min_value=0.0, max_value=1.50, value=1.00, step=0.01)
+        length_m = st.number_input("Heat trace length (m)", min_value=0.1, value=60.0, step=1.0)
+        watts_per_m = st.number_input("Heat output (W/m)", min_value=1.0, value=30.0, step=1.0)
+        voltage = st.number_input("Supply voltage (V)", min_value=12.0, value=120.0, step=1.0)
 
-        adj = base * grouping * ambient
-        st.success(f"Adjusted ampacity: **{fmt(adj, 'A')}**")
+        total_power_w = length_m * watts_per_m
+        current_a = total_power_w / voltage if voltage > 0 else None
+        st.success(f"Total heat trace load: **{fmt(total_power_w, 'W')}**")
+        st.metric("Estimated circuit current", fmt(current_a, "A"))
 
         st.markdown("### Equation used")
-        eq(r"I_{adj}=I_{base}\cdot k_{group}\cdot k_{ambient}")
+        eq(r"P_{total}=L\cdot q,\ \ I=P_{total}/V")
 
 
 # ============================
