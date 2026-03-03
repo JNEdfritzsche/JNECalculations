@@ -40,7 +40,7 @@ except Exception as e:
     _TABLES_IMPORT_ERROR = str(e)
 
 # Set to False during development to disable password protection
-ENABLE_PASSWORD_PROTECTION = False
+ENABLE_PASSWORD_PROTECTION = True
 
 # ----------------------------
 # Global Variables
@@ -133,15 +133,26 @@ def check_password():
     def password_entered():
         """Checks whether a password entered by the user is correct."""
         try:
-            correct_password = st.secrets["app_password"]
+            admin_password = st.secrets.get("app_password_admin", "admin")
+            user_password = st.secrets.get("app_password_user", "JNE")
+            legacy_password = st.secrets.get("app_password", None)
         except (KeyError, FileNotFoundError):
-            correct_password = "admin"  # fallback default
-        
-        if st.session_state["password"] == correct_password:
+            admin_password = "admin"
+            user_password = "JNE"
+            legacy_password = None
+
+        entered = st.session_state.get("password", "")
+        if entered == admin_password or (legacy_password and entered == legacy_password):
             st.session_state["password_correct"] = True
+            st.session_state["access_role"] = "admin"
+            del st.session_state["password"]  # don't store password
+        elif entered == user_password:
+            st.session_state["password_correct"] = True
+            st.session_state["access_role"] = "user"
             del st.session_state["password"]  # don't store password
         else:
             st.session_state["password_correct"] = False
+            st.session_state["access_role"] = None
 
     if st.session_state.get("password_correct", False):
         return True
@@ -362,7 +373,7 @@ def calc_fla(kva, volts, phase):
 # ----------------------------
 # Sidebar navigation
 # ----------------------------
-PAGES = [
+ALL_PAGES = [
     "Home",
     "Transformer Protection",
     "Transformer Feeders",
@@ -378,6 +389,19 @@ PAGES = [
     "Conductors",
     "Table Library",
 ]
+
+RESTRICTED_PAGES = {
+    "Grounding/Bonding Conductor Sizing",
+    "Demand Load",
+    "Power Factor Correction",
+    "Heat Trace",
+}
+
+access_role = st.session_state.get("access_role", "admin")
+if access_role == "user":
+    PAGES = [p for p in ALL_PAGES if p not in RESTRICTED_PAGES]
+else:
+    PAGES = ALL_PAGES
 
 with st.sidebar:
     st.header("Navigate")
