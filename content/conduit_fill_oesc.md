@@ -76,7 +76,7 @@ Conduit Fill %      |                                                   $$ \frac
 
 During the routing phase, the bending radius of the conduit is an important consideration. Conduits have a minimum bending radius to prevent excess pressure on the conduit wall, and to limit pulling tension. The bending radius depends on the diameter of the conduit, and the minimum radii can be found in Table 7. Below is a visualization of different bending radii of the same sized conduit. 
 
-![Figure 2: ](images/ConduitBendEx.png)
+![Figure 2: 35mm conduit bent to different radii](images/ConduitBendEx.png)
 
 As we see, the smaller the radius, the tighter the bend is. The third conduit is bent to the minimum allowewd radius, while the ones on the left show larger bending radii.
 
