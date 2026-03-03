@@ -72,6 +72,13 @@ Total Cable area    | $$ 75 \cdot 8.9 = 667.5 \text{mm}^2$$ </br> $$27\cdot 15.7
 Conduit Area (100%) |                                                         $$ 4839\text{mm}^2 $$                                                            | $$ 4839 \text{mm}^2 $$                | $$ 4839\text{mm}^2 $$             |
 Conduit Fill %      |                                                   $$ \frac{1091.4}{4839} = 22.55 \% $$                                                   | $$ \frac{1931.1}{4839} = 39.91\% $$   | $$ \frac{1416}{4839} = 29.26\% $$ |
 
+## Bend Radii
+
+During the routing phase, the bending radius of the conduit is an important consideration. Conduits have a minimum bending radius to prevent excess pressure on the conduit wall, and to limit pulling tension. The bending radius depends on the diameter of the conduit, and the minimum radii can be found in Table 7. Below is a visualization of different bending radii of the same sized conduit. 
+
+![Figure 2: ](images/ConduitBendEx.png)
+
+As we see, the smaller the radius, the tighter the bend is. The third conduit is bent to the minimum allowewd radius, while the ones on the left show larger bending radii.
 
 ## Other considerations
 
@@ -102,6 +109,7 @@ Rule 12-910 — Conductors in Conduit
 
 ### Related OESC Tables
 
-Tables 9A-9G — Conduit areas at various percentages<br/>
+Table 7 — Minimum conduit bending radius <br/>
 Table 8 — Maximum allowable conduit fill percent<br/>
+Tables 9A-9G — Conduit areas at various percentages<br/>
 Table 19 — Conditions of use for Conductors and Cables
