@@ -87,6 +87,6 @@ With out amapacity target of 102.5 A, we check Table 1 @ 75°C, and select **#4 
 Rule 26-256 — Conductor size for transformers <br/>
 
 ### Related OESC Tables
-Table 1/2 — Single Conductor ampacities for Copper/Aluminum<br/>
-Table 3/4 — Multi-Conductor ampacities for Copper/Aluminum <br/>
+Table 1/3 — Single Conductor ampacities for Copper/Aluminum<br/>
+Table 2/4 — Multi-Conductor ampacities for Copper/Aluminum <br/>
 
