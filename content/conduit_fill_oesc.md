@@ -98,7 +98,7 @@ When running high current armoured or metal-sheathed conductors it can induced a
 
 ### Related Knowledge File
 
-[Knowledge File: Maximum Allowable Conductors/Cables in Conduit and Tubing]()
+[Knowledge File: Maximum Allowable Conductors/Cables in Conduit and Tubing](https://jnepeng.sharepoint.com/:w:/s/JNEElectricalPortalTeams/IQD_dpZ_f5oHQ6fAWxmiT_CjAb57hCu7AJd_lmC_tLEvPTM?e=bzHXAI)
 
 ### Related OESC Rules
 
