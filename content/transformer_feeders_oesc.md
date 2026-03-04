@@ -68,11 +68,11 @@ $$  I_{\text{FLC}} = \frac{75{,}000}{\sqrt{3}\cdot 600} \approx 73.169 \text{A} 
 
 From Table 5A, for 75°C Insulation @ 40°C Ambient, temperature correction factor is: *0.88*
 
-$$  I_{\text{FLC}}' = \frac{1.25 \cdot I_{\text{prim}}}{0.88} = \frac{1.25 \cdot 73.169}{0.88} /approx 102.5 \text{A}  $$
+$$  I_{\text{FLC}}' = \frac{1.25 \cdot I_{\text{prim}}}{0.88} = \frac{1.25 \cdot 73.169}{0.88} \approx 102.5 \text{A}  $$
 
 ### Conductor Size Selection
 
-With out amapcity target of 102.5, we check Table 1 75°C column and select **#4 AWG** as our feeder size.
+With out amapacity target of 102.5 A, we check Table 1 @ 75°C, and select **#4 AWG** as our feeder size.
 
 ---
 ## Appendix
