@@ -89,7 +89,7 @@ RLC for compressors
 ## Appendix
 
 ### Related Knowledge File
-
+[Design Basis — Calculations: Motor Protection](https://jnepeng.sharepoint.com/:w:/s/JNEElectricalPortalTeams/IQCXVHdd4QCvQJZdJh_U0PmVAUMoccLRBfe8SBMf7WTRXpo?e=oWNutN)<br/>
 [Knowledge File - OESC: Section 28 Motor and Generators](https://jnepeng.sharepoint.com/:b:/s/JNEElectricalPortalTeams/IQAXnWzLgtMmR61hoesUWqmpAXLI_p34pKUoeB9wE2W_eBs?e=cBCsY6)
 
 ### Related OESC Rules
