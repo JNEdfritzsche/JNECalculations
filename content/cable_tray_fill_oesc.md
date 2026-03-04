@@ -121,7 +121,7 @@ $$ \text{Total fill} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} =
 [Knowledge File: Electrical Cable Tray Basics](https://jnepeng.sharepoint.com/:b:/s/JNEElectricalPortalTeams/IQBtTHP_lg3JQJIxvLmY4aO0ASu8wD0xU1vlKVAghLyceGM?e=4hsiZl)<br/>
 [Knowledge File: Cable Tray Fill Calculations](https://jnepeng.sharepoint.com/:w:/s/JNEElectricalPortalTeams/IQDv0upg_n7VR6T_52A_DDI4Ae_oKjCl7_EWnXslImvY5HA?e=LyVdMO) <br/>
 <!--Finish Revision
-[Design Basis — Calculations: Cable Tray]()<br/>-->
+[Design Basis — Calculations: Cable Tray]()--><br/>
 Knowledge File Sharing Session: Cable Tray Supports
 
 ### Related OESC Rules
