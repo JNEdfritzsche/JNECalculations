@@ -67,7 +67,7 @@ To determine which derating factors to apply and their exceptions, the reference
 
 ### Related Knowledge Files
 
-[Knowledge File — OESC: Section 4 Conductors]() </br>
+[Knowledge File — OESC: Section 4 Conductors](https://jnepeng.sharepoint.com/:b:/s/JNEElectricalPortalTeams/IQBX__AeZwFdTaYRIpekMk53AST1Z1fmbLyJuMdhL2C3csc?e=siODjS) </br>
 [Knowledge File — Conductor and Cable Derating]()
 
 ### Related OESC Rules
