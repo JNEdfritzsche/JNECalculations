@@ -63,7 +63,27 @@ To determine which derating factors to apply and their exceptions, the reference
 </div>
 
 ---
-# Related Reading
+## Appendix
 
-Knowledge File — OESC: Section 4 Conductors </br>
-Knowledge File — Conductor and Cable Derating
+### Related Knowledge Files
+
+[Knowledge File — OESC: Section 4 Conductors]() </br>
+[Knowledge File — Conductor and Cable Derating]()
+
+### Related OESC Rules
+
+Rule 4-004 — Ampacity of Wires and Cables<br/>
+Rule 4-006 — Temperature Limitations
+
+
+### Related OESC Tables
+
+Table 1/2 — Single Conductor ampacities for Copper/Aluminum <br/>
+Table 3/4 — Multi-Conductor ampacities for Copper/Aluminum <br/.
+Table 5A — Conductor Ambient Temperature Correction Factors <br/>
+Table 5B — Single Conductor Spacing Correction Factors <br/>
+Table 5C — Multi-Conductor Group Correction Factors <br/>
+Table 5D — Cable tray Spacing Correction Factors <br/>
+
+
+
