@@ -21,7 +21,7 @@ Fittings are the different kinds of trays that are used in project  such as stra
 
 ### Expansion
 
-Like all metal materials, cable trays experience expansion and contraction during temperature fluctuations. Between two sections of cable tray an expansion joints/guides is used to handle this. Its calculation is dependant on the maximum temperature difference the sections and expected to experience. 
+Like all metal materials, cable trays experience expansion and contraction during temperature fluctuations. Between two sections of cable tray an expansion joints/guides is used to handle this. Its calculation is dependant on the maximum temperature difference the sections are expected to experience. 
 
 ### Typical Dimensions
 
@@ -34,6 +34,7 @@ Trays come in many different manufactured size. Heights, lengths, useable length
 
 ## Clearances
 
+The clearance for cable trays are mostly concerned
 <div align="center">
   
 ![](images/CableTrayClearances.png)
@@ -74,7 +75,7 @@ A 9" tray will suffice.
 
 </div>
 
-To determine tray we simply divide total cable area by usable tray area. Practical dimensions can be found from the manufacturer's catalogue as often a 4" height tray will have a smaller usable area due to the rails (say 3.04").
+To determine tray fil, we simply divide total cable area by usable tray area. Practical dimensions can be found from the manufacturer's catalogue as often a 4" height tray will have a smaller usable height due to the rungs (say 3.04").
 
 $$ \text{Tray fill \%} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} = \frac{9 \cdot \pi (6.615)^2}{77.22 \cdot 228.6}  = \frac{1237.24}{17652.492} = 7 \% $$
 
