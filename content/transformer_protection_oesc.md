@@ -37,7 +37,8 @@ Each ungrounded conductor of the transformer feeder or branch circuit supplying 
 Each ungrounded conductor of the transformer feeder or branch circuit supplying the transformer shall be provided with overcurrent protection rated or set at **not more than 125%** of the rated primary current of the transformer, and this primary overcurrent device shall be considered as protecting secondary conductors rated at **not less than 125%** of the rated secondary current. The OESC outlines an exception to this rule in subrules 2-3 of section 26-254.
 
 ---
-## Other Considerations
+## Considerations
+There are a few things that must be accounted for when dealing with transformer protection. During the design phase, things such as transformer size and overcurrent device size will be calculated.
 
 ### Maximum Circuit Loading
 OESC Section 8-104 states that the ampere rating of a consumer’s service, feeder, or branch circuit shall be the lesser of the rating of the overcurrent device protecting the circuit or the ampacity of the conductors. It also says that the calculated load in a circuit shall not exceed the ampere rating of the circuit. The calculated load in a consumer's service, feeder, or branch circuit shall be considered a continuous load unless it can be shown that in normal operation it will not persist for:
@@ -53,6 +54,7 @@ The possible connections are Delta-Delta (Dd), Wye-Wye (Yy), Wye-Delta (Yd), Del
 
 ---
 ## Example
+<!-split into three better section-->
 
 ### Assumptions
 - The ambient temperature is 40 °C
