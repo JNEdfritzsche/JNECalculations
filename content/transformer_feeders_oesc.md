@@ -15,6 +15,7 @@ Transformers differ fundamentally from utilization equipment such as motors, hea
 - Because of this, the OESC treats the transformer feeder as part of the transformer system, not a supply conductor
 - The feeder must therefore be sized assuming the transformer can and may operate at its nameplate rating indefinitely
 
+---
 ## Design Methodology
 
 ### Base Current Determination
@@ -44,7 +45,7 @@ Final design checks shall include:
 - Voltage drop compliance  
 - Adequate fault-clearing capability
 -->
-
+---
 ## Primary Feeder Sizing Example
 
 Properly size the primary feeder of a transformer with the following information:
