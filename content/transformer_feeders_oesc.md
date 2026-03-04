@@ -79,7 +79,7 @@ With out amapacity target of 102.5 A, we check Table 1 @ 75°C, and select **#4 
 ## Appendix
 
 ### Related Knowledge Files:
-[Knowledge File — OESC: Section 4 Conductors]() <br/>
+[Knowledge File — OESC: Section 4 Conductors](https://jnepeng.sharepoint.com/:b:/s/JNEElectricalPortalTeams/IQBX__AeZwFdTaYRIpekMk53AST1Z1fmbLyJuMdhL2C3csc?e=siODjS) <br/>
 [Knowledge File — OESC: Section 26 Installation of Electrical Equipment]() <br/>
 [Design Basis — Calculations: Transformer Feeder Calculation]()
 
