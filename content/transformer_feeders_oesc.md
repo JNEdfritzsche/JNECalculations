@@ -72,7 +72,7 @@ $$  I_{\text{FLC}}' = \frac{1.25 \cdot I_{\text{prim}}}{0.88} = \frac{1.25 \cdot
 
 ### Conductor Size Selection
 
-With out amapcity target of 102.5 A, we check Table 1 @ 75°C, and select **#4 AWG** as our feeder size.
+With out amapacity target of 102.5 A, we check Table 1 @ 75°C, and select **#4 AWG** as our feeder size.
 
 ---
 ## Appendix
