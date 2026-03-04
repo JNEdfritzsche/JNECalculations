@@ -375,6 +375,8 @@ def calc_fla(kva, volts, phase):
 # ----------------------------
 ALL_PAGES = [
     "Home",
+    "Conductors",
+    "Voltage Drop",
     "Transformer Protection",
     "Transformer Feeders",
     "Grounding/Bonding Conductor Sizing",
@@ -385,8 +387,6 @@ ALL_PAGES = [
     "Heat Trace",
     "Demand Load",
     "Power Factor Correction",
-    "Voltage Drop",
-    "Conductors",
     "Table Library",
 ]
 
