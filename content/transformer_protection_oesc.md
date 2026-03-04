@@ -199,6 +199,11 @@ Based on the calculated primary full-load currents and applicable OESC rules, th
 ---
 ## Appendix
 
+### Related Knowledge Files
+
+[Knowledge File — OESC: Section 26 Installation of Electrical Equipment](https://jnepeng.sharepoint.com/:b:/s/JNEElectricalPortalTeams/IQAr5W2CWdUbQb-26XCqmNYqAfifLPPITzkxySXkq7Q7sGQ?e=ZFTBIb) <br/>
+[Design Basis — Calculations: Transformer Protection Calculation](https://jnepeng.sharepoint.com/:w:/s/JNEElectricalPortalTeams/IQDKl-wkmkujQb_ZfZKZZwfDAXYYVGNWrV_TkJmXlw8w2Ac?e=BAApqB)
+
 ### Related OESC Rules
 
 Rule 8-104 — Maximum circuit loading </br>
