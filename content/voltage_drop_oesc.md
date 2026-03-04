@@ -41,21 +41,32 @@ This equation assumes you already selected a conductor size and are verifying th
 
 If determining the required conductor size or maximum allowable length for a specified voltage drop, rearranged as needed:
 
-### Conductor sizing (solve for k)
+### Conductor sizing
 
 $$
 K \leq \frac{V_D \cdot 1000}{I \cdot L \cdot f}
 $$
 
-### Maximum length (solve for L)
+### Maximum length
 
 $$
 L \leq \frac{V_D \cdot 1000}{I \cdot K \cdot f}
 $$
 
 ---
+## Appendix
 
-## References
+### Related Knowledge Files
 
-- [Design Basis – Calculations: Motor Feeder]()
-- [Knowledge File – OESC: Section 4 Conductors]()
+[Knowledge File — OESC: Section 4 Conductors]() </br>
+[Design Basis – Calculations: Motor Feeder]()
+
+### Related OESC Rules
+
+Rule 8-102 — Voltge drop limitations<br/>
+
+### Related OESC Tables
+
+Table D3 — K-values for calculating voltage drop 
+
+
