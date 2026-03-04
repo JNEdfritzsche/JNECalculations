@@ -195,15 +195,15 @@ Based on the calculated primary full-load currents and applicable OESC rules, th
 - 90 A rated circuit breaker or fuse
 
 ---
-# Appendix
+## Appendix
 
-## Related OESC Rules
+### Related OESC Rules
 
 Rule 8-104 — Maximum circuit loading </br>
 Rule 26-250 — Overcurrent protection, transformers rated >750 V </br>
 Rule 26-252 — Overcurrent protection, transformers rated <750 V, other than dry type </br>
 Rule 26-254 — Overcurrent protection. dry-type transformers rated <750 V </br>
 
-## Related OESC Tables
+### Related OESC Tables
 Table 13 — Standard Overcurrent Device Ratings</br>
 Table 50 — Overcurrent protection, transformers rated > 750V
