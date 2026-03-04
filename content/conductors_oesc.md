@@ -5,7 +5,7 @@ The main area of concern for conductors is sizing. When properly sizing conducto
 ---
 ## Base Ampacity
 
-At the elementary level, running conductors/cables through free air at 30°C, we use Tables 1/3 for single conductors and Tables 2/4 for 1-3 multi-conductor cables (or 1-3 single conductors in a raceway). Since many rules consider upsizing the cable according to a service factor, it is generally recommended to upsize 125% for most loads.
+At the elementary level, running conductors/cables through free air at 30°C, we use **Tables 1/3** for single conductors and **Tables 2/4** for 1-3 multi-conductor cables (or 1-3 single conductors in a raceway). Since many rules consider upsizing the cable according to a service factor, it is generally recommended to upsize 125% for most loads.
 
 ---
 ## Temperature Derating
@@ -21,7 +21,7 @@ Another consideration for temperature is the equipment rating. For instance, whe
 ---
 ## Conduit Derating
 
-Often conduits will house multiple conductors, in which case, you would apply Table 5C factor to Table 2/4.
+Often conduits will house multiple conductors, in which case, you would apply **Table 5C** factor to Table 2/4.
 
 ---
 ## Spacing Derating
@@ -30,11 +30,11 @@ Cables can be spaced in three ways based on the diameter of the largest cable in
 
 ### Spacing <25% Diameter
 
-For close spacing, it can be applied in two different way depending on the configuration, but some cases are defined to be functionally equivalent (FE) to each other. For 1-4 single conductors in free air, you would apply Table 5B factor to Table 1/3. Five or more single conductors in free air with close spacing is FE to 4 or more single conductors in a raceway/cable, where you would apply Table 5C factor to Table 2/4
+For close spacing, it can be applied in two different way depending on the configuration, but some cases are defined to be functionally equivalent (FE) to each other. For 1-4 single conductors in free air, you would apply **Table 5B** factor to Table 1/3. Five or more single conductors in free air with close spacing is FE to 4 or more single conductors in a raceway/cable, where you would apply Table 5C factor to Table 2/4
 
 ### 25% Diameter < Spacing < 100% Diameter
 
-This spacing is uncommon, but for single conductors in this configuration you would apply correction factor from Table 5D, according to Rule 4-004 8).
+This spacing is uncommon, typically found in cable trays, but for single conductors in this configuration you would apply correction factor from **Table 5D**, according to Rule 4-004 8).
 
 ### Spacing >100% Diameter
 
