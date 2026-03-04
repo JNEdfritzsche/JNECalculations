@@ -80,8 +80,8 @@ With out amapacity target of 102.5 A, we check Table 1 @ 75°C, and select **#4 
 
 ### Related Knowledge Files:
 [Knowledge File — OESC: Section 4 Conductors](https://jnepeng.sharepoint.com/:b:/s/JNEElectricalPortalTeams/IQBX__AeZwFdTaYRIpekMk53AST1Z1fmbLyJuMdhL2C3csc?e=siODjS) <br/>
-[Knowledge File — OESC: Section 26 Installation of Electrical Equipment]() <br/>
-[Design Basis — Calculations: Transformer Feeder Calculation]()
+[Knowledge File — OESC: Section 26 Installation of Electrical Equipment](https://jnepeng.sharepoint.com/:b:/s/JNEElectricalPortalTeams/IQAr5W2CWdUbQb-26XCqmNYqAfifLPPITzkxySXkq7Q7sGQ?e=ZFTBIb) <br/>
+[Design Basis — Calculations: Transformer Feeder Calculation](https://jnepeng.sharepoint.com/:w:/s/JNEElectricalPortalTeams/IQBmWQP7oRhwQJpoUj2syI31ASaPrwBGzyvhWrQlZzT9228?e=XKoJPh)
 
 ### Related OESC Rules
 Rule 26-256 — Conductor size for transformers <br/>
