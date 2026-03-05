@@ -1772,6 +1772,322 @@ elif page == "Motor Feeder":
             eq(r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \eta}")
         eq(r"I_{target}=k\cdot I_{FLA}")
 
+        # =====================================================================
+        # Export Motor Feeder Report
+        # =====================================================================
+        st.divider()
+        st.markdown("### 📄 Export calculation report")
+
+        OMML_MF_EQUATIONS = {
+            r"I_{FLA}=\frac{HP\cdot 745.7}{\sqrt{3}\cdot V_{LL}\cdot \cos\theta\cdot \eta}": r"""
+        <m:sSub>
+            <m:e><m:r><m:t>I</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>FLA</m:t></m:r></m:sub>
+        </m:sSub>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num>
+                <m:r><m:t>HP</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>745.7</m:t></m:r>
+            </m:num>
+            <m:den>
+                <m:r><m:t>√3 </m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:sSub>
+                    <m:e><m:r><m:t>V</m:t></m:r></m:e>
+                    <m:sub><m:r><m:t>LL</m:t></m:r></m:sub>
+                </m:sSub>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>cos θ</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>η</m:t></m:r>
+            </m:den>
+        </m:f>
+        """,
+            r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \cos\theta\cdot \eta}": r"""
+        <m:sSub>
+            <m:e><m:r><m:t>I</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>FLA</m:t></m:r></m:sub>
+        </m:sSub>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num>
+                <m:r><m:t>HP</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>745.7</m:t></m:r>
+            </m:num>
+            <m:den>
+                <m:r><m:t>V</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>cos θ</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>η</m:t></m:r>
+            </m:den>
+        </m:f>
+        """,
+            r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \eta}": r"""
+        <m:sSub>
+            <m:e><m:r><m:t>I</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>FLA</m:t></m:r></m:sub>
+        </m:sSub>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num>
+                <m:r><m:t>HP</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>745.7</m:t></m:r>
+            </m:num>
+            <m:den>
+                <m:r><m:t>V</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>η</m:t></m:r>
+            </m:den>
+        </m:f>
+        """,
+            r"I_{target}=k\cdot I_{FLA}": r"""
+        <m:sSub>
+            <m:e><m:r><m:t>I</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>target</m:t></m:r></m:sub>
+        </m:sSub>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:r><m:t>k</m:t></m:r>
+        <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+        <m:sSub>
+            <m:e><m:r><m:t>I</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>FLA</m:t></m:r></m:sub>
+        </m:sSub>
+        """,
+        }
+
+        def build_mf_word_report():
+            doc = Document("content/files/Template.docx")
+            remove_leading_blank_paragraphs(doc)
+
+            table = doc.sections[0].header.tables[0]
+            append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
+            append_to_value_line(table.cell(0, 4), "#")
+            append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
+            append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
+            append_to_value_line(table.cell(3, 3), "")
+            append_to_value_line(table.cell(3, 4), "")
+            append_to_value_line(table.cell(3, 2), "Motor Feeder Calculation Report")
+
+            # Equations
+            doc.add_heading("Equations", level=1)
+            
+            if phase == "3-phase":
+                p = doc.add_paragraph()
+                p.add_run("Full-Load Current (three-phase): ").bold = True
+                omml = OMML_MF_EQUATIONS.get(r"I_{FLA}=\frac{HP\cdot 745.7}{\sqrt{3}\cdot V_{LL}\cdot \cos\theta\cdot \eta}")
+                if omml is not None:
+                    add_omml_equation_to_paragraph(p, omml)
+            elif phase == "1-phase":
+                p = doc.add_paragraph()
+                p.add_run("Full-Load Current (single-phase): ").bold = True
+                omml = OMML_MF_EQUATIONS.get(r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \cos\theta\cdot \eta}")
+                if omml is not None:
+                    add_omml_equation_to_paragraph(p, omml)
+            else:
+                p = doc.add_paragraph()
+                p.add_run("Full-Load Current (DC motor): ").bold = True
+                omml = OMML_MF_EQUATIONS.get(r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \eta}")
+                if omml is not None:
+                    add_omml_equation_to_paragraph(p, omml)
+
+            p = doc.add_paragraph()
+            p.add_run("Conductor Sizing (with feeder factor): ").bold = True
+            omml = OMML_MF_EQUATIONS.get(r"I_{target}=k\cdot I_{FLA}")
+            if omml is not None:
+                add_omml_equation_to_paragraph(p, omml)
+
+            # Assumptions
+            doc.add_heading("Assumptions", level=1)
+            mf_assumptions = [
+                f"Motor type: {phase}.",
+                f"Motor power: {hp} HP.",
+                f"Voltage: {volts} V" + (" (line-to-line for three-phase)." if phase == "3-phase" else "."),
+                f"Power factor: {pf:.2f}" if phase != "DC motor" else "Power factor: N/A (DC motor).",
+                f"Efficiency: {eff}%.",
+                f"Sizing factor: {sizing_mult}.",
+                "Full-load current (I_FLA) is calculated from motor nameplate data.",
+                "Conductor ampacity target is I_FLA multiplied by the sizing factor k.",
+            ]
+            for a in mf_assumptions:
+                doc.add_paragraph(a, style="CalcBullet")
+
+            # Inputs
+            doc.add_heading("Inputs", level=1)
+            mf_inputs = [
+                ("Motor Type", phase),
+                ("Power (HP)", str(hp)),
+                ("Voltage (V)", str(volts)),
+                ("Power Factor", f"{pf:.2f}" if phase != "DC motor" else "N/A (DC)"),
+                ("Efficiency (%)", str(eff)),
+                ("Sizing Factor (k)", sizing_mult),
+            ]
+            
+            t = doc.add_table(rows=1, cols=2)
+            hdr = t.rows[0].cells
+            p = hdr[0].paragraphs[0]
+            p.clear()
+            r = p.add_run("Parameter")
+            r.bold = True
+            p = hdr[1].paragraphs[0]
+            p.clear()
+            r = p.add_run("Value")
+            r.bold = True
+
+            for param, val in mf_inputs:
+                row = t.add_row().cells
+                row[0].text = str(param)
+                row[1].text = str(val)
+
+            set_table_borders(t)
+
+            # Results
+            doc.add_heading("Results", level=1)
+            mf_results = [
+                ("Full-Load Current (I_FLA)", f"{ifla:.4f} A" if ifla is not None else "—"),
+                ("Conductor Ampacity Target", f"{target:.4f} A" if target is not None else "—"),
+            ]
+
+            t = doc.add_table(rows=1, cols=2)
+            hdr = t.rows[0].cells
+            p = hdr[0].paragraphs[0]
+            p.clear()
+            r = p.add_run("Parameter")
+            r.bold = True
+            p = hdr[1].paragraphs[0]
+            p.clear()
+            r = p.add_run("Value")
+            r.bold = True
+
+            for param, val in mf_results:
+                row = t.add_row().cells
+                row[0].text = str(param)
+                row[1].text = str(val)
+
+            set_table_borders(t)
+
+            style = doc.styles["Normal"]
+            style.font.name = "Calibri"
+            style.font.size = Pt(11)
+
+            bio = io.BytesIO()
+            doc.save(bio)
+            return bio.getvalue()
+
+        def build_mf_excel_report():
+            def _safe_float(x):
+                try:
+                    return None if x is None else float(x)
+                except Exception:
+                    return None
+
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Motor Feeder"
+
+            ws["A1"] = "Motor Feeder Calculation Report"
+            ws["A1"].font = Font(bold=True, size=14)
+            ws["A3"] = "Generated"
+            ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            row = 5
+            ws[f"A{row}"] = "Inputs"
+            ws[f"A{row}"].font = Font(bold=True)
+
+            row += 1
+            mf_inputs = [
+                ("Motor Type", phase),
+                ("Power (HP)", hp),
+                ("Voltage (V)", volts),
+                ("Power Factor", pf if phase != "DC motor" else "N/A (DC)"),
+                ("Efficiency (%)", eff),
+                ("Sizing Factor (k)", float(sizing_mult)),
+            ]
+            
+            for param, val in mf_inputs:
+                ws[f"A{row}"] = param
+                ws[f"B{row}"] = val
+                row += 1
+
+            row += 1
+            ws[f"A{row}"] = "Results"
+            ws[f"A{row}"].font = Font(bold=True)
+
+            row += 1
+            mf_results = [
+                ("Full-Load Current (A)", _safe_float(ifla)),
+                ("Conductor Ampacity Target (A)", _safe_float(target)),
+            ]
+
+            for param, val in mf_results:
+                ws[f"A{row}"] = param
+                ws[f"B{row}"] = val
+                row += 1
+
+            # Auto-size columns
+            for col in ws.columns:
+                max_len = 0
+                col_letter = get_column_letter(col[0].column)
+                for cell in col:
+                    try:
+                        v = "" if cell.value is None else str(cell.value)
+                        max_len = max(max_len, len(v))
+                    except Exception:
+                        pass
+                ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
+
+            bio = io.BytesIO()
+            wb.save(bio)
+            return bio.getvalue()
+
+        # Export buttons
+        can_export_mf = (ifla is not None) and (target is not None)
+
+        exp_c1, exp_c2 = st.columns([1, 1], gap="large")
+        with exp_c1:
+            if st.button("Prepare Word report (.docx)", key="mf_build_docx"):
+                try:
+                    st.session_state["mf_docx_bytes"] = build_mf_word_report()
+                    st.success("Word report prepared. Use the download button below.")
+                except Exception as e:
+                    st.error(f"Failed to build Word report: {e}")
+
+            docx_bytes_mf = st.session_state.get("mf_docx_bytes", None)
+            st.download_button(
+                "⬇️ Download Word report (.docx)",
+                data=docx_bytes_mf if docx_bytes_mf else b"",
+                file_name="Motor_Feeder_Report.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                disabled=(not can_export_mf) or (docx_bytes_mf is None),
+                key="mf_download_docx",
+            )
+
+        with exp_c2:
+            if st.button("Prepare Excel report (.xlsx)", key="mf_build_xlsx"):
+                try:
+                    st.session_state["mf_xlsx_bytes"] = build_mf_excel_report()
+                    st.success("Excel report prepared. Use the download button below.")
+                except Exception as e:
+                    st.error(f"Failed to build Excel report: {e}")
+
+            xlsx_bytes_mf = st.session_state.get("mf_xlsx_bytes", None)
+            st.download_button(
+                "⬇️ Download Excel report (.xlsx)",
+                data=xlsx_bytes_mf if xlsx_bytes_mf else b"",
+                file_name="Motor_Feeder_Report.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                disabled=(not can_export_mf) or (xlsx_bytes_mf is None),
+                key="mf_download_xlsx",
+            )
+
+        st.caption(
+            "Export includes: equations, assumptions, inputs, full-load current calculation, and conductor sizing target."
+        )
+
 
 # ============================
 # 6) Cable Tray Size & Fill & Bend Radius
