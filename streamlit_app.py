@@ -1665,23 +1665,93 @@ elif page == "Motor Protection":
             render_md_safe("motor_protection_examples_nec.md")
 
     with calc_tab:
-        header("Motor Protection Calculator", "Estimate overload and short-circuit device settings.")
+        header("Motor Protection Calculator", "Calculate motor overcurrent device using Table 29 flowchart.")
         show_code_note(code_mode)
 
-        fla = st.number_input("Motor full-load amps (FLA)", min_value=0.1, value=28.0, step=0.1)
-        ol_mult = st.selectbox("Overload multiplier (k)", ["1.15", "1.25"], index=1)
-        sc_mult = st.selectbox("Short-circuit multiplier (m)", ["1.75", "2.50"], index=0)
+        st.markdown("### Motor Specifications")
+        fla = st.number_input("Motor full-load current (FLA) (A)", min_value=0.1, value=28.0, step=0.1)
 
-        ol = fla * float(ol_mult)
-        sc = fla * float(sc_mult)
+        # Flowchart-based dropdown navigation for Table 29
+        st.markdown("### Table 29 Selection — Follow the flowchart")
+        
+        # Step 1: Voltage system selection
+        voltage_system = st.selectbox(
+            "Voltage System",
+            ["1Φ AC", "3Φ AC", "DC"],
+            index=1,
+            key="mp_voltage_system"
+        )
 
-        c1, c2 = st.columns(2)
-        c1.metric("Overload setting (A)", fmt(ol, "A"))
-        c2.metric("Short-circuit device (A)", fmt(sc, "A"))
+        table_29_row = None
+        table_29_row_desc = None
+        multiplier = None
 
-        st.markdown("### Equations used")
-        eq(r"I_{OL}=k\cdot I_{FLA}")
-        eq(r"I_{SC}=m\cdot I_{FLA}")
+        if voltage_system == "1Φ AC":
+            # Table 29 Row 1: 1Φ AC
+            table_29_row = 1
+            table_29_row_desc = "1Φ AC (Row 1)"
+            multiplier = 1.75
+
+        elif voltage_system == "DC":
+            # Table 29 Row 6: DC
+            table_29_row = 6
+            table_29_row_desc = "DC (Row 6)"
+            multiplier = 1.75
+
+        else:  # 3Φ AC
+            # Step 2: Motor Type for 3Φ AC
+            motor_type = st.selectbox(
+                "Motor Type",
+                ["Squirrel-cage or Synchronous", "Wound Rotor"],
+                index=0,
+                key="mp_motor_type"
+            )
+
+            if motor_type == "Wound Rotor":
+                # Table 29 Row 5: Wound Rotor
+                table_29_row = 5
+                table_29_row_desc = "Wound Rotor (Row 5)"
+                multiplier = 1.75
+
+            else:  # Squirrel-cage or Synchronous
+                # Step 3: Starter or Controller type
+                starter_type = st.selectbox(
+                    "Starter or Controller Type",
+                    ["Auto-TX or Star-Delta", "FV&R (Full Voltage & Running)"],
+                    index=0,
+                    key="mp_starter_type"
+                )
+
+                if starter_type == "FV&R (Full Voltage & Running)":
+                    # Table 29 Row 2: FV&R
+                    table_29_row = 2
+                    table_29_row_desc = "FV&R (Row 2)"
+                    multiplier = 1.75
+
+                else:  # Auto-TX or Star-Delta
+                    # Step 4: Check if FLA > 30A
+                    if fla > 30.0:
+                        # Table 29 Row 4: Auto-TX/Star-Delta with FLA > 30A
+                        table_29_row = 4
+                        table_29_row_desc = "Auto-TX or Star-Delta, FLA > 30A (Row 4)"
+                        multiplier = 2.2
+                    else:
+                        # Table 29 Row 3: Auto-TX/Star-Delta with FLA ≤ 30A
+                        table_29_row = 3
+                        table_29_row_desc = "Auto-TX or Star-Delta, FLA ≤ 30A (Row 3)"
+                        multiplier = 1.75
+
+        # Calculate OCPD
+        if multiplier is not None:
+            ocpd_raw = fla * multiplier
+            st.markdown("### Calculation Result")
+            st.info(f"**Table 29 {table_29_row_desc}** → Multiplier: **{multiplier}×**")
+            st.metric("Overcurrent Device Setting (raw)", fmt(ocpd_raw, "A"))
+            st.caption("Round to the next standard overcurrent device rating from Table 13.")
+
+            st.markdown("### Equation used")
+            eq(r"I_{OCPD}=k\cdot I_{FLA}")
+            st.caption(f"where k = {multiplier} (from Table 29 Row {table_29_row})")
 
 
 # ============================
