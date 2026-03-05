@@ -759,6 +759,421 @@ if page == "Transformer Protection":
                             "These multipliers match the attached NEC calculation 'Primary + Secondary' scheme for ≤1000 V with currents ≥ 9A."
                         )
 
+        # =====================================================================
+        # Export Transformer Protection Report
+        # =====================================================================
+        st.divider()
+        st.markdown("### 📄 Export calculation report")
+
+        OMML_TP_EQUATIONS = {
+            r"I=\frac{S}{\sqrt{3}\,V}": r"""
+        <m:r><m:t>I</m:t></m:r>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num><m:r><m:t>S</m:t></m:r></m:num>
+            <m:den>
+                <m:r><m:t>√3 </m:t></m:r>
+                <m:r><m:t>V</m:t></m:r>
+            </m:den>
+        </m:f>
+        """,
+            r"I=\frac{S}{V}": r"""
+        <m:r><m:t>I</m:t></m:r>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num><m:r><m:t>S</m:t></m:r></m:num>
+            <m:den><m:r><m:t>V</m:t></m:r></m:den>
+        </m:f>
+        """,
+        }
+
+        def build_tp_word_report():
+            doc = Document("content/files/Template.docx")
+            remove_leading_blank_paragraphs(doc)
+
+            table = doc.sections[0].header.tables[0]
+            append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
+            append_to_value_line(table.cell(0, 4), "#")
+            append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
+            append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
+            append_to_value_line(table.cell(3, 3), "")
+            append_to_value_line(table.cell(3, 4), "")
+            append_to_value_line(table.cell(3, 2), "Transformer Protection Calculation Report")
+
+            # Equations
+            doc.add_heading("Equations", level=1)
+            
+            if phase == "3Φ":
+                p = doc.add_paragraph()
+                p.add_run("Full-Load Current (three-phase): ").bold = True
+                omml = OMML_TP_EQUATIONS.get(r"I=\frac{S}{\sqrt{3}\,V}")
+                if omml is not None:
+                    add_omml_equation_to_paragraph(p, omml)
+            else:
+                p = doc.add_paragraph()
+                p.add_run("Full-Load Current (single-phase): ").bold = True
+                omml = OMML_TP_EQUATIONS.get(r"I=\frac{S}{V}")
+                if omml is not None:
+                    add_omml_equation_to_paragraph(p, omml)
+
+            # Assumptions
+            doc.add_heading("Assumptions", level=1)
+            tp_assumptions = [
+                f"System: {phase} (Three-phase)" if phase == "3Φ" else f"System: {phase} (Single-phase)",
+                f"Transformer rating: {kva} kVA.",
+                f"Primary voltage: {vpri} V.",
+                f"Secondary voltage: {vsec} V.",
+                f"Nameplate FLA used: {use_nameplate}.",
+                f"Code standard: {code_mode}.",
+                "OCPD multipliers and allowed ratings follow the attached standard calculation document.",
+                "Rounding to standard/next higher rating: Yes." if round_to_std else "Rounding to standard/next higher rating: No.",
+            ]
+            for a in tp_assumptions:
+                doc.add_paragraph(a, style="CalcBullet")
+
+            # Inputs
+            doc.add_heading("Inputs", level=1)
+            tp_inputs = [
+                ("System Type", phase),
+                ("Transformer Rating (kVA)", str(kva)),
+                ("Primary Voltage (V)", str(vpri)),
+                ("Secondary Voltage (V)", str(vsec)),
+                ("Nameplate FLA Used", "Yes" if use_nameplate else "No"),
+            ]
+            
+            t = doc.add_table(rows=1, cols=2)
+            hdr = t.rows[0].cells
+            p = hdr[0].paragraphs[0]
+            p.clear()
+            r = p.add_run("Parameter")
+            r.bold = True
+            p = hdr[1].paragraphs[0]
+            p.clear()
+            r = p.add_run("Value")
+            r.bold = True
+
+            for param, val in tp_inputs:
+                row = t.add_row().cells
+                row[0].text = str(param)
+                row[1].text = str(val)
+
+            set_table_borders(t)
+
+            # Calculated FLA
+            doc.add_heading("Full-Load Currents", level=1)
+            tp_fla = [
+                ("Primary FLA (A)", f"{Ip:.4f}" if Ip is not None else "—"),
+                ("Secondary FLA (A)", f"{Is:.4f}" if Is is not None else "—"),
+            ]
+
+            t = doc.add_table(rows=1, cols=2)
+            hdr = t.rows[0].cells
+            p = hdr[0].paragraphs[0]
+            p.clear()
+            r = p.add_run("Current")
+            r.bold = True
+            p = hdr[1].paragraphs[0]
+            p.clear()
+            r = p.add_run("Value")
+            r.bold = True
+
+            for param, val in tp_fla:
+                row = t.add_row().cells
+                row[0].text = str(param)
+                row[1].text = str(val)
+
+            set_table_borders(t)
+
+            # Code-based protection scheme
+            doc.add_heading("Code-Based Protection Scheme", level=1)
+            
+            if code_mode == "OESC":
+                tp_code_info = [
+                    ("Code Standard", "OESC"),
+                    ("Transformer Type", xfmr_type),
+                    ("Voltage Class", voltage_class),
+                    ("Rule Selected", rule_path),
+                    ("Round to Standard", "Yes" if round_to_std else "No"),
+                ]
+            else:
+                tp_code_info = [
+                    ("Code Standard", "NEC"),
+                    ("Case Selected", nec_case),
+                    ("Round to Standard", "Yes" if round_to_std else "No"),
+                ]
+                if nec_case.startswith("450.3(B)"):
+                    tp_code_info.append(("Protection Scheme", scheme if scheme is not None else "—"))
+
+            t = doc.add_table(rows=1, cols=2)
+            hdr = t.rows[0].cells
+            p = hdr[0].paragraphs[0]
+            p.clear()
+            r = p.add_run("Parameter")
+            r.bold = True
+            p = hdr[1].paragraphs[0]
+            p.clear()
+            r = p.add_run("Value")
+            r.bold = True
+
+            for param, val in tp_code_info:
+                row = t.add_row().cells
+                row[0].text = str(param)
+                row[1].text = str(val)
+
+            set_table_borders(t)
+
+            # Protection Results (vary by code/rule)
+            doc.add_heading("Calculated OCPD Limits", level=1)
+            
+            if code_mode == "OESC":
+                # Build results for OESC rule
+                tp_results = []
+                if rule_path.startswith("26-250"):
+                    if Ip is not None:
+                        raw_fuse = 1.50 * Ip
+                        raw_brk = 3.00 * Ip
+                        std_fuse = next_standard(raw_fuse, OESC_TABLE13_STANDARD) if round_to_std else raw_fuse
+                        std_brk = next_standard(raw_brk, OESC_TABLE13_STANDARD) if round_to_std else raw_brk
+                        tp_results.append(("Primary Fuse (150%)", f"{raw_fuse:.2f}A", f"{std_fuse:.2f}A" if std_fuse else "exceeds list"))
+                        tp_results.append(("Primary Breaker (300%)", f"{raw_brk:.2f}A", f"{std_brk:.2f}A" if std_brk else "exceeds list"))
+                        
+                elif rule_path.startswith("26-252") and "direct primary" in rule_path.lower():
+                    if Ip is not None:
+                        if Ip < 2.0:
+                            mult = 3.00
+                        elif Ip < 9.0:
+                            mult = 1.67
+                        else:
+                            mult = 1.50
+                        raw_primary = mult * Ip
+                        std_primary = next_standard(raw_primary, OESC_TABLE13_STANDARD) if round_to_std else raw_primary
+                        tp_results.append(("Primary OCPD (direct)", f"{raw_primary:.2f}A ({mult:.2f}×)", f"{std_primary:.2f}A" if std_primary else "exceeds list"))
+                        
+                elif rule_path.startswith("26-252") and "secondary device" in rule_path.lower():
+                    if (Ip is not None) and (Is is not None):
+                        raw_sec = 1.25 * Is
+                        raw_pri = 3.00 * Ip
+                        std_sec = next_standard(raw_sec, OESC_TABLE13_STANDARD) if round_to_std else raw_sec
+                        std_pri = next_standard(raw_pri, OESC_TABLE13_STANDARD) if round_to_std else raw_pri
+                        tp_results.append(("Secondary OCPD (125%)", f"{raw_sec:.2f}A", f"{std_sec:.2f}A" if std_sec else "exceeds list"))
+                        tp_results.append(("Primary Feeder OCPD (300%)", f"{raw_pri:.2f}A", f"{std_pri:.2f}A" if std_pri else "exceeds list"))
+                        
+                elif rule_path.startswith("26-254") and "direct primary" in rule_path.lower():
+                    if Ip is not None:
+                        raw_primary = 1.25 * Ip
+                        std_primary = next_standard(raw_primary, OESC_TABLE13_STANDARD) if round_to_std else raw_primary
+                        tp_results.append(("Primary OCPD (125%)", f"{raw_primary:.2f}A", f"{std_primary:.2f}A" if std_primary else "exceeds list"))
+                        
+                elif rule_path.startswith("26-254") and "secondary device" in rule_path.lower():
+                    if (Ip is not None) and (Is is not None):
+                        raw_sec = 1.25 * Is
+                        raw_pri = 3.00 * Ip
+                        std_sec = next_standard(raw_sec, OESC_TABLE13_STANDARD) if round_to_std else raw_sec
+                        std_pri = next_standard(raw_pri, OESC_TABLE13_STANDARD) if round_to_std else raw_pri
+                        tp_results.append(("Secondary OCPD (125%)", f"{raw_sec:.2f}A", f"{std_sec:.2f}A" if std_sec else "exceeds list"))
+                        tp_results.append(("Primary Feeder OCPD (300%)", f"{raw_pri:.2f}A", f"{std_pri:.2f}A" if std_pri else "exceeds list"))
+
+            else:
+                # Build results for NEC case
+                tp_results = []
+                if nec_case.startswith("450.3(A)"):
+                    if (Ip is not None) and (Is is not None):
+                        raw_pri_brk = 6.00 * Ip
+                        raw_pri_fuse = 3.00 * Ip
+                        raw_sec_brk = 3.00 * Is
+                        raw_sec_fuse = 2.50 * Is
+                        std_pri_brk = next_standard(raw_pri_brk, NEC_2406A_STANDARD) if round_to_std else raw_pri_brk
+                        std_pri_fuse = next_standard(raw_pri_fuse, NEC_2406A_STANDARD) if round_to_std else raw_pri_fuse
+                        std_sec_brk = next_standard(raw_sec_brk, NEC_2406A_STANDARD) if round_to_std else raw_sec_brk
+                        std_sec_fuse = next_standard(raw_sec_fuse, NEC_2406A_STANDARD) if round_to_std else raw_sec_fuse
+                        tp_results.append(("Primary Breaker (6.00×)", f"{raw_pri_brk:.2f}A", f"{std_pri_brk:.2f}A" if std_pri_brk else "exceeds list"))
+                        tp_results.append(("Primary Fuse (3.00×)", f"{raw_pri_fuse:.2f}A", f"{std_pri_fuse:.2f}A" if std_pri_fuse else "exceeds list"))
+                        tp_results.append(("Secondary Breaker (3.00×)", f"{raw_sec_brk:.2f}A", f"{std_sec_brk:.2f}A" if std_sec_brk else "exceeds list"))
+                        tp_results.append(("Secondary Fuse (2.50×)", f"{raw_sec_fuse:.2f}A", f"{std_sec_fuse:.2f}A" if std_sec_fuse else "exceeds list"))
+                        
+                else:  # 450.3(B)
+                    if (Ip is not None) and (Is is not None):
+                        if scheme == "Primary-only protection":
+                            raw_primary = 1.25 * Ip
+                            std_primary = next_standard(raw_primary, NEC_2406A_STANDARD) if round_to_std else raw_primary
+                            tp_results.append(("Primary OCPD (1.25×)", f"{raw_primary:.2f}A", f"{std_primary:.2f}A" if std_primary else "exceeds list"))
+                        else:  # Primary + Secondary
+                            raw_primary = 2.50 * Ip
+                            raw_secondary = 1.25 * Is
+                            std_primary = next_standard(raw_primary, NEC_2406A_STANDARD) if round_to_std else raw_primary
+                            std_secondary = next_standard(raw_secondary, NEC_2406A_STANDARD) if round_to_std else raw_secondary
+                            tp_results.append(("Primary OCPD (2.50×)", f"{raw_primary:.2f}A", f"{std_primary:.2f}A" if std_primary else "exceeds list"))
+                            tp_results.append(("Secondary OCPD (1.25×)", f"{raw_secondary:.2f}A", f"{std_secondary:.2f}A" if std_secondary else "exceeds list"))
+
+            if tp_results:
+                t = doc.add_table(rows=1, cols=3)
+                hdr = t.rows[0].cells
+                p = hdr[0].paragraphs[0]
+                p.clear()
+                r = p.add_run("Device Type")
+                r.bold = True
+                p = hdr[1].paragraphs[0]
+                p.clear()
+                r = p.add_run("Raw Value")
+                r.bold = True
+                p = hdr[2].paragraphs[0]
+                p.clear()
+                r = p.add_run("Selected Size")
+                r.bold = True
+
+                for device, raw_val, sel_val in tp_results:
+                    row = t.add_row().cells
+                    row[0].text = str(device)
+                    row[1].text = str(raw_val)
+                    row[2].text = str(sel_val)
+
+                set_table_borders(t)
+
+            style = doc.styles["Normal"]
+            style.font.name = "Calibri"
+            style.font.size = Pt(11)
+
+            bio = io.BytesIO()
+            doc.save(bio)
+            return bio.getvalue()
+
+        def build_tp_excel_report():
+            def _safe_float(x):
+                try:
+                    return None if x is None else float(x)
+                except Exception:
+                    return None
+
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Transformer Protection"
+
+            ws["A1"] = "Transformer Protection Calculation Report"
+            ws["A1"].font = Font(bold=True, size=14)
+            ws["A3"] = "Generated"
+            ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            row = 5
+            ws[f"A{row}"] = "Inputs"
+            ws[f"A{row}"].font = Font(bold=True)
+
+            row += 1
+            tp_inputs = [
+                ("System Type", phase),
+                ("Transformer Rating (kVA)", kva),
+                ("Primary Voltage (V)", vpri),
+                ("Secondary Voltage (V)", vsec),
+                ("Nameplate FLA Used", "Yes" if use_nameplate else "No"),
+            ]
+            
+            for param, val in tp_inputs:
+                ws[f"A{row}"] = param
+                ws[f"B{row}"] = val
+                row += 1
+
+            row += 1
+            ws[f"A{row}"] = "Full-Load Currents"
+            ws[f"A{row}"].font = Font(bold=True)
+
+            row += 1
+            ws[f"A{row}"] = "Primary FLA (A)"
+            ws[f"B{row}"] = _safe_float(Ip)
+            row += 1
+            ws[f"A{row}"] = "Secondary FLA (A)"
+            ws[f"B{row}"] = _safe_float(Is)
+
+            row += 2
+            ws[f"A{row}"] = "Code-Based Protection"
+            ws[f"A{row}"].font = Font(bold=True)
+
+            row += 1
+            if code_mode == "OESC":
+                ws[f"A{row}"] = "Code Standard"
+                ws[f"B{row}"] = "OESC"
+                row += 1
+                ws[f"A{row}"] = "Transformer Type"
+                ws[f"B{row}"] = xfmr_type
+                row += 1
+                ws[f"A{row}"] = "Voltage Class"
+                ws[f"B{row}"] = voltage_class
+                row += 1
+                ws[f"A{row}"] = "Rule Selected"
+                ws[f"B{row}"] = rule_path
+            else:
+                ws[f"A{row}"] = "Code Standard"
+                ws[f"B{row}"] = "NEC"
+                row += 1
+                ws[f"A{row}"] = "Case Selected"
+                ws[f"B{row}"] = nec_case
+                if nec_case.startswith("450.3(B)"):
+                    row += 1
+                    ws[f"A{row}"] = "Protection Scheme"
+                    ws[f"B{row}"] = scheme if scheme is not None else "—"
+
+            row += 2
+            ws[f"A{row}"] = "Round to Standard"
+            ws[f"B{row}"] = "Yes" if round_to_std else "No"
+
+            # Auto-size columns
+            for col in ws.columns:
+                max_len = 0
+                col_letter = get_column_letter(col[0].column)
+                for cell in col:
+                    try:
+                        v = "" if cell.value is None else str(cell.value)
+                        max_len = max(max_len, len(v))
+                    except Exception:
+                        pass
+                ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
+
+            bio = io.BytesIO()
+            wb.save(bio)
+            return bio.getvalue()
+
+        # Export buttons
+        can_export_tp = (Ip is not None) and (Is is not None)
+
+        exp_c1, exp_c2 = st.columns([1, 1], gap="large")
+        with exp_c1:
+            if st.button("Prepare Word report (.docx)", key="tp_build_docx"):
+                try:
+                    st.session_state["tp_docx_bytes"] = build_tp_word_report()
+                    st.success("Word report prepared. Use the download button below.")
+                except Exception as e:
+                    st.error(f"Failed to build Word report: {e}")
+
+            docx_bytes_tp = st.session_state.get("tp_docx_bytes", None)
+            st.download_button(
+                "⬇️ Download Word report (.docx)",
+                data=docx_bytes_tp if docx_bytes_tp else b"",
+                file_name="Transformer_Protection_Report.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                disabled=(not can_export_tp) or (docx_bytes_tp is None),
+                key="tp_download_docx",
+            )
+
+        with exp_c2:
+            if st.button("Prepare Excel report (.xlsx)", key="tp_build_xlsx"):
+                try:
+                    st.session_state["tp_xlsx_bytes"] = build_tp_excel_report()
+                    st.success("Excel report prepared. Use the download button below.")
+                except Exception as e:
+                    st.error(f"Failed to build Excel report: {e}")
+
+            xlsx_bytes_tp = st.session_state.get("tp_xlsx_bytes", None)
+            st.download_button(
+                "⬇️ Download Excel report (.xlsx)",
+                data=xlsx_bytes_tp if xlsx_bytes_tp else b"",
+                file_name="Transformer_Protection_Report.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                disabled=(not can_export_tp) or (xlsx_bytes_tp is None),
+                key="tp_download_xlsx",
+            )
+
+        st.caption(
+            "Export includes: equations, assumptions, inputs, calculated FLAs, selected code/rule, and OCPD limits."
+        )
+
         st.divider()
         st.markdown("### Equations used")
         if phase == "3Φ":
