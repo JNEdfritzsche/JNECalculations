@@ -1753,6 +1753,264 @@ elif page == "Motor Protection":
             eq(r"I_{OCPD}=k\cdot I_{FLA}")
             st.caption(f"where k = {multiplier} (from Table 29 Row {table_29_row})")
 
+            # =====================================================================
+            # Export Motor Protection Report
+            # =====================================================================
+            st.divider()
+            st.markdown("### 📄 Export calculation report")
+
+            OMML_MP_EQUATIONS = {
+                r"I_{OCPD}=k\cdot I_{FLA}": r"""
+        <m:sSub>
+            <m:e><m:r><m:t>I</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>OCPD</m:t></m:r></m:sub>
+        </m:sSub>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:r><m:t>k</m:t></m:r>
+        <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+        <m:sSub>
+            <m:e><m:r><m:t>I</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>FLA</m:t></m:r></m:sub>
+        </m:sSub>
+        """,
+            }
+
+            # Build flowchart path description
+            mp_flowchart_path = f"Voltage system: {voltage_system}"
+            if voltage_system == "3Φ AC":
+                mp_flowchart_path += f" → Motor type: {motor_type}"
+                if motor_type == "Squirrel-cage or Synchronous":
+                    mp_flowchart_path += f" → Starter type: {starter_type}"
+                    if starter_type == "Auto-TX or Star-Delta":
+                        mp_flowchart_path += f" → FLA {'>' if fla > 30.0 else '≤'} 30A"
+
+            def build_mp_word_report():
+                doc = Document("content/files/Template.docx")
+                remove_leading_blank_paragraphs(doc)
+
+                table = doc.sections[0].header.tables[0]
+                append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
+                append_to_value_line(table.cell(0, 4), "#")
+                append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
+                append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
+                append_to_value_line(table.cell(3, 3), "")
+                append_to_value_line(table.cell(3, 4), "")
+                append_to_value_line(table.cell(3, 2), "Motor Protection Calculation Report")
+
+                # Equations
+                doc.add_heading("Equations", level=1)
+                p = doc.add_paragraph()
+                p.add_run("Overcurrent Device Setting: ").bold = True
+                omml = OMML_MP_EQUATIONS.get(r"I_{OCPD}=k\cdot I_{FLA}")
+                if omml is not None:
+                    add_omml_equation_to_paragraph(p, omml)
+
+                # Assumptions
+                doc.add_heading("Assumptions", level=1)
+                mp_assumptions = [
+                    "Motor overcurrent device sizing follows OESC Table 29 flowchart methodology.",
+                    "Full-load current (FLA) is the motor's nameplate FLA.",
+                    "Multiplier k is determined by motor type, starter type, and voltage system per Table 29.",
+                    "Raw OCPD value is rounded to the next standard rating from Table 13 (overcurrent device ratings).",
+                    "All motor configurations and selection criteria follow the flowchart depicted in OESC Rule 28-200 & 28-204.",
+                ]
+                for a in mp_assumptions:
+                    doc.add_paragraph(a, style="CalcBullet")
+
+                # Flowchart Path and Inputs
+                doc.add_heading("Flowchart Path & Inputs", level=1)
+                mp_inputs = [
+                    ("Motor FLA (A)", str(fla)),
+                    ("Voltage System", voltage_system),
+                ]
+                
+                if voltage_system == "3Φ AC":
+                    mp_inputs.append(("Motor Type", motor_type))
+                    if motor_type == "Squirrel-cage or Synchronous":
+                        mp_inputs.append(("Starter Type", starter_type))
+
+                t = doc.add_table(rows=1, cols=2)
+                hdr = t.rows[0].cells
+                p = hdr[0].paragraphs[0]
+                p.clear()
+                r = p.add_run("Parameter")
+                r.bold = True
+                p = hdr[1].paragraphs[0]
+                p.clear()
+                r = p.add_run("Value")
+                r.bold = True
+
+                for param, val in mp_inputs:
+                    row = t.add_row().cells
+                    row[0].text = str(param)
+                    row[1].text = str(val)
+
+                set_table_borders(t)
+
+                # Results
+                doc.add_heading("Table 29 Selection & Results", level=1)
+                mp_results = [
+                    ("Table 29 Row Selected", str(table_29_row)),
+                    ("Table 29 Row Description", str(table_29_row_desc)),
+                    ("Multiplier (k) from Table 29", f"{multiplier}"),
+                    ("Raw OCPD Setting (k × I_FLA)", f"{ocpd_raw:.2f} A"),
+                ]
+
+                t = doc.add_table(rows=1, cols=2)
+                hdr = t.rows[0].cells
+                p = hdr[0].paragraphs[0]
+                p.clear()
+                r = p.add_run("Parameter")
+                r.bold = True
+                p = hdr[1].paragraphs[0]
+                p.clear()
+                r = p.add_run("Value")
+                r.bold = True
+
+                for param, val in mp_results:
+                    row = t.add_row().cells
+                    row[0].text = str(param)
+                    row[1].text = str(val)
+
+                set_table_borders(t)
+
+                doc.add_heading("Notes", level=1)
+                doc.add_paragraph(
+                    f"Round the raw OCPD setting of {ocpd_raw:.2f} A to the next standard overcurrent device rating from Table 13. "
+                    "Consult Table 13 for available standard ratings.",
+                    style="CalcBullet"
+                )
+
+                style = doc.styles["Normal"]
+                style.font.name = "Calibri"
+                style.font.size = Pt(11)
+
+                bio = io.BytesIO()
+                doc.save(bio)
+                return bio.getvalue()
+
+            def build_mp_excel_report():
+                def _safe_float(x):
+                    try:
+                        return None if x is None else float(x)
+                    except Exception:
+                        return None
+
+                wb = Workbook()
+                ws = wb.active
+                ws.title = "Motor Protection"
+
+                ws["A1"] = "Motor Protection Calculation Report"
+                ws["A1"].font = Font(bold=True, size=14)
+                ws["A3"] = "Generated"
+                ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                row = 5
+                ws[f"A{row}"] = "Motor Specifications"
+                ws[f"A{row}"].font = Font(bold=True)
+
+                row += 1
+                mp_inputs = [
+                    ("Motor FLA (A)", fla),
+                    ("Voltage System", voltage_system),
+                ]
+                
+                if voltage_system == "3Φ AC":
+                    mp_inputs.append(("Motor Type", motor_type))
+                    if motor_type == "Squirrel-cage or Synchronous":
+                        mp_inputs.append(("Starter Type", starter_type))
+
+                for param, val in mp_inputs:
+                    ws[f"A{row}"] = param
+                    ws[f"B{row}"] = val
+                    row += 1
+
+                row += 1
+                ws[f"A{row}"] = "Table 29 Selection"
+                ws[f"A{row}"].font = Font(bold=True)
+
+                row += 1
+                ws[f"A{row}"] = "Table 29 Row"
+                ws[f"B{row}"] = table_29_row
+                row += 1
+                ws[f"A{row}"] = "Row Description"
+                ws[f"B{row}"] = table_29_row_desc
+                row += 1
+                ws[f"A{row}"] = "Multiplier (k)"
+                ws[f"B{row}"] = multiplier
+
+                row += 2
+                ws[f"A{row}"] = "Calculation"
+                ws[f"A{row}"].font = Font(bold=True)
+
+                row += 1
+                ws[f"A{row}"] = "Raw OCPD Setting (A)"
+                ws[f"B{row}"] = _safe_float(ocpd_raw)
+
+                row += 2
+                ws[f"A{row}"] = "Notes"
+                ws[f"B{row}"] = f"Round {ocpd_raw:.2f} A to next standard rating from Table 13"
+
+                # Auto-size columns
+                for col in ws.columns:
+                    max_len = 0
+                    col_letter = get_column_letter(col[0].column)
+                    for cell in col:
+                        try:
+                            v = "" if cell.value is None else str(cell.value)
+                            max_len = max(max_len, len(v))
+                        except Exception:
+                            pass
+                    ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
+
+                bio = io.BytesIO()
+                wb.save(bio)
+                return bio.getvalue()
+
+            # Export buttons
+            can_export_mp = True  # Always exportable when we have a result
+
+            exp_c1, exp_c2 = st.columns([1, 1], gap="large")
+            with exp_c1:
+                if st.button("Prepare Word report (.docx)", key="mp_build_docx"):
+                    try:
+                        st.session_state["mp_docx_bytes"] = build_mp_word_report()
+                        st.success("Word report prepared. Use the download button below.")
+                    except Exception as e:
+                        st.error(f"Failed to build Word report: {e}")
+
+                docx_bytes_mp = st.session_state.get("mp_docx_bytes", None)
+                st.download_button(
+                    "⬇️ Download Word report (.docx)",
+                    data=docx_bytes_mp if docx_bytes_mp else b"",
+                    file_name="Motor_Protection_Report.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    disabled=(not can_export_mp) or (docx_bytes_mp is None),
+                    key="mp_download_docx",
+                )
+
+            with exp_c2:
+                if st.button("Prepare Excel report (.xlsx)", key="mp_build_xlsx"):
+                    try:
+                        st.session_state["mp_xlsx_bytes"] = build_mp_excel_report()
+                        st.success("Excel report prepared. Use the download button below.")
+                    except Exception as e:
+                        st.error(f"Failed to build Excel report: {e}")
+
+                xlsx_bytes_mp = st.session_state.get("mp_xlsx_bytes", None)
+                st.download_button(
+                    "⬇️ Download Excel report (.xlsx)",
+                    data=xlsx_bytes_mp if xlsx_bytes_mp else b"",
+                    file_name="Motor_Protection_Report.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    disabled=(not can_export_mp) or (xlsx_bytes_mp is None),
+                    key="mp_download_xlsx",
+                )
+
+            st.caption(
+                "Export includes: equations, assumptions, flowchart path selections, Table 29 row selection, multiplier, and calculated OCPD value."
+            )
+
 
 # ============================
 # 5) Motor Feeder
