@@ -888,6 +888,304 @@ elif page == "Transformer Feeders":
             eq(r"I=\frac{S}{V}")
         eq(r"\text{Turns Ratio}=\frac{V_1}{V_2}=\frac{N_1}{N_2}=\frac{I_2}{I_1}")
 
+        # =====================================================================
+        # Export Transformer Feeders Report
+        # =====================================================================
+        st.divider()
+        st.markdown("### 📄 Export calculation report")
+
+        OMML_TF_EQUATIONS = {
+            r"I=\frac{S}{\sqrt{3}\,V}": r"""
+        <m:r><m:t>I</m:t></m:r>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num><m:r><m:t>S</m:t></m:r></m:num>
+            <m:den>
+                <m:r><m:t>√3 </m:t></m:r>
+                <m:r><m:t>V</m:t></m:r>
+            </m:den>
+        </m:f>
+        """,
+            r"I=\frac{S}{V}": r"""
+        <m:r><m:t>I</m:t></m:r>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num><m:r><m:t>S</m:t></m:r></m:num>
+            <m:den><m:r><m:t>V</m:t></m:r></m:den>
+        </m:f>
+        """,
+            r"\text{Turns Ratio}=\frac{V_1}{V_2}=\frac{N_1}{N_2}=\frac{I_2}{I_1}": r"""
+        <m:r><m:t>Turns Ratio</m:t></m:r>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num>
+                <m:sSub>
+                    <m:e><m:r><m:t>V</m:t></m:r></m:e>
+                    <m:sub><m:r><m:t>1</m:t></m:r></m:sub>
+                </m:sSub>
+            </m:num>
+            <m:den>
+                <m:sSub>
+                    <m:e><m:r><m:t>V</m:t></m:r></m:e>
+                    <m:sub><m:r><m:t>2</m:t></m:r></m:sub>
+                </m:sSub>
+            </m:den>
+        </m:f>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num>
+                <m:sSub>
+                    <m:e><m:r><m:t>N</m:t></m:r></m:e>
+                    <m:sub><m:r><m:t>1</m:t></m:r></m:sub>
+                </m:sSub>
+            </m:num>
+            <m:den>
+                <m:sSub>
+                    <m:e><m:r><m:t>N</m:t></m:r></m:e>
+                    <m:sub><m:r><m:t>2</m:t></m:r></m:sub>
+                </m:sSub>
+            </m:den>
+        </m:f>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num>
+                <m:sSub>
+                    <m:e><m:r><m:t>I</m:t></m:r></m:e>
+                    <m:sub><m:r><m:t>2</m:t></m:r></m:sub>
+                </m:sSub>
+            </m:num>
+            <m:den>
+                <m:sSub>
+                    <m:e><m:r><m:t>I</m:t></m:r></m:e>
+                    <m:sub><m:r><m:t>1</m:t></m:r></m:sub>
+                </m:sSub>
+            </m:den>
+        </m:f>
+        """,
+        }
+
+        def build_tf_word_report():
+            doc = Document("content/files/Template.docx")
+            remove_leading_blank_paragraphs(doc)
+
+            table = doc.sections[0].header.tables[0]
+            append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
+            append_to_value_line(table.cell(0, 4), "#")
+            append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
+            append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
+            append_to_value_line(table.cell(3, 3), "")
+            append_to_value_line(table.cell(3, 4), "")
+            append_to_value_line(table.cell(3, 2), "Transformer Feeder Calculation Report")
+
+            # Equations
+            doc.add_heading("Equations", level=1)
+            
+            if phase == "Three-phase":
+                p = doc.add_paragraph()
+                p.add_run("Primary/Secondary Full-Load Current (three-phase): ").bold = True
+                omml = OMML_TF_EQUATIONS.get(r"I=\frac{S}{\sqrt{3}\,V}")
+                if omml is not None:
+                    add_omml_equation_to_paragraph(p, omml)
+            else:
+                p = doc.add_paragraph()
+                p.add_run("Primary/Secondary Full-Load Current (single-phase): ").bold = True
+                omml = OMML_TF_EQUATIONS.get(r"I=\frac{S}{V}")
+                if omml is not None:
+                    add_omml_equation_to_paragraph(p, omml)
+
+            p = doc.add_paragraph()
+            p.add_run("Transformer Turns Ratio and Current Relationship: ").bold = True
+            omml = OMML_TF_EQUATIONS.get(r"\text{Turns Ratio}=\frac{V_1}{V_2}=\frac{N_1}{N_2}=\frac{I_2}{I_1}")
+            if omml is not None:
+                add_omml_equation_to_paragraph(p, omml)
+
+            # Assumptions
+            doc.add_heading("Assumptions", level=1)
+            tf_assumptions = [
+                f"Transformer type: {phase}.",
+                f"Transformer rating: {rating_value} {rating_unit}.",
+                f"Primary voltage: {vpri_value} {vpri_unit} (line-to-line for three-phase).",
+                f"Secondary voltage: {vsec_value} {vsec_unit} (line-to-line for three-phase).",
+                "Full-load current (FLA) is calculated from S = V·I (single-phase) or S = √3·V·I (three-phase).",
+                "Turns ratio is calculated from voltage ratio: N₁/N₂ = V₁/V₂.",
+                "Ampere ratio is inverse of turns ratio: I₂/I₁ = N₁/N₂ = V₁/V₂.",
+                "No-load losses and impedance effects are not included in this simplified FLA calculation.",
+            ]
+            for a in tf_assumptions:
+                doc.add_paragraph(a, style="CalcBullet")
+
+            # Inputs
+            doc.add_heading("Inputs", level=1)
+            tf_inputs = [
+                ("Number of Phases", phase),
+                ("Transformer Rating", f"{rating_value} {rating_unit}"),
+                ("Primary Voltage", f"{vpri_value} {vpri_unit}"),
+                ("Secondary Voltage", f"{vsec_value} {vsec_unit}"),
+            ]
+            
+            t = doc.add_table(rows=1, cols=2)
+            hdr = t.rows[0].cells
+            p = hdr[0].paragraphs[0]
+            p.clear()
+            r = p.add_run("Parameter")
+            r.bold = True
+            p = hdr[1].paragraphs[0]
+            p.clear()
+            r = p.add_run("Value")
+            r.bold = True
+
+            for param, val in tf_inputs:
+                row = t.add_row().cells
+                row[0].text = str(param)
+                row[1].text = str(val)
+
+            set_table_borders(t)
+
+            # Results/Variables
+            doc.add_heading("Results", level=1)
+            tf_results = [
+                ("Primary Full-Load Current (I₁)", f"{I1:.4f} A" if I1 is not None else "—"),
+                ("Secondary Full-Load Current (I₂)", f"{I2:.4f} A" if I2 is not None else "—"),
+                ("Turns Ratio (V₁/V₂)", f"{turns_ratio:.4f}" if turns_ratio is not None else "—"),
+                ("Transformer Type", xform_type),
+            ]
+
+            t = doc.add_table(rows=1, cols=2)
+            hdr = t.rows[0].cells
+            p = hdr[0].paragraphs[0]
+            p.clear()
+            r = p.add_run("Parameter")
+            r.bold = True
+            p = hdr[1].paragraphs[0]
+            p.clear()
+            r = p.add_run("Value")
+            r.bold = True
+
+            for param, val in tf_results:
+                row = t.add_row().cells
+                row[0].text = str(param)
+                row[1].text = str(val)
+
+            set_table_borders(t)
+
+            style = doc.styles["Normal"]
+            style.font.name = "Calibri"
+            style.font.size = Pt(11)
+
+            bio = io.BytesIO()
+            doc.save(bio)
+            return bio.getvalue()
+
+        def build_tf_excel_report():
+            def _safe_float(x):
+                try:
+                    return None if x is None else float(x)
+                except Exception:
+                    return None
+
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Transformer Feeder"
+
+            ws["A1"] = "Transformer Feeder Calculation Report"
+            ws["A1"].font = Font(bold=True, size=14)
+            ws["A3"] = "Generated"
+            ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            row = 5
+            ws[f"A{row}"] = "Inputs"
+            ws[f"A{row}"].font = Font(bold=True)
+
+            row += 1
+            tf_inputs = [
+                ("Number of Phases", phase),
+                ("Transformer Rating", f"{rating_value} {rating_unit}"),
+                ("Primary Voltage", f"{vpri_value} {vpri_unit}"),
+                ("Secondary Voltage", f"{vsec_value} {vsec_unit}"),
+            ]
+            
+            for param, val in tf_inputs:
+                ws[f"A{row}"] = param
+                ws[f"B{row}"] = val
+                row += 1
+
+            row += 1
+            ws[f"A{row}"] = "Results"
+            ws[f"A{row}"].font = Font(bold=True)
+
+            row += 1
+            tf_results = [
+                ("Primary Full-Load Current (A)", _safe_float(I1)),
+                ("Secondary Full-Load Current (A)", _safe_float(I2)),
+                ("Turns Ratio (V1/V2)", _safe_float(turns_ratio)),
+                ("Transformer Type", xform_type),
+            ]
+
+            for param, val in tf_results:
+                ws[f"A{row}"] = param
+                ws[f"B{row}"] = val
+                row += 1
+
+            # Auto-size columns
+            for col in ws.columns:
+                max_len = 0
+                col_letter = get_column_letter(col[0].column)
+                for cell in col:
+                    try:
+                        v = "" if cell.value is None else str(cell.value)
+                        max_len = max(max_len, len(v))
+                    except Exception:
+                        pass
+                ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
+
+            bio = io.BytesIO()
+            wb.save(bio)
+            return bio.getvalue()
+
+        # Export buttons
+        can_export_tf = (I1 is not None) and (I2 is not None) and (turns_ratio is not None)
+
+        exp_c1, exp_c2 = st.columns([1, 1], gap="large")
+        with exp_c1:
+            if st.button("Prepare Word report (.docx)", key="tf_build_docx"):
+                try:
+                    st.session_state["tf_docx_bytes"] = build_tf_word_report()
+                    st.success("Word report prepared. Use the download button below.")
+                except Exception as e:
+                    st.error(f"Failed to build Word report: {e}")
+
+            docx_bytes_tf = st.session_state.get("tf_docx_bytes", None)
+            st.download_button(
+                "⬇️ Download Word report (.docx)",
+                data=docx_bytes_tf if docx_bytes_tf else b"",
+                file_name="Transformer_Feeder_Report.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                disabled=(not can_export_tf) or (docx_bytes_tf is None),
+                key="tf_download_docx",
+            )
+
+        with exp_c2:
+            if st.button("Prepare Excel report (.xlsx)", key="tf_build_xlsx"):
+                try:
+                    st.session_state["tf_xlsx_bytes"] = build_tf_excel_report()
+                    st.success("Excel report prepared. Use the download button below.")
+                except Exception as e:
+                    st.error(f"Failed to build Excel report: {e}")
+
+            xlsx_bytes_tf = st.session_state.get("tf_xlsx_bytes", None)
+            st.download_button(
+                "⬇️ Download Excel report (.xlsx)",
+                data=xlsx_bytes_tf if xlsx_bytes_tf else b"",
+                file_name="Transformer_Feeder_Report.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                disabled=(not can_export_tf) or (xlsx_bytes_tf is None),
+                key="tf_download_xlsx",
+            )
+
+        st.caption(
+            "Export includes: equations, assumptions, inputs, turns ratio, FLA calculations, and transformer type."
+        )
+
 
 # ============================
 # 3) Grounding/Bonding Conductor Sizing
