@@ -1,12 +1,14 @@
 ## Overview
 
-The Transformer Protection section describes the OESC intent and design principles for overcurrent protection to maintain operability of a typical transformer. The OESC classifies three main groups of transformer circuits, each with its own associated design rules. This section focuses on the sizing of the fuses and breakers used to protect the transformer, cable sizing can be found in the Transformer Feeders section. The general layout of a transformer with primary-side overcurrent protection can be seen below.
+The Transformer Protection section describes the OESC intent and design principles for overcurrent protection to maintain operability of a typical transformer. The OESC classifies three main groups of transformer circuits, each with its own associated design rules. This section focuses on the sizing of the fuses and breakers used to protect the transformer, cable sizing can be found in the Transformer Feeders section. 
+<!-- The general layout of a transformer with primary-side overcurrent protection can be seen below.
+
 
 <div align="center">
 
 ![Figure 1: Example Transformer Protection](images/Transformer_Protector.png)
 
-</div>
+</div> -->
 
 ---
 ## Transformer Circuit Classifications:
@@ -15,7 +17,9 @@ There are 3 main types of transformer circuits outlined in OESC Section 26-250, 
 - Circuits rated 750 V or less, other than dry-type transformers
 - Dry-type transformer circuits rated 750 V or less
 
-Circuits over 750 V are treated as high-voltage systems; at this level, arc-flash energy, insulation stress, and fault consequences increase significantly. The focus with these systems is on safety rather than equipment convenience. Non-dry type transformers at low voltage pose a fire and environmental risk due to the presence of insulating liquid - one must account for leakage, ignition, and heat dissipation. Finally, dry type transformers at low voltages pose the lowest overall risk with risks being primarily electrical rather than fire-related. When considering the application of the transformer and which type of cooling it will use there are two main options:
+<!-- Maybe add two flowcharts, one fuse one CB, like for motor protection, to choose multipolier-->
+
+Circuits over 750 V are treated as high-voltage systems; at this level, arc-flash energy, insulation stress, and fault consequences increase significantly. The focus with these systems is on safety rather than equipment convenience. Non-dry type transformers at low voltage pose a fire and environmental risk due to the presence of insulating liquid, therefore we must account for leakage, ignition, and heat dissipation. Finally, dry type transformers at low voltages pose the lowest overall risk with risks being primarily electrical rather than fire-related. When considering the application of the transformer and which type of cooling it will use there are two main options:
 - 1. Oil-Cooled Transformers (Rules 26-250 & 26-252):
   - Typically used in either outdoor or higher voltage systems due to being fully enclosed alongside better cooling capabilities
   - Higher cost and require additional maintenance
@@ -30,11 +34,35 @@ Each ungrounded conductor of the transformer feeder or branch circuit supplying 
 - b) rated or set at **not more than 300%** of the rated primary current of the transformer in the case of breakers.
 The OESC outlines some exceptions to this rule in subrules 2-4 of section 26-250.
 
+<div align="center">
+  
+![Figure 1: Transformers rated over 750V layout](images/TXProtect1.png)
+
+</div>
+  
 ### Non-Dry Type Transformer Circuits Rated Under 750 V
-Each ungrounded conductor of the transformer feeder or branch circuit supplying the transformer shall be provided with overcurrent protection rated or set at **not more than 150%** of the rated primary current of the transformer. The OESC outlines some exceptions to this rule in subrules 2-6 of section 26-252.
+Each ungrounded conductor of the transformer feeder or branch circuit supplying the transformer shall be provided with overcurrent protection rated or set at **not more than 150%** of the rated primary current of the transformer.  As low-voltage transformers, as a general rule, we allow the following protection on the primary side;
+
+- Where the primary current is 9A or more, the multiplier is 150%
+- Where the primary current is less than 9A, the multiplier is 167%
+- Where the rated primary current is less than 2A, the multiplier is 300%
+
+The OESC further outlines some exceptions to this rule in subrules 2-6 of section 26-252.
+
+<div align="center">
+  
+![Figure 2: Transformers rated under 750V, non dry-type](images/TXProtect2.png)
+
+</div>
 
 ### Dry Type Transformer Circuits Rated Under 750 V
 Each ungrounded conductor of the transformer feeder or branch circuit supplying the transformer shall be provided with overcurrent protection rated or set at **not more than 125%** of the rated primary current of the transformer, and this primary overcurrent device shall be considered as protecting secondary conductors rated at **not less than 125%** of the rated secondary current. The OESC outlines an exception to this rule in subrules 2-3 of section 26-254.
+
+<div align="center">
+  
+![Figure 3: Transformers rated under 750V, dry-type](images/TXProtect3.png)
+
+</div>
 
 ---
 ## Considerations
@@ -53,21 +81,20 @@ Another thing to consider is how the transformer windings are configured. <!-- I
 The possible connections are Delta-Delta (Dd), Wye-Wye (Yy), Wye-Delta (Yd), Delta-Wye (Dy). -->Typically you will see the Delta-Wye connection as it is commonly used in low power distribution; the Delta windings provide a balanced load for the utility company while the Wye connection provides a 4th-wire neutral connection for the secondary side. The designer should also consider how the secondary side will be grounded (Open, Solid Ground, or Neutral Ground Resistor).
 
 ---
-## Example
-<!-split into three better section-->
+## Transformer Overcurrent Protection examples
 
-### Assumptions
+Below we will size overccurent protection devices for the three types of transformer circuits. We will assume the following;
+
 - The ambient temperature is 40 °C
 - The conductor temperature is 75 °C
-- The conductor is copper routed in free-air
+- The conductor is copper routed in free-air, evenly spaced
 - No more than 3 conductors per cable, complete with ground
 - The maximum cable length is 50m
 - Transformer is operating with natural cooling (no fans/pumps)<br/>
-<br>
 
-### Oil-Cooled > 750 V
+### 1. Transformer Rated Over 750 V
 
-#### Transformer Nameplate Data
+Consider an oil-filled transformer with the following nameplate. Calculate the fuse and circuit breakers sizes for primary overcurrent protection.
 
 | Parameter           | Value     |
 |---------------------|-----------|
@@ -76,28 +103,25 @@ The possible connections are Delta-Delta (Dd), Wye-Wye (Yy), Wye-Delta (Yd), Del
 | Secondary Voltage   | 600 V     |
 | Phase               | 3         |
 | Frequency           | 60 Hz     |
+| Impedance           | 6 %       |
 
-#### Full-Load Currents (FLC)
-
-$$
-I = \frac{\text{VA}}{\sqrt{3}\,V}
-$$
+The FLCs can be calculated as;
 
 | Side       | Calculation | FLA (A) |
 |------------|-------------|---------|
 | Primary    | $$ \frac{2000 \times 10^3}{\sqrt{3} \times 27.6 \times 10^3} $$ | 41.84 |
 | Secondary  | $$ \frac{2000 \times 10^3}{\sqrt{3} \times 600} $$ | 1924.5 |
 
-#### Overcurrent Protection Sizing
+According to Table 50, our Overcurrent Protection Devices (OCPD) can be sized to; 
 
-| Protection Type | OESC Multiplier | Primary FLA | Secondary FLA |
-|-----------------|-----------------|-------------|---------------|
-| Fuses           | 1.50 | 41.84 $$\cdot$$ 1.50 = 62.76 | 1926.78 $$\cdot$$ 1.50 = 2886.75 |
-| Circuit Breaker | 3.00 | 41.84 $$\cdot$$ 3.00 = 125.52 | 1926.78 $$\cdot$$ 3.00 = 5773.5 |
+| Protection Type | Primary OCPD Size | Secondary OCPD Size |
+|-----------------|-------------------|---------------------|
+| Fuses           | 41.84 $$\cdot$$ 3.00 = 125.5  | 1924.5 $$\cdot$$ 2.50 = 4811.25 |
+| Circuit Breaker | 41.84 $$\cdot$$ 6.00 = 251.02 | 1924.5 $$\cdot$$ 2.50 = 4811.25 |
 
-### Oil-Cooled < 750 V
+### 2. Transformer Rated Under 750 V, non dry-type
 
-#### Transformer Nameplate Data
+Consider an oil-filled transformer with the following nameplate. Calculate the fuse and circuit breakers sizes for primary overcurrent protection.
 
 | Parameter           | Value     |
 |---------------------|-----------|
@@ -107,27 +131,22 @@ $$
 | Phase               | 3         |
 | Frequency           | 60 Hz     |
 
-#### Full-Load Currents
-
-$$
-I = \frac{\text{VA}}{\sqrt{3}\,V}
-$$
+The FLCs can be calculated as;
 
 | Side      | Calculation | FLA (A) |
 |-----------|-------------|---------|
 | Primary   | $$ \frac{75 \times 10^3}{\sqrt{3} \times 600} $$ | 72.17 |
 | Secondary | $$ \frac{75 \times 10^3}{\sqrt{3} \times 208} $$ | 208.18 |
 
-#### Overcurrent Protection Sizing  
-*OESC Rule 26-252 1)*
+As per Rule 26-252, our primary overcurrent protection device can be sized to;
 
-| Protection Type | OESC Multiplier | Primary FLA | Secondary FLA |
-|-----------------|-----------------|-------------|---------------|
-| Overcurrent Protection | 1.50 | 72.17 $$\cdot$$ 1.50 = 108.26 | 208.18 $$\cdot$$ 1.50 = 312.27 |
+| Protection Type | OESC Multiplier | Primary OCPD Size | Secondary OCPD Size |
+|-----------------|-----------------|-------------------|---------------------|
+| Fuse/Circuit Breaker | 1.50 | 72.17 $$\cdot$$ 1.50 = 108.25 | 208.18 $$\cdot$$ 1.50 = 312.27 |
 
-### Dry-Type < 750 V
+### 3. Transformer Rated Under 750 V, dry-type
 
-#### Transformer Nameplate Data
+Consider a dry-type transformer with the following nameplate. Calculate the fuse and circuit breakers sizes for the overcurrent protection devices.
 
 | Parameter           | Value     |
 |---------------------|-----------|
@@ -137,25 +156,18 @@ $$
 | Phase               | 3         |
 | Frequency           | 60 Hz     |
 
-<!-- Since it is the same, no need to repeat calculation, just list values
-### Full-Load Currents
-
-$$
-I = \frac{S}{\sqrt{3}\,V}
-$$
+The FLCs can be calculated as;
 
 | Side           | Calculation | Result (A) |
 |----------------|-------------|------------|
 | Primary FLA    | $$ \frac{75 \times 10^3}{\sqrt{3} \times 600} $$ | 72.17 |
-| Secondary FLA  | $$ \frac{75 \times 10^3}{\sqrt{3} \times 208} $$ | 208.43 |
+| Secondary FLA  | $$ \frac{75 \times 10^3}{\sqrt{3} \times 208} $$ | 208.18 |
 
--->
-#### Overcurrent Protection Sizing  
-*OESC Rule 26-254 1)*
+As per Rule 26-254, our primary overcurrent protection device can be sized to;
 
-| Protection Type | OESC Multiplier | Primary FLA | Secondary FLA |
+| Protection Type | OESC Multiplier | Primary OCPD Size | Secondary OCPD Size |
 |-----------------|-----------------|-------------|---------------|
-| Overcurrent Protection | 1.25 | 72.17 $$\cdot$$ 1.25 = 90.21 | 208.18 $$\cdot$$ 1.25 = 260.26 |
+| Overcurrent Protection | 1.25 | 72.17 $$\cdot$$ 1.25 = 90.21 | 208.18 $$\cdot$$ 1.25 = 260.22 |
 
 <!-- Dont know where you found this, 26-250,252,254 does nto mention anything like this. if rule is found then adjust accordingly.
 
@@ -186,15 +198,15 @@ b) Carry **25 × transformer rated primary full-load current** for **0.01 s**
 
 Based on the calculated primary full-load currents and applicable OESC rules, the required primary overcurrent protection device sizes are as follows:
 
-**2 MVA, 27.6 kV / 600 V, Oil-Cooled, Direct Primary Protected Transformer**
-- 60 A rated fuse  
-- 125 A rated circuit breaker  
+**2 MVA, 27.6 kV / 600 V, Oil-Filled, Direct Primary Protected Transformer**
+- 125 A rated fuse or,
+- 250 A rated circuit breaker  
 
-**75 kVA, 600 V / 208 V, Oil-Cooled, Direct Primary Protected Transformer**
-- 100 A rated circuit breaker or fuse  
+**75 kVA, 600 V / 208 V, Oil-Filled, Direct Primary Protected Transformer**
+- 100 A rated fuse or circuit breaker
 
 **75 kVA, 600 V / 208 V, Dry-Type, Direct Primary Protected Transformer**
-- 90 A rated circuit breaker or fuse
+- 90 A rated fuse or circuit breaker
 
 ---
 ## Appendix
