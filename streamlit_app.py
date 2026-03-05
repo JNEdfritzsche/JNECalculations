@@ -537,6 +537,7 @@ RESTRICTED_PAGES = {
     "Demand Load",
     "Power Factor Correction",
     "Heat Trace",
+    "Panel Schedule",
 }
 
 access_role = st.session_state.get("access_role", "admin")
