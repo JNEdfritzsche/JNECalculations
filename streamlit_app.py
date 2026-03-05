@@ -14,7 +14,7 @@ from docx.oxml import parse_xml
 from docx.oxml.ns import nsdecls
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment
 from openpyxl.utils import get_column_letter
 
@@ -47,6 +47,7 @@ ENABLE_PASSWORD_PROTECTION = True
 # ----------------------------
 PROJECT_NUMBER = ""
 DESIGNER_NAME = ""
+PANEL_TEMPLATE_PATH = Path("content/files/panel_schedule_template.xlsx")
 
 # ----------------------------
 # Report Export Helpers
@@ -229,6 +230,146 @@ def safe_div(a, b):
     return None if b == 0 else a / b
 
 
+def _panel_safe_number(value):
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return value
+    s = str(value).strip()
+    if s == "":
+        return None
+    try:
+        num = float(s)
+    except Exception:
+        return value
+    return int(num) if abs(num - int(num)) < 1e-12 else num
+
+
+def _panel_set_cell(ws, cell, value):
+    ws[cell].value = None if value in ("", None) else value
+
+
+def _panel_get_schedule_sheet(wb):
+    for name in wb.sheetnames:
+        if name.upper() != "COVER":
+            return wb[name]
+    return wb.active
+
+
+def build_panel_schedule_workbook(
+    cover_data,
+    panel_header,
+    left_rows,
+    right_rows,
+    use_current_date=False,
+):
+    wb = load_workbook(PANEL_TEMPLATE_PATH)
+    cover = wb["COVER"]
+    ws = _panel_get_schedule_sheet(wb)
+
+    # ----------------------------
+    # COVER sheet
+    # ----------------------------
+    _panel_set_cell(cover, "A1", cover_data.get("client"))
+    _panel_set_cell(cover, "A2", cover_data.get("facility"))
+    _panel_set_cell(cover, "A3", cover_data.get("building"))
+    _panel_set_cell(cover, "A4", cover_data.get("title"))
+    _panel_set_cell(cover, "A5", cover_data.get("panel_tag"))
+
+    _panel_set_cell(cover, "F1", cover_data.get("drawn_by"))
+    _panel_set_cell(cover, "F3", cover_data.get("checked_by"))
+    _panel_set_cell(cover, "F5", cover_data.get("approved_by"))
+
+    _panel_set_cell(cover, "G8", cover_data.get("project_number"))
+    _panel_set_cell(cover, "I8", cover_data.get("drawing_number"))
+
+    _panel_set_cell(cover, "G11", cover_data.get("cover_building"))
+    _panel_set_cell(cover, "G12", cover_data.get("cover_title"))
+    _panel_set_cell(cover, "A11", cover_data.get("notes"))
+
+    _panel_set_cell(cover, "A15", cover_data.get("rev_no"))
+    _panel_set_cell(cover, "B15", cover_data.get("revised_by"))
+    _panel_set_cell(cover, "D15", cover_data.get("rev_checked_by"))
+    _panel_set_cell(cover, "G15", cover_data.get("rev_approved_by"))
+    _panel_set_cell(cover, "I15", cover_data.get("rev_notes"))
+
+    if use_current_date:
+        today = datetime.today().date()
+        for cell in ["F2", "F4", "F6", "C15", "F15", "H15"]:
+            cover[cell].value = today
+    else:
+        _panel_set_cell(cover, "F2", cover_data.get("drawn_date"))
+        _panel_set_cell(cover, "F4", cover_data.get("checked_date"))
+        _panel_set_cell(cover, "F6", cover_data.get("approved_date"))
+        _panel_set_cell(cover, "C15", cover_data.get("rev_date"))
+        _panel_set_cell(cover, "F15", cover_data.get("rev_checked_date"))
+        _panel_set_cell(cover, "H15", cover_data.get("rev_approved_date"))
+
+    # ----------------------------
+    # PANEL schedule sheet header
+    # ----------------------------
+    _panel_set_cell(ws, "B1", panel_header.get("distribution_board_no"))
+    _panel_set_cell(ws, "G1", panel_header.get("location"))
+    _panel_set_cell(ws, "M1", panel_header.get("document_number"))
+    _panel_set_cell(ws, "B2", panel_header.get("bus_rating"))
+    _panel_set_cell(ws, "G2", panel_header.get("incomer_transformer_rating"))
+    _panel_set_cell(ws, "M2", panel_header.get("equipment_layout_number"))
+    _panel_set_cell(ws, "B3", panel_header.get("num_circuits"))
+    _panel_set_cell(ws, "G3", panel_header.get("incomer_breaker"))
+    _panel_set_cell(ws, "B4", panel_header.get("incomer_transformer_tag"))
+    _panel_set_cell(ws, "G4", panel_header.get("interrupting_capacity"))
+
+    # ----------------------------
+    # Schedule rows (6-17)
+    # ----------------------------
+    for i in range(12):
+        row = 6 + i
+        left = left_rows[i] if i < len(left_rows) else {}
+        right = right_rows[i] if i < len(right_rows) else {}
+
+        _panel_set_cell(ws, f"A{row}", left.get("Load Description"))
+        _panel_set_cell(ws, f"B{row}", _panel_safe_number(left.get("Conn Load (W)")))
+        _panel_set_cell(ws, f"C{row}", left.get("RCCB Rating"))
+        _panel_set_cell(ws, f"D{row}", _panel_safe_number(left.get("No. of Fixt.")))
+        _panel_set_cell(ws, f"E{row}", left.get("Brkr Size"))
+        _panel_set_cell(ws, f"F{row}", left.get("Cct No"))
+
+        # Phase markers on left (G/H/I)
+        ws[f"G{row}"].value = None
+        ws[f"H{row}"].value = None
+        ws[f"I{row}"].value = None
+        phase = (left.get("Phase") or "").strip().upper()
+        if phase == "A":
+            ws[f"G{row}"].value = "A"
+        elif phase == "B":
+            ws[f"H{row}"].value = "B"
+        elif phase == "C":
+            ws[f"I{row}"].value = "C"
+
+        _panel_set_cell(ws, f"J{row}", right.get("Cct No"))
+        _panel_set_cell(ws, f"K{row}", right.get("Brkr Size"))
+        _panel_set_cell(ws, f"L{row}", _panel_safe_number(right.get("No. of Fixt.")))
+        _panel_set_cell(ws, f"M{row}", right.get("RCCB Rating"))
+        _panel_set_cell(ws, f"N{row}", _panel_safe_number(right.get("Conn Load (W)")))
+        _panel_set_cell(ws, f"O{row}", right.get("Load Description"))
+
+    return wb
+
+
+def default_panel_left_rows():
+    return [
+        {"Cct No": n, "Phase": p, "Load Description": "", "Conn Load (W)": "", "RCCB Rating": "", "No. of Fixt.": "", "Brkr Size": ""}
+        for n, p in zip([1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23], ["A", "B", "C", "A", "B", "C", "A", "B", "C", "A", "B", "C"])
+    ]
+
+
+def default_panel_right_rows():
+    return [
+        {"Cct No": n, "Brkr Size": "", "No. of Fixt.": "", "RCCB Rating": "", "Conn Load (W)": "", "Load Description": ""}
+        for n in [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24]
+    ]
+
+
 def header(title: str, subtitle: str = ""):
     st.header(title)
     if subtitle:
@@ -377,6 +518,7 @@ ALL_PAGES = [
     "Home",
     "Conductors",
     "Voltage Drop",
+    "Panel Schedule",
     "Transformer Feeders",
     "Transformer Protection",
     "Grounding/Bonding Conductor Sizing",
@@ -6044,7 +6186,278 @@ elif page == "Voltage Drop":
 
 
 # ============================
-# 12) Conductors
+# 12) Panel Schedule
+# ============================
+elif page == "Panel Schedule":
+    with theory_tab:
+        header("Panel Schedule — Setup")
+        show_code_note(code_mode)
+        st.markdown(
+            "- Enter header and schedule data below to build a panel schedule workbook.\n"
+            "- Use the **Download Empty Template** button for a clean copy with today’s date.\n"
+            "- The exported file preserves the template layout, styles, and formulas."
+        )
+
+    with examples_tab:
+        header("Panel Schedule — Tips")
+        show_code_note(code_mode)
+        st.markdown(
+            "- Circuit numbers and phase grouping follow the template row order (A/B/C in repeating rows).\n"
+            "- Use consistent units for connected load (W).\n"
+            "- Leave fields blank if not applicable; totals will update automatically."
+        )
+
+    with calc_tab:
+        header("Panel Schedule Builder", "Fill out fields and export to a matching Excel panel schedule.")
+        show_code_note(code_mode)
+
+        if not PANEL_TEMPLATE_PATH.exists():
+            st.error(f"Panel schedule template not found: {PANEL_TEMPLATE_PATH}")
+            st.stop()
+
+        today = datetime.today().date()
+
+        st.markdown("### Cover Sheet")
+        c1, c2, c3 = st.columns([1, 1, 1], gap="large")
+        with c1:
+            client = st.text_input("Client / Company", value="", key="ps_client")
+            facility = st.text_input("Facility / Project", value="", key="ps_facility")
+            building = st.text_input("Building / Area", value="", key="ps_building")
+            panel_tag = st.text_input("Panel Tag", value="", key="ps_panel_tag")
+        with c2:
+            title = st.text_input("Drawing Title", value="", key="ps_title")
+            cover_building = st.text_input("Cover Building Title", value="", key="ps_cover_building")
+            cover_title = st.text_input("Cover Schedule Title", value="", key="ps_cover_title")
+            drawing_number = st.text_input("Drawing Number", value="", key="ps_drawing_number")
+        with c3:
+            project_number = st.text_input("Project Number", value="", key="ps_project_number")
+            drawn_by = st.text_input("Drawn By", value="", key="ps_drawn_by")
+            checked_by = st.text_input("Checked By", value="", key="ps_checked_by")
+            approved_by = st.text_input("Approved By", value="", key="ps_approved_by")
+
+        d1, d2, d3 = st.columns([1, 1, 1], gap="large")
+        with d1:
+            drawn_date = st.date_input("Drawn Date", value=today, key="ps_drawn_date")
+        with d2:
+            checked_date = st.date_input("Checked Date", value=today, key="ps_checked_date")
+        with d3:
+            approved_date = st.date_input("Approved Date", value=today, key="ps_approved_date")
+
+        notes = st.text_area("Notes / References (Cover)", value="", height=160, key="ps_notes")
+
+        st.markdown("### Revision Block")
+        r1, r2, r3, r4 = st.columns([1, 1, 1, 1], gap="large")
+        with r1:
+            rev_no = st.text_input("Rev No.", value="", key="ps_rev_no")
+            revised_by = st.text_input("Revised By", value="", key="ps_revised_by")
+        with r2:
+            rev_date = st.date_input("Revision Date", value=today, key="ps_rev_date")
+            rev_checked_by = st.text_input("Revision Checked By", value="", key="ps_rev_checked_by")
+        with r3:
+            rev_checked_date = st.date_input("Revision Checked Date", value=today, key="ps_rev_checked_date")
+            rev_approved_by = st.text_input("Revision Approved By", value="", key="ps_rev_approved_by")
+        with r4:
+            rev_approved_date = st.date_input("Revision Approved Date", value=today, key="ps_rev_approved_date")
+            rev_notes = st.text_input("Revision Notes", value="", key="ps_rev_notes")
+
+        st.divider()
+        st.markdown("### Panel Header")
+        h1, h2, h3 = st.columns([1, 1, 1], gap="large")
+        with h1:
+            distribution_board_no = st.text_input("Distribution Board No.", value="", key="ps_distribution_board_no")
+            bus_rating = st.text_input("Bus Rating", value="", key="ps_bus_rating")
+            num_circuits = st.number_input("Number of Circuits", min_value=1, value=24, step=1, key="ps_num_circuits")
+            incomer_transformer_tag = st.text_input("Incomer Transformer Tag No.", value="", key="ps_incomer_transformer_tag")
+        with h2:
+            location = st.text_input("Location", value="", key="ps_location")
+            incomer_transformer_rating = st.text_input("Incomer Transformer Rating", value="", key="ps_incomer_transformer_rating")
+            incomer_breaker = st.text_input("Incomer Breaker", value="", key="ps_incomer_breaker")
+            interrupting_capacity = st.text_input("Interrupting Capacity", value="", key="ps_interrupting_capacity")
+        with h3:
+            document_number = st.text_input("Document Number", value="", key="ps_document_number")
+            equipment_layout_number = st.text_input("Equipment Layout Number", value="", key="ps_equipment_layout_number")
+
+        st.divider()
+        st.markdown("### Schedule Entries")
+        if "panel_left_rows" not in st.session_state:
+            st.session_state["panel_left_rows"] = default_panel_left_rows()
+        if "panel_right_rows" not in st.session_state:
+            st.session_state["panel_right_rows"] = default_panel_right_rows()
+
+        lcol, rcol = st.columns([1, 1], gap="large")
+        with lcol:
+            st.markdown("#### Left Side (Odd Circuits)")
+            left_rows = st.data_editor(
+                st.session_state["panel_left_rows"],
+                key="panel_left_rows",
+                num_rows="fixed",
+                hide_index=True,
+                column_config={
+                    "Cct No": st.column_config.NumberColumn("Cct No", width="small"),
+                    "Phase": st.column_config.TextColumn("Phase", width="small"),
+                    "Load Description": st.column_config.TextColumn("Load Description", width="medium"),
+                    "Conn Load (W)": st.column_config.TextColumn("Conn Load (W)", width="small"),
+                    "RCCB Rating": st.column_config.TextColumn("RCCB Rating", width="small"),
+                    "No. of Fixt.": st.column_config.TextColumn("No. of Fixt.", width="small"),
+                    "Brkr Size": st.column_config.TextColumn("Brkr Size", width="small"),
+                },
+                disabled=["Cct No", "Phase"],
+            )
+        with rcol:
+            st.markdown("#### Right Side (Even Circuits)")
+            right_rows = st.data_editor(
+                st.session_state["panel_right_rows"],
+                key="panel_right_rows",
+                num_rows="fixed",
+                hide_index=True,
+                column_config={
+                    "Cct No": st.column_config.NumberColumn("Cct No", width="small"),
+                    "Brkr Size": st.column_config.TextColumn("Brkr Size", width="small"),
+                    "No. of Fixt.": st.column_config.TextColumn("No. of Fixt.", width="small"),
+                    "RCCB Rating": st.column_config.TextColumn("RCCB Rating", width="small"),
+                    "Conn Load (W)": st.column_config.TextColumn("Conn Load (W)", width="small"),
+                    "Load Description": st.column_config.TextColumn("Load Description", width="medium"),
+                },
+                disabled=["Cct No"],
+            )
+
+        st.divider()
+        st.markdown("### Exports")
+        exp1, exp2 = st.columns([1, 1], gap="large")
+
+        cover_data = {
+            "client": client,
+            "facility": facility,
+            "building": building,
+            "title": title,
+            "panel_tag": panel_tag,
+            "drawn_by": drawn_by,
+            "checked_by": checked_by,
+            "approved_by": approved_by,
+            "drawn_date": drawn_date,
+            "checked_date": checked_date,
+            "approved_date": approved_date,
+            "project_number": project_number,
+            "drawing_number": drawing_number,
+            "cover_building": cover_building,
+            "cover_title": cover_title,
+            "notes": notes,
+            "rev_no": rev_no,
+            "revised_by": revised_by,
+            "rev_date": rev_date,
+            "rev_checked_by": rev_checked_by,
+            "rev_checked_date": rev_checked_date,
+            "rev_approved_by": rev_approved_by,
+            "rev_approved_date": rev_approved_date,
+            "rev_notes": rev_notes,
+        }
+
+        panel_header = {
+            "distribution_board_no": distribution_board_no,
+            "location": location,
+            "document_number": document_number,
+            "bus_rating": bus_rating,
+            "incomer_transformer_rating": incomer_transformer_rating,
+            "equipment_layout_number": equipment_layout_number,
+            "num_circuits": int(num_circuits) if num_circuits else None,
+            "incomer_breaker": incomer_breaker,
+            "incomer_transformer_tag": incomer_transformer_tag,
+            "interrupting_capacity": interrupting_capacity,
+        }
+
+        with exp1:
+            if st.button("Prepare Filled Excel (.xlsx)", key="ps_build_filled"):
+                try:
+                    wb = build_panel_schedule_workbook(
+                        cover_data,
+                        panel_header,
+                        left_rows,
+                        right_rows,
+                        use_current_date=False,
+                    )
+                    buf = io.BytesIO()
+                    wb.save(buf)
+                    st.session_state["ps_filled_bytes"] = buf.getvalue()
+                    st.success("Filled Excel prepared. Use the download button below.")
+                except Exception as e:
+                    st.error(f"Failed to build panel schedule: {e}")
+
+            filled_bytes = st.session_state.get("ps_filled_bytes", None)
+            st.download_button(
+                "Download Filled Excel",
+                data=filled_bytes if filled_bytes else b"",
+                file_name="Panel_Schedule_Filled.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                disabled=(filled_bytes is None),
+                key="ps_download_filled",
+            )
+
+        with exp2:
+            if st.button("Prepare Empty Template (.xlsx)", key="ps_build_template"):
+                try:
+                    wb = build_panel_schedule_workbook(
+                        {
+                            "client": "",
+                            "facility": "",
+                            "building": "",
+                            "title": "",
+                            "panel_tag": "",
+                            "drawn_by": "",
+                            "checked_by": "",
+                            "approved_by": "",
+                            "drawn_date": today,
+                            "checked_date": today,
+                            "approved_date": today,
+                            "project_number": "",
+                            "drawing_number": "",
+                            "cover_building": "",
+                            "cover_title": "",
+                            "notes": "",
+                            "rev_no": "",
+                            "revised_by": "",
+                            "rev_date": today,
+                            "rev_checked_by": "",
+                            "rev_checked_date": today,
+                            "rev_approved_by": "",
+                            "rev_approved_date": today,
+                            "rev_notes": "",
+                        },
+                        {
+                            "distribution_board_no": "",
+                            "location": "",
+                            "document_number": "",
+                            "bus_rating": "",
+                            "incomer_transformer_rating": "",
+                            "equipment_layout_number": "",
+                            "num_circuits": 24,
+                            "incomer_breaker": "",
+                            "incomer_transformer_tag": "",
+                            "interrupting_capacity": "",
+                        },
+                        default_panel_left_rows(),
+                        default_panel_right_rows(),
+                        use_current_date=True,
+                    )
+                    buf = io.BytesIO()
+                    wb.save(buf)
+                    st.session_state["ps_template_bytes"] = buf.getvalue()
+                    st.success("Empty template prepared. Use the download button below.")
+                except Exception as e:
+                    st.error(f"Failed to build template: {e}")
+
+            template_bytes = st.session_state.get("ps_template_bytes", None)
+            st.download_button(
+                "Download Empty Template",
+                data=template_bytes if template_bytes else b"",
+                file_name="Panel_Schedule_Template.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                disabled=(template_bytes is None),
+                key="ps_download_template",
+            )
+
+
+# ============================
+# 13) Conductors
 # ============================
 elif page == "Conductors":
     with theory_tab:
