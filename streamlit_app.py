@@ -629,6 +629,81 @@ if page == "Transformer Protection":
         header("Transformer Protection Calculator", "Compute transformer currents + code-based OCPD limits (per attached calc documents).")
         show_code_note(code_mode)
 
+        
+st.markdown("### Transformer Protection Flowchart")
+
+dot = '''
+digraph G {
+  rankdir=TB;
+ 
+  node [shape=box, style=rounded];
+
+  d1 [label="Rating "];
+  d1 -> d2 [label=">750V"];
+  d2 [label="Impedance", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d2 -> d3 [label="<7.5"];
+  d3 [label="Protection
+ level", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d2 -> d4 [label="bet 7.5 & 10"];
+  d4 [label="Protection 
+ level", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d5 [label="CB: 300%\nF:150%"];
+  d3 -> d5 [label= "Pri. only"];
+  d4 -> d5 [label= "Pri. only"];
+  d6 [label="For side", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d7 [label="For side", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d3 -> d6 [label="P&S"]; 
+  d4 -> d7 [label="P&S"];
+  d8 [label="CB: 600%\nF:300%"];
+  d9 [label="Voltage", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d10 [label="Voltage", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d6 -> d8 [label="Pri. >750V"];
+  d6 -> d9 [label="Sec."];
+  d7 -> d10 [label="Pri. >750V"];
+  d7 -> d9 [label="Sec."];
+  d7 -> d11 [label="Pri. >750V"];
+  d11 [label="CB: 400%\nF:200%"];
+  d12 [label="CB:300%\nF:150%"];
+  d13 [label="CB:250%\nF:250%"];
+  d14 [label="CB:250%\nF:125%"];
+  d9 -> d12 [label="<750V"];
+  d9 -> d13 [label ="<750V"];
+  d10 -> d13 [label="<750V"];
+  d10 -> d14 [label=">750V"];
+  
+  d15 [label ="Insulation", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d16 [label ="Protection
+ level", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d17 [label ="Protection 
+ level", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d18 [label ="FLC", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d19 [label ="CB:150%\nF:150%"];
+  d20 [label ="CB:167%\nF:167%"];
+  d21 [label ="CB:300%\nF:300%"];
+  d22 [label ="For side", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d23 [label ="CB:125%\nF:125%"];
+  
+  d1 -> d15 [label=">750V"];
+  d15 -> d16 [label="Oil"];
+  d15 -> d17 [label="Dry"];
+  d16 -> d18 [label="pri. only"];
+  d18 -> d19 [label=">=9A"];
+  d18 -> d20 [label="9>I>2"];
+  d18 -> d21 [label="<2"];
+  d16 -> d22 [label="P&S"];
+  d17 -> d22 [label="P&S"];
+  d17 -> d23 [label="pri. only"];
+  d22 -> d21 [label="primary "];
+  d22 -> d23 [label="sec."];
+  
+
+  
+}
+'''
+
+st.graphviz_chart(dot)
+
+
         st.markdown("### Inputs")
         c1, c2, c3, c4 = st.columns([1, 1, 1, 1], gap="large")
         with c1:
