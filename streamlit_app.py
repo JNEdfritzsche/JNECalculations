@@ -6289,7 +6289,7 @@ elif page == "Panel Schedule":
             st.markdown("#### Left Side (Odd Circuits)")
             left_rows = st.data_editor(
                 st.session_state["panel_left_rows"],
-                key="panel_left_rows",
+                key="panel_left_editor",
                 num_rows="fixed",
                 hide_index=True,
                 column_config={
@@ -6303,11 +6303,12 @@ elif page == "Panel Schedule":
                 },
                 disabled=["Cct No", "Phase"],
             )
+            st.session_state["panel_left_rows"] = left_rows
         with rcol:
             st.markdown("#### Right Side (Even Circuits)")
             right_rows = st.data_editor(
                 st.session_state["panel_right_rows"],
-                key="panel_right_rows",
+                key="panel_right_editor",
                 num_rows="fixed",
                 hide_index=True,
                 column_config={
@@ -6320,6 +6321,7 @@ elif page == "Panel Schedule":
                 },
                 disabled=["Cct No"],
             )
+            st.session_state["panel_right_rows"] = right_rows
 
         st.divider()
         st.markdown("### Exports")
