@@ -2629,6 +2629,328 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
         eq(r"A_{total}=\sum\left(n\cdot A_{cable}\right)")
         eq(r"\text{Fill (\%)}=\frac{A_{total}}{A_{tray}}\cdot 100")
 
+        # =====================================================================
+        # Export Cable Tray Report
+        # =====================================================================
+        st.divider()
+        st.markdown("### 📄 Export calculation report")
+
+        OMML_CTRAY_EQUATIONS = {
+            r"A_{tray}=w\cdot d": r"""
+        <m:sSub>
+            <m:e><m:r><m:t>A</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>tray</m:t></m:r></m:sub>
+        </m:sSub>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:r><m:t>w</m:t></m:r>
+        <m:r><m:t xml:space="preserve"> · </m:t></m:r>
+        <m:r><m:t>d</m:t></m:r>
+        """,
+            r"A_{cable}=\pi\left(\frac{OD}{2}\right)^2": r"""
+        <m:sSub>
+            <m:e><m:r><m:t>A</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>cable</m:t></m:r></m:sub>
+        </m:sSub>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:r><m:t>π</m:t></m:r>
+        <m:r><m:t xml:space="preserve"> </m:t></m:r>
+        <m:f>
+            <m:num><m:r><m:t>OD</m:t></m:r></m:num>
+            <m:den><m:r><m:t>2</m:t></m:r></m:den>
+        </m:f>
+        <m:sup><m:r><m:t>2</m:t></m:r></m:sup>
+        """,
+            r"A_{total}=\sum\left(n\cdot A_{cable}\right)": r"""
+        <m:sSub>
+            <m:e><m:r><m:t>A</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>total</m:t></m:r></m:sub>
+        </m:sSub>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:r><m:t>∑</m:t></m:r>
+        <m:r><m:t>(</m:t></m:r>
+        <m:r><m:t>n</m:t></m:r>
+        <m:r><m:t xml:space="preserve"> · </m:t></m:r>
+        <m:sSub>
+            <m:e><m:r><m:t>A</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>cable</m:t></m:r></m:sub>
+        </m:sSub>
+        <m:r><m:t>)</m:t></m:r>
+        """,
+            r"\text{Fill (\%)}=\frac{A_{total}}{A_{tray}}\cdot 100": r"""
+        <m:r><m:t>Fill (%)</m:t></m:r>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num>
+                <m:sSub>
+                    <m:e><m:r><m:t>A</m:t></m:r></m:e>
+                    <m:sub><m:r><m:t>total</m:t></m:r></m:sub>
+                </m:sSub>
+            </m:num>
+            <m:den>
+                <m:sSub>
+                    <m:e><m:r><m:t>A</m:t></m:r></m:e>
+                    <m:sub><m:r><m:t>tray</m:t></m:r></m:sub>
+                </m:sSub>
+            </m:den>
+        </m:f>
+        <m:r><m:t xml:space="preserve"> · </m:t></m:r>
+        <m:r><m:t>100</m:t></m:r>
+        """,
+        }
+
+        def build_ctray_word_report():
+            doc = Document("content/files/Template.docx")
+            remove_leading_blank_paragraphs(doc)
+
+            table = doc.sections[0].header.tables[0]
+            append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
+            append_to_value_line(table.cell(0, 4), "#")
+            append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
+            append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
+            append_to_value_line(table.cell(3, 3), "")
+            append_to_value_line(table.cell(3, 4), "")
+            append_to_value_line(table.cell(3, 2), "Cable Tray Fill Calculation Report")
+
+            # Equations
+            doc.add_heading("Equations", level=1)
+            
+            for title, equation in [
+                ("Tray area", r"A_{tray}=w\cdot d"),
+                ("Cable cross-sectional area", r"A_{cable}=\pi\left(\frac{OD}{2}\right)^2"),
+                ("Total cable area", r"A_{total}=\sum\left(n\cdot A_{cable}\right)"),
+                ("Fill percentage", r"\text{Fill (\%)}=\frac{A_{total}}{A_{tray}}\cdot 100"),
+            ]:
+                p = doc.add_paragraph()
+                p.add_run(f"{title}: ").bold = True
+                omml = OMML_CTRAY_EQUATIONS.get(equation)
+                if omml is not None:
+                    add_omml_equation_to_paragraph(p, omml)
+
+            # Assumptions
+            doc.add_heading("Assumptions", level=1)
+            ctray_assumptions = [
+                "All cable outer diameters are measured in the same cross-sectional plane.",
+                f"Tray dimensions: width = {tray_width_mm:.2f} mm, depth = {tray_depth_mm:.2f} mm.",
+                "Tray area is calculated as the product of width and depth.",
+                "Cable area is calculated using the circular cross-section formula: A = π(OD/2)².",
+                "Total cable area is the sum of each cable group's area (OD × number of cables in group).",
+                "Fill percentage is calculated as (total cable area / tray area) × 100%.",
+            ]
+            for a in ctray_assumptions:
+                doc.add_paragraph(a, style="CalcBullet")
+
+            # Tray Dimensions
+            doc.add_heading("Tray Dimensions", level=1)
+            ctray_dims = [
+                ("Tray width (mm)", f"{tray_width_mm:.2f}"),
+                ("Tray depth (mm)", f"{tray_depth_mm:.2f}"),
+                ("Tray usable area (mm²)", f"{tray_area_mm2:,.2f}"),
+            ]
+
+            t = doc.add_table(rows=1, cols=2)
+            hdr = t.rows[0].cells
+            p = hdr[0].paragraphs[0]
+            p.clear()
+            r = p.add_run("Parameter")
+            r.bold = True
+            p = hdr[1].paragraphs[0]
+            p.clear()
+            r = p.add_run("Value")
+            r.bold = True
+
+            for param, val in ctray_dims:
+                row = t.add_row().cells
+                row[0].text = str(param)
+                row[1].text = str(val)
+
+            set_table_borders(t)
+
+            # Cable Groups
+            if cable_groups_list:
+                doc.add_heading("Cable Groups", level=1)
+                
+                t = doc.add_table(rows=1, cols=5)
+                hdr = t.rows[0].cells
+                headers = ["Cable Name", "OD (mm)", "Quantity", "Area per Cable (mm²)", "Total Area (mm²)"]
+                for i, header_text in enumerate(headers):
+                    p = hdr[i].paragraphs[0]
+                    p.clear()
+                    r = p.add_run(header_text)
+                    r.bold = True
+
+                for group in cable_groups_list:
+                    row = t.add_row().cells
+                    row[0].text = group["Name"] if group["Name"] else "[Unnamed]"
+                    row[1].text = f"{group['OD (mm)']:.2f}"
+                    row[2].text = str(group["Qty"])
+                    cable_area_single = math.pi * (group["OD (mm)"] / 2.0) ** 2
+                    row[3].text = f"{cable_area_single:.2f}"
+                    row[4].text = f"{group['Area (mm²)']:.2f}"
+
+                set_table_borders(t)
+
+            # Results
+            doc.add_heading("Calculation Results", level=1)
+            results_data = [
+                ("Total Cable Area (mm²)", f"{total_cable_area_mm2:,.2f}"),
+                ("Tray Usable Area (mm²)", f"{tray_area_mm2:,.2f}"),
+                ("Fill Percentage (%)", f"{fill_percentage:.2f}%"),
+            ]
+
+            t = doc.add_table(rows=1, cols=2)
+            hdr = t.rows[0].cells
+            p = hdr[0].paragraphs[0]
+            p.clear()
+            r = p.add_run("Parameter")
+            r.bold = True
+            p = hdr[1].paragraphs[0]
+            p.clear()
+            r = p.add_run("Value")
+            r.bold = True
+
+            for param, val in results_data:
+                row = t.add_row().cells
+                row[0].text = str(param)
+                row[1].text = str(val)
+
+            set_table_borders(t)
+
+            style = doc.styles["Normal"]
+            style.font.name = "Calibri"
+            style.font.size = Pt(11)
+
+            bio = io.BytesIO()
+            doc.save(bio)
+            return bio.getvalue()
+
+        def build_ctray_excel_report():
+            def _safe_float(x):
+                try:
+                    return None if x is None else float(x)
+                except Exception:
+                    return None
+
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Cable Tray Fill"
+
+            ws["A1"] = "Cable Tray Fill Calculation Report"
+            ws["A1"].font = Font(bold=True, size=14)
+            ws["A3"] = "Generated"
+            ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            # Tray dimensions
+            row = 5
+            ws[f"A{row}"] = "Tray Dimensions"
+            ws[f"A{row}"].font = Font(bold=True)
+
+            row += 1
+            ws[f"A{row}"] = "Width (mm)"
+            ws[f"B{row}"] = _safe_float(tray_width_mm)
+            row += 1
+            ws[f"A{row}"] = "Depth (mm)"
+            ws[f"B{row}"] = _safe_float(tray_depth_mm)
+            row += 1
+            ws[f"A{row}"] = "Usable Area (mm²)"
+            ws[f"B{row}"] = _safe_float(tray_area_mm2)
+
+            # Cable groups
+            if cable_groups_list:
+                row += 2
+                ws[f"A{row}"] = "Cable Groups"
+                ws[f"A{row}"].font = Font(bold=True)
+
+                row += 1
+                headers = ["Cable Name", "OD (mm)", "Quantity", "Area/Cable (mm²)", "Total Area (mm²)"]
+                for col_num, header in enumerate(headers, 1):
+                    cell = ws.cell(row=row, column=col_num)
+                    cell.value = header
+                    cell.font = Font(bold=True)
+
+                for group in cable_groups_list:
+                    row += 1
+                    ws.cell(row=row, column=1).value = group["Name"] if group["Name"] else "[Unnamed]"
+                    ws.cell(row=row, column=2).value = _safe_float(group["OD (mm)"])
+                    ws.cell(row=row, column=3).value = group["Qty"]
+                    cable_area_single = math.pi * (group["OD (mm)"] / 2.0) ** 2
+                    ws.cell(row=row, column=4).value = _safe_float(cable_area_single)
+                    ws.cell(row=row, column=5).value = _safe_float(group["Area (mm²)"])
+
+            # Results
+            row += 2
+            ws[f"A{row}"] = "Calculation Results"
+            ws[f"A{row}"].font = Font(bold=True)
+
+            row += 1
+            ws[f"A{row}"] = "Total Cable Area (mm²)"
+            ws[f"B{row}"] = _safe_float(total_cable_area_mm2)
+            row += 1
+            ws[f"A{row}"] = "Tray Usable Area (mm²)"
+            ws[f"B{row}"] = _safe_float(tray_area_mm2)
+            row += 1
+            ws[f"A{row}"] = "Fill Percentage (%)"
+            ws[f"B{row}"] = _safe_float(fill_percentage)
+
+            # Auto-size columns
+            for col in ws.columns:
+                max_len = 0
+                col_letter = get_column_letter(col[0].column)
+                for cell in col:
+                    try:
+                        v = "" if cell.value is None else str(cell.value)
+                        max_len = max(max_len, len(v))
+                    except Exception:
+                        pass
+                ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
+
+            bio = io.BytesIO()
+            wb.save(bio)
+            return bio.getvalue()
+
+        # Export buttons
+        can_export_ctray = tray_area_mm2 > 0
+
+        exp_c1, exp_c2 = st.columns([1, 1], gap="large")
+        with exp_c1:
+            if st.button("Prepare Word report (.docx)", key="ctray_build_docx"):
+                try:
+                    st.session_state["ctray_docx_bytes"] = build_ctray_word_report()
+                    st.success("Word report prepared. Use the download button below.")
+                except Exception as e:
+                    st.error(f"Failed to build Word report: {e}")
+
+            docx_bytes_ctray = st.session_state.get("ctray_docx_bytes", None)
+            st.download_button(
+                "⬇️ Download Word report (.docx)",
+                data=docx_bytes_ctray if docx_bytes_ctray else b"",
+                file_name="Cable_Tray_Fill_Report.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                disabled=(not can_export_ctray) or (docx_bytes_ctray is None),
+                key="ctray_download_docx",
+            )
+
+        with exp_c2:
+            if st.button("Prepare Excel report (.xlsx)", key="ctray_build_xlsx"):
+                try:
+                    st.session_state["ctray_xlsx_bytes"] = build_ctray_excel_report()
+                    st.success("Excel report prepared. Use the download button below.")
+                except Exception as e:
+                    st.error(f"Failed to build Excel report: {e}")
+
+            xlsx_bytes_ctray = st.session_state.get("ctray_xlsx_bytes", None)
+            st.download_button(
+                "⬇️ Download Excel report (.xlsx)",
+                data=xlsx_bytes_ctray if xlsx_bytes_ctray else b"",
+                file_name="Cable_Tray_Fill_Report.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                disabled=(not can_export_ctray) or (xlsx_bytes_ctray is None),
+                key="ctray_download_xlsx",
+            )
+
+        st.caption(
+            "Export includes: equations, assumptions, tray dimensions, cable group details, and fill calculation results."
+        )
+
 
 # ============================
 # 7) Conduit Size & Fill & Bend Radius
