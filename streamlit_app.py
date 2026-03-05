@@ -632,7 +632,7 @@ if page == "Transformer Protection":
         
 st.markdown("### Transformer Protection Flowchart")
 
-dot = '''
+dot = """
 digraph G {
   rankdir=TB;
  
@@ -699,7 +699,7 @@ digraph G {
 
   
 }
-'''
+"""
 
 st.graphviz_chart(dot)
 
