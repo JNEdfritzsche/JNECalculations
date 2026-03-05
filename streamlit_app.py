@@ -2438,26 +2438,196 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
             render_md_safe("cable_tray_fill_examples_nec.md")
 
     with calc_tab:
-        header("Tray Fill & Bend Radius Calculator", "Estimate cable area + bend radius.")
+        header("Cable Tray Fill Calculator", "Enter tray dimensions and cable groups to calculate fill percentage.")
         show_code_note(code_mode)
 
-        col1, col2, col3 = st.columns(3, gap="large")
-        with col1:
-            n = st.number_input("Number of cables", min_value=1, value=20, step=1)
-        with col2:
-            od_mm = st.number_input("Cable OD (mm)", min_value=1.0, value=20.0, step=0.5)
-        with col3:
-            br_mult = st.selectbox("Bend radius multiplier (k)", ["8", "12", "16"], index=1)
+        st.markdown("### 1) Tray Dimensions")
+        
+        # Tray unit selection
+        tray_unit = st.radio("Tray dimensions unit", ["Metric (mm)", "Imperial (inches)"], horizontal=True, key="tray_unit")
+        
+        c1, c2 = st.columns(2, gap="large")
+        with c1:
+            if tray_unit == "Metric (mm)":
+                tray_width_val = st.number_input("Tray width (mm)", min_value=1.0, value=300.0, step=10.0, key="tray_width_mm")
+                tray_width_mm = tray_width_val
+            else:
+                tray_width_in = st.number_input("Tray width (inches)", min_value=0.1, value=12.0, step=0.1, key="tray_width_in")
+                tray_width_mm = tray_width_in * 25.4
+        
+        with c2:
+            if tray_unit == "Metric (mm)":
+                tray_depth_val = st.number_input("Tray depth (mm)", min_value=1.0, value=100.0, step=10.0, key="tray_depth_mm")
+                tray_depth_mm = tray_depth_val
+            else:
+                tray_depth_in = st.number_input("Tray depth (inches)", min_value=0.1, value=4.0, step=0.1, key="tray_depth_in")
+                tray_depth_mm = tray_depth_in * 25.4
+        
+        tray_area_mm2 = tray_width_mm * tray_depth_mm
+        st.info(f"**Tray usable area: {tray_area_mm2:,.2f} mm²**")
 
-        cable_area_mm2 = n * math.pi * (od_mm / 2.0) ** 2
-        bend_radius_mm = float(br_mult) * od_mm
+        st.markdown("### 2) Cable Groups")
+        
+        # Initialize session state for cable groups
+        if "tray_cables_df" not in st.session_state:
+            st.session_state["tray_cables_df"] = pd.DataFrame([
+                {"Name": "", "OD (mm)": 25.0, "Qty": 4, "Unit": "mm", "_row_id": 0}
+            ])
+        
+        df_cables = st.session_state["tray_cables_df"].copy()
+        
+        # Ensure _row_id exists
+        if "_row_id" not in df_cables.columns:
+            df_cables["_row_id"] = range(len(df_cables))
+            st.session_state["tray_cables_df"]["_row_id"] = df_cables["_row_id"]
+        
+        # Ensure other columns exist
+        for col in ["Name", "OD (mm)", "Qty", "Unit"]:
+            if col not in st.session_state["tray_cables_df"].columns:
+                st.session_state["tray_cables_df"][col] = "" if col == "Name" else (25.0 if col == "OD (mm)" else 4 if col == "Qty" else "mm")
+        
+        df_cables = st.session_state["tray_cables_df"].copy()
+        
+        cable_groups_list = []
+        
+        for display_num, (idx, row) in enumerate(df_cables.iterrows(), 1):
+            row_id = row.get("_row_id", idx)
+            cable_name = row.get("Name", "")
+            od_value = row.get("OD (mm)", 25.0)
+            qty = row.get("Qty", 4)
+            od_unit = row.get("Unit", "mm")
+            
+            # Convert OD to mm if needed
+            od_mm = od_value
+            if od_unit == "in":
+                od_mm = od_value * 25.4
+            
+            # Create row - main content + minus button
+            box_col, minus_col = st.columns([0.95, 0.05], gap="small")
+            
+            with box_col:
+                row_container = st.container(border=True)
+                with row_container:
+                    c1, c2, c3, c4, c5 = st.columns([0.05, 0.25, 0.25, 0.25, 0.20], gap="small")
+                    
+                    # Row number
+                    with c1:
+                        st.markdown(f"**{display_num}**")
+                    
+                    # Cable name
+                    with c2:
+                        cable_name = st.text_input(
+                            "Cable name",
+                            value=cable_name,
+                            placeholder="e.g., 'Main feeds'",
+                            key=f"tray_cable_name_{row_id}"
+                        )
+                    
+                    # OD value and unit
+                    with c3:
+                        od_unit = st.selectbox(
+                            "OD unit",
+                            ["mm", "in"],
+                            index=0 if od_unit == "mm" else 1,
+                            key=f"tray_cable_od_unit_{row_id}"
+                        )
+                    
+                    with c4:
+                        od_value = st.number_input(
+                            f"Cable OD ({od_unit})",
+                            min_value=0.1,
+                            value=od_value if od_unit == st.session_state.get(f"tray_cable_od_unit_{row_id}", "mm") else (od_mm / 25.4 if od_unit == "in" else od_mm),
+                            step=0.1,
+                            key=f"tray_cable_od_{row_id}"
+                        )
+                    
+                    # Quantity
+                    with c5:
+                        qty = st.number_input(
+                            "Qty",
+                            min_value=1,
+                            value=int(qty),
+                            step=1,
+                            key=f"tray_cable_qty_{row_id}"
+                        )
+                    
+                    # Calculate area for this group
+                    od_mm = od_value * (25.4 if od_unit == "in" else 1.0)
+                    cable_area_mm2 = qty * math.pi * (od_mm / 2.0) ** 2
+                    
+                    # Display info
+                    info_c1, info_c2 = st.columns([1, 1])
+                    with info_c1:
+                        st.caption(f"Area per cable: {math.pi * (od_mm / 2.0) ** 2:.2f} mm²")
+                    with info_c2:
+                        st.caption(f"Total group area: {cable_area_mm2:.2f} mm²")
+            
+            # Minus button
+            with minus_col:
+                st.write("")  # Spacer
+                if st.button("➖", key=f"tray_cable_minus_{row_id}", help="Remove this cable group", width="stretch"):
+                    st.session_state["tray_cables_df"] = st.session_state["tray_cables_df"][st.session_state["tray_cables_df"]["_row_id"] != row_id].reset_index(drop=True)
+                    st.rerun()
+            
+            # Add to list for calculations
+            cable_groups_list.append({
+                "Name": cable_name,
+                "OD (mm)": od_mm,
+                "Qty": int(qty),
+                "Area (mm²)": cable_area_mm2
+            })
+        
+        # Plus button to add new cable group
+        plus_col1, plus_col2 = st.columns([0.95, 0.05], gap="small")
+        with plus_col2:
+            st.write("")  # Spacer
+            if st.button("➕", key="tray_cable_plus_new", help="Add new cable group", width="stretch"):
+                max_id = st.session_state["tray_cables_df"]["_row_id"].max() if len(st.session_state["tray_cables_df"]) > 0 else -1
+                new_row_id = int(max_id) + 1 if max_id >= 0 else 0
+                new_row = {
+                    "Name": "",
+                    "OD (mm)": 25.0,
+                    "Qty": 4,
+                    "Unit": "mm",
+                    "_row_id": new_row_id
+                }
+                new_df = pd.concat([st.session_state["tray_cables_df"], pd.DataFrame([new_row])], ignore_index=True)
+                st.session_state["tray_cables_df"] = new_df
+                st.rerun()
 
-        st.metric("Estimated total cable area", fmt(cable_area_mm2, "mm²"))
-        st.success(f"Suggested bend radius (rule-of-thumb): **{fmt(bend_radius_mm, 'mm')}**")
-
+        st.markdown("### 3) Results")
+        
+        # Calculate totals
+        total_cable_area_mm2 = sum([g["Area (mm²)"] for g in cable_groups_list]) if cable_groups_list else 0
+        fill_percentage = (total_cable_area_mm2 / tray_area_mm2 * 100) if tray_area_mm2 > 0 else 0
+        
+        # Display metrics
+        m1, m2, m3 = st.columns(3, gap="large")
+        m1.metric("Total Usable Area (mm²)", f"{tray_area_mm2:,.2f}")
+        m2.metric("Total Area Used (mm²)", f"{total_cable_area_mm2:,.2f}")
+        m3.metric("Fill Percentage (%)", f"{fill_percentage:.2f}%")
+        
+        # Display cable group breakdown
+        if cable_groups_list:
+            st.markdown("#### Cable Group Breakdown")
+            breakdown_data = []
+            for group in cable_groups_list:
+                breakdown_data.append({
+                    "Name": group["Name"] if group["Name"] else "[Unnamed]",
+                    "Cable OD (mm)": f"{group['OD (mm)']:.2f}",
+                    "Quantity": group["Qty"],
+                    "Total Area (mm²)": f"{group['Area (mm²)']:.2f}",
+                    "% of Tray": f"{(group['Area (mm²)'] / tray_area_mm2 * 100):.2f}%" if tray_area_mm2 > 0 else "—"
+                })
+            
+            if pd is not None:
+                st.dataframe(pd.DataFrame(breakdown_data), width="stretch", hide_index=True, use_container_width=True)
+        
         st.markdown("### Equations used")
-        eq(r"A_{cables}\approx n\cdot \pi\left(\frac{d}{2}\right)^2")
-        eq(r"R_{min}=k\cdot d")
+        eq(r"A_{tray}=w\cdot d")
+        eq(r"A_{cable}=\pi\left(\frac{OD}{2}\right)^2")
+        eq(r"A_{total}=\sum\left(n\cdot A_{cable}\right)")
+        eq(r"\text{Fill (\%)}=\frac{A_{total}}{A_{tray}}\cdot 100")
 
 
 # ============================
