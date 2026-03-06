@@ -628,25 +628,20 @@ if page == "Transformer Protection":
     with calc_tab:
         header("Transformer Protection Calculator", "Compute transformer currents + code-based OCPD limits (per attached calc documents).")
         show_code_note(code_mode)
-
         
         st.markdown("### Transformer Protection Flowchart")
-
         dot = """
 digraph G {
   rankdir=TB;
- 
   node [shape=box, style=rounded];
 
   d1 [label="Rating "];
   d1 -> d2 [label=">750V"];
   d2 [label="Impedance", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
   d2 -> d3 [label="<7.5"];
-  d3 [label="Protection
- level", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d3 [label="Protectio level", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
   d2 -> d4 [label="bet 7.5 & 10"];
-  d4 [label="Protection 
- level", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d4 [label="Protection level", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
   d5 [label="CB: 300%\nF:150%"];
   d3 -> d5 [label= "Pri. only"];
   d4 -> d5 [label= "Pri. only"];
@@ -672,10 +667,8 @@ digraph G {
   d10 -> d14 [label=">750V"];
   
   d15 [label ="Insulation", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
-  d16 [label ="Protection
- level", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
-  d17 [label ="Protection 
- level", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d16 [label ="Protection level", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d17 [label ="Protection level", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
   d18 [label ="FLC", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
   d19 [label ="CB:150%\nF:150%"];
   d20 [label ="CB:167%\nF:167%"];
@@ -695,12 +688,9 @@ digraph G {
   d17 -> d23 [label="pri. only"];
   d22 -> d21 [label="primary "];
   d22 -> d23 [label="sec."];
-  
 }
 """
-
-st.graphviz_chart(dot)
-
+        st.graphviz_chart(dot)
 
         st.markdown("### Inputs")
         c1, c2, c3, c4 = st.columns([1, 1, 1, 1], gap="large")
