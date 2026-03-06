@@ -661,8 +661,8 @@ digraph G {
   d13 [label="CB:250%\nF:250%"];
   d14 [label="CB:250%\nF:125%"];
   d9 -> d12 [label=">750V"];
-  d9 -> d13 [label ="<750V"];
-  d10 -> d13 [label="<750V"];
+  d9 -> d13 [label ="<=750V"];
+  d10 -> d13 [label="<=750V"];
   d10 -> d14 [label=">750V"];
   
   d15 [label ="Insulation", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
