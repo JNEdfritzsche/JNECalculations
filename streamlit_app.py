@@ -630,9 +630,9 @@ if page == "Transformer Protection":
         show_code_note(code_mode)
 
         
-st.markdown("### Transformer Protection Flowchart")
+        st.markdown("### Transformer Protection Flowchart")
 
-dot = """
+        dot = """
 digraph G {
   rankdir=TB;
  
@@ -695,8 +695,6 @@ digraph G {
   d17 -> d23 [label="pri. only"];
   d22 -> d21 [label="primary "];
   d22 -> d23 [label="sec."];
-  
-
   
 }
 """
