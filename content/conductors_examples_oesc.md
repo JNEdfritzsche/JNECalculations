@@ -1,5 +1,3 @@
-# Conductor Sizing — Calculation Examples
-
 ## Overview
 
 This section walks through worked examples for conductor sizing under OESC Rule 4-004. The goal is to demonstrate how to identify which tables and correction factors apply, and how to combine them correctly. For theory and derating methodology, refer to the theory tab.
