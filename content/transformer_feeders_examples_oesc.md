@@ -71,6 +71,8 @@ $$\frac{V_1}{V_2} = \frac{13{,}800}{600} = 23$$
 ## Appendix
 
 ### Related OESC Rules
+Rule 26-256 — Conductor size for transformers <br/>
 
-Rule 26-250 — Transformer Feeder Overcurrent Protection<br/>
-Rule 26-256 — Transformer Secondary Overcurrent Protection<br/>
+### Related OESC Tables
+Table 1/3 — Single Conductor ampacities for Copper/Aluminum<br/>
+Table 2/4 — Multi-Conductor ampacities for Copper/Aluminum <br/>
