@@ -97,9 +97,9 @@ Rule 4-006 — Temperature Limitations
 
 ### Related OESC Tables
 
-Table 1/2 — Single Conductor Ampacities for Copper/Aluminum<br/>
-Table 3/4 — Multi-Conductor Ampacities for Copper/Aluminum<br/>
-Table 5A — Conductor Ambient Temperature Correction Factors<br/>
-Table 5B — Single Conductor Spacing Correction Factors<br/>
-Table 5C — Multi-Conductor Group Correction Factors<br/>
-Table 5D — Cable Tray Spacing Correction Factors<br/>
+Table 1/2 — Single Conductor ampacities for Copper/Aluminum <br/>
+Table 3/4 — Multi-Conductor ampacities for Copper/Aluminum <br/>
+Table 5A — Conductor Ambient Temperature Correction Factors <br/>
+Table 5B — Single Conductor Spacing Correction Factors <br/>
+Table 5C — Multi-Conductor Group Correction Factors <br/>
+Table 5D — Cable tray Spacing Correction Factors <br/>
