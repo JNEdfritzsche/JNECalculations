@@ -79,6 +79,12 @@ $$I_{\text{target}} = 1.25 \times 162.1 = 202.6 \text{ A}$$
 
 ## Appendix
 
+### Related Knowledge Files
+
+[Design Basis — Calculations: Motor Feeder](https://jnepeng.sharepoint.com/:w:/s/JNEElectricalPortalTeams/IQAJQj9NgJoFQZ1Cka91W7FrAU1C4cOQc2NbIUe-6dugX7o?e=4OlqCj)<br/>
+[Knowledge File — OESC: Section 28 Motor and Generators](https://jnepeng.sharepoint.com/:b:/s/JNEElectricalPortalTeams/IQAXnWzLgtMmR61hoesUWqmpAXLI_p34pKUoeB9wE2W_eBs?e=cBCsY6)<br/>
+[Knowledge File — Cable Sizing for a motor](https://jnepeng.sharepoint.com/:w:/s/JNEElectricalPortalTeams/IQAeH5a2w33eToJmvy6SYiWPAb36iBHMkGGKajJcOedagLo?e=5mL84s)
+
 ### Related OESC Rules
 
 Rule 4-004 — Conductor ampacity<br/>
