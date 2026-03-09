@@ -63,10 +63,8 @@ $$
 
 ### Related OESC Rules
 
-Rule 8-102 — Voltge drop limitations<br/>
+Rule 8-102 — Voltage drop limitations<br/>
 
 ### Related OESC Tables
 
 Table D3 — K-values for calculating voltage drop 
-
-
