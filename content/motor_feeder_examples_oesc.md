@@ -1,5 +1,3 @@
-# Motor Feeder — Calculation Examples
-
 ## Overview
 
 This section walks through worked examples for calculating motor full-load amps (FLA) from nameplate data. The formula varies by system type — the √3 factor appears for three-phase, and cosθ drops out for DC. For theory and conductor/overcurrent protection sizing from FLA, refer to the theory tab.
