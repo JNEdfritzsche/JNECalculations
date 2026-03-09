@@ -70,6 +70,11 @@ $$\frac{V_1}{V_2} = \frac{13{,}800}{600} = 23$$
 
 ## Appendix
 
+### Related Knowledge Files:
+[Knowledge File — OESC: Section 4 Conductors](https://jnepeng.sharepoint.com/:b:/s/JNEElectricalPortalTeams/IQBX__AeZwFdTaYRIpekMk53AST1Z1fmbLyJuMdhL2C3csc?e=siODjS) <br/>
+[Knowledge File — OESC: Section 26 Installation of Electrical Equipment](https://jnepeng.sharepoint.com/:b:/s/JNEElectricalPortalTeams/IQAr5W2CWdUbQb-26XCqmNYqAfifLPPITzkxySXkq7Q7sGQ?e=ZFTBIb) <br/>
+[Design Basis — Calculations: Transformer Feeder Calculation](https://jnepeng.sharepoint.com/:w:/s/JNEElectricalPortalTeams/IQBmWQP7oRhwQJpoUj2syI31ASaPrwBGzyvhWrQlZzT9228?e=XKoJPh)
+
 ### Related OESC Rules
 Rule 26-256 — Conductor size for transformers <br/>
 
