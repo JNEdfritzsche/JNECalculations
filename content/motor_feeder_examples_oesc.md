@@ -96,7 +96,7 @@ Rule 28-108 — Conductor sizing:  Multiple motors branch circuit<br/>
 Rule 28-110 — Conductor sizing: Feeder <br/>
 Rule 28-400 — Motor Undervoltage
 
-## Related OESC Tables
+### Related OESC Tables
 
 Tables 27 — Motor Service Duties<br/>
 Tables 37 — Motor Insulation Class Rating<br/>
