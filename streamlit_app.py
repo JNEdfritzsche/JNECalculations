@@ -636,7 +636,7 @@ digraph G {
   node [shape=box, style=rounded];
 
   d1 [label="Rating "];
-  d1 -> d2 [label="> 750V", labeldistance=4, labelfontsize=10];
+  d1 -> d2 [taillabel="> 750V", labeldistance=4, labelfontsize=10];
   d2 [label="Protection level", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
   d2 -> d3 [label="", taillabel="P & S", labeldistance=5, labelfontsize=10];
   d3 [label="Impedance", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
