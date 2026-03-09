@@ -81,6 +81,19 @@ $$I_{\text{target}} = 1.25 \times 162.1 = 202.6 \text{ A}$$
 
 ### Related OESC Rules
 
-Rule 28-106 — Motor Branch Circuit Conductors<br/>
-Rule 28-200 — Motor Overcurrent Protection<br/>
-Rule 28-204 — Motor Branch Circuit Short-Circuit and Ground-Fault Protection<br/>
+Rule 4-004 — Conductor ampacity<br/>
+Rule 4-006 — Temperature limitations<br/>
+Rule 8-102 — Voltage drop <br/>
+Rule 28-104 — Motor supply conductor insulation temperature rating & ampacity<br/>
+Rule 28-106 — Conductor sizing:  Single motor branch circuit<br/>
+Rule 28-108 — Conductor sizing:  Multiple motors branch circuit<br/>
+Rule 28-110 — Conudctor sizing: Feeder <br/>
+Rule 28-400 — Motor Undervoltage
+
+## Related OESC Tables
+
+Tables 27 — Motor Service Duties<br/>
+Tables 37 — Motor Insulation Class Rating<br/>
+Table D2 — DC motor Full Load Ampacity<br/>
+Table 44 — 3Φ Motor FLA at 100% PF<br/>
+Table 45 — 1Φ Motor FLA at 100% PF
