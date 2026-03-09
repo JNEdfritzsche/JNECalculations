@@ -1,5 +1,3 @@
-# Conduit Fill — Calculation Examples
-
 ## Overview
 
 This section walks through worked examples for conduit fill calculations under OESC Rule 12-904 and Table 9. The goal is to demonstrate how to sum cable areas, select conduit size, and check against the allowable fill limit. For theory and table selection, refer to the theory tab.
