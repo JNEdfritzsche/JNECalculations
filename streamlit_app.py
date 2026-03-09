@@ -637,22 +637,19 @@ digraph G {
 
   d1 [label="Rating "];
   d1 -> d2 [label="> 750V"];
-  d2 [label="Impedance", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
-  d2 -> d3 [label="Z <= 7.5%"];
-  d3 [label="Protection \nlevel", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
-  d2 -> d4 [label="7.5% < Z <= 10%"];
-  d4 [label="Protection \nlevel", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d2 [label="Protection level", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
+  d2 -> d3 [label="", taillabel="P & S", labeldistance=5, labelfontsize=10];
+  d3 [label="Impedance", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
   d5 [label="CB: 300%\nF:150%"];
-  d3 -> d5 [label= "Pri.\nonly"];
-  d4 -> d5 [label= "Pri.\nonly"];
+  d2 -> d5 [label= "Pri.\nonly"];
   d6 [label="For side", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
   d7 [label="For side", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
-  d3 -> d6 [label="P & S"]; 
-  d4 -> d7 [label="P & S"];
+  d3 -> d6 [taillabel="Z <= 7.5%", labeldistance=7, labelfontsize=10]; 
+  d3 -> d7 [label="7.5% < Z <= 10%"];
   d8 [label="CB: 600%\nF:300%"];
   d9 [label="Voltage", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
   d10 [label="Voltage", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
-  d6 -> d8 [label="Pri. >750V"];
+  d6 -> d8 [taillabel="Pri. >750V", labeldistance=5, labelfontsize=10];
   d6 -> d9 [label="Sec."];
   d7 -> d10 [label="Sec."];
   d7 -> d11 [label="Pri. >750V"];
@@ -674,12 +671,14 @@ digraph G {
   d21 [label ="CB:300%\nF:300%"];
   d22 [label ="For side", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
   d23 [label ="CB:125%\nF:125%"];
-  d1 -> d15 [label="> 750V"];
+  d1 -> d15 [label="< 750V"];
   d15 -> d16 [label="Oil"];
   d15 -> d17 [label="Dry"];
   d16 -> d18 [label="Pri.\nonly"];
   d18 -> d19 [label="I >= 9A"];
   d18 -> d20 [label="9A > I >= 2A"];
+  {rank=same; d19; d20;}
+d19 -> d20 [style=invis];
   d18 -> d21 [label="I < 2A"];
   d16 -> d22 [label="P & S"];
   d17 -> d22 [label="P & S"];
