@@ -97,7 +97,7 @@ $$\%\Delta V = \frac{5.46}{125} \times 100\% = 4.37\%$$
 
 ### Related OESC Rules
 
-Rule 8-102 — Voltge drop limitations<br/>
+Rule 8-102 — Voltage drop limitations<br/>
 
 ### Related OESC Tables
 
