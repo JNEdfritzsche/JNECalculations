@@ -1,5 +1,3 @@
-# Transformer Feeder — Calculation Examples
-
 ## Overview
 
 This section walks through worked examples for calculating transformer primary and secondary full-load currents. The key distinction is the formula used; single-phase and three-phase transformers differ by a factor of √3. For theory, refer to the theory tab.
