@@ -135,6 +135,10 @@ $$\text{Fill\%} = \frac{826 + 1{,}750}{8{,}311} \times 100\% = \frac{2{,}576}{8{
 
 ## Appendix
 
+### Related Knowledge File
+
+[Knowledge File: Maximum Allowable Conductors/Cables in Conduit and Tubing](https://jnepeng.sharepoint.com/:w:/s/JNEElectricalPortalTeams/IQD_dpZ_f5oHQ6fAWxmiT_CjAb57hCu7AJd_lmC_tLEvPTM?e=bzHXAI)
+
 ### Related OESC Rules
 
 Rule 4-004 — Ampacity of Wires and Cables<br/>
