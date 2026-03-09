@@ -74,7 +74,7 @@ $$\text{Fill\%} = \frac{357}{985} \times 100\% = 36.24\% \leq 40\% \quad \checkm
 
 **Mixed 24VDC and 480V cables | RMC**
 
-Three cable groups are present. The 24VDC control cables must be kept separate from the 480V power cables per OESC Rule 12-1010. The 480V group contains one 3/C cable and four 1/C cables.
+Three cable groups are present. The 24VDC control cables must be kept separate from the 480V power cables. The 480V group contains one 3/C cable and four 1/C cables.
 
 | Cable group | Table | Area/cable | Qty | Total area |
 |-------------|-------|-----------|-----|------------|
@@ -104,7 +104,7 @@ $$\text{Fill\%} = \frac{1{,}167}{3{,}139} \times 100\% = 37.18\% \leq 40\% \quad
 
 **Mixed 24VDC, 120V, and 600V cables | RMC**
 
-Four cable groups must be distributed across three conduits. The 600V HV cable must be isolated from all LV cables (OESC Rule 12-1010). The two 24VDC groups are separated because combining them would exceed 250 conductors in a single raceway (175 + 64 = 239 conductors; note: combining with other groups pushes total above the threshold).
+Four cable groups must be distributed across three conduits. The 600V HV cable must be isolated from all LV cables. The two 24VDC groups are separated because combining them would exceed 200 conductors in a single raceway (175 + 64 = 239 conductors; note: combining with other groups pushes total above the threshold).
 
 | Cable group | Table | Area/cable | Qty | Total area |
 |-------------|-------|-----------|-----|------------|
