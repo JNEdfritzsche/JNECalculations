@@ -137,12 +137,14 @@ $$\text{Fill\%} = \frac{826 + 1{,}750}{8{,}311} \times 100\% = \frac{2{,}576}{8{
 
 ### Related OESC Rules
 
-Rule 12-904 — Number and size of conductors in raceway<br/>
-Rule 12-1010 — Separation of conductors of different systems<br/>
+Rule 4-004 — Ampacity of Wires and Cables<br/>
+Rule 12-902 — Types of insulated conductors and cables<br/>
+Rule 12-904 — Conductors in Raceways<br/>
+Rule 12-910 — Conductors in Conduit
 
 ### Related OESC Tables
 
-Table 6A / 6C / 6J — Cable cross-sectional areas by insulation type and conductor count<br/>
-Table 9C — Conduit internal areas and allowable fill (1 cable, 53%)<br/>
-Table 9E — Conduit internal areas and allowable fill (2 cables, 31%)<br/>
-Table 9G — Conduit internal areas and allowable fill (3+ cables, 40%)<br/>
+Table 7 — Minimum conduit bending radius <br/>
+Table 8 — Maximum allowable conduit fill percent<br/>
+Tables 9A-9G — Conduit areas at various percentages<br/>
+Table 19 — Conditions of use for Conductors and Cables
