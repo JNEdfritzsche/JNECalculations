@@ -95,7 +95,7 @@ Rule 8-102 — Voltage drop <br/>
 Rule 28-104 — Motor supply conductor insulation temperature rating & ampacity<br/>
 Rule 28-106 — Conductor sizing:  Single motor branch circuit<br/>
 Rule 28-108 — Conductor sizing:  Multiple motors branch circuit<br/>
-Rule 28-110 — Conudctor sizing: Feeder <br/>
+Rule 28-110 — Conductor sizing: Feeder <br/>
 Rule 28-400 — Motor Undervoltage
 
 ## Related OESC Tables
