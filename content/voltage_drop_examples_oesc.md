@@ -1,5 +1,3 @@
-# Voltage Drop — Calculation Examples
-
 ## Overview
 
 This section walks through worked examples for voltage drop calculations using OESC Appendix D. The goal is to demonstrate how to select the correct k-value, temperature multiplier, and system factor for different circuit types. For theory and methodology, refer to the theory tab.
