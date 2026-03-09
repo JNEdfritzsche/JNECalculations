@@ -129,8 +129,6 @@ $$\text{Fill\%} = \frac{826 + 1{,}750}{8{,}311} \times 100\% = \frac{2{,}576}{8{
 
 **Result: Fill three 103 mm (4") RMC conduits — Conduits 1 & 2 for LV control, Conduit 3 for LV/HV power at 31.0%**
 
-**NOTE:** Two key points illustrated here. First, HV and LV cables must be in separate conduits per OESC Rule 12-1010. Second, the allowable fill **drops from 40% to 31% when only 2 cables are present** (Table 9E vs 9G) — Conduit 3 passes by a margin of only 0.01%. In practice, engineering judgment or a larger conduit should be considered at such tight margins.
-
 ---
 
 ## Appendix
