@@ -18,7 +18,7 @@ The first step for working with any motor is to gather all information available
 
 ---
 ## Feeder Size
-The motor's Full Load Ampacity (FLA) is typically found on the nameplate. If unavailable, we can calculate the FLA from the following equation, or using values from Tables 44, 45, or D2. To calculate the FLA for a 3Φ motor we use the following equation:
+The motor's Full Load Ampacity (FLA) is typically found on the nameplate. If unavailable, we can calculate the FLA from the following equation, or using values from **Tables 44, 45, or D2**. To calculate the FLA for a 3Φ motor we use the following equation:
 
 $$
 I_{\text{FLA}} = \frac{\text{HP} \cdot 745.7}{\sqrt3 \cdot V_{\text{LL}} \cdot \cos\theta \cdot  \eta}
