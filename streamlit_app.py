@@ -3751,13 +3751,23 @@ elif page == "Conduit Size & Fill & Bend Radius":
         allowed_source = "—"
 
         if use_manual_conduit:
-            c1, c2, c3 = st.columns([1, 1, 1], gap="large")
+            conduit_name = st.text_input("Conduit name (optional)", value="Custom Conduit", key="cf_manual_name")
+            
+            c1, c2, c3, c4 = st.columns([1, 1, 0.8, 1], gap="large")
             with c1:
                 conduit_type = st.text_input("Conduit type (label)", value="(Manual)", key="cf_manual_type")
             with c2:
                 conduit_trade = st.text_input("Trade size (label)", value="(Manual)", key="cf_manual_size")
             with c3:
-                conduit_internal_area = st.number_input("Conduit internal area (mm²)", min_value=0.01, value=500.0, step=10.0, key="cf_manual_area")
+                area_unit = st.selectbox("Area unit", ["mm²", "in²"], key="cf_manual_area_unit")
+            
+            with c4:
+                if area_unit == "mm²":
+                    area_value = st.number_input("Conduit internal area", min_value=0.01, value=500.0, step=10.0, key="cf_manual_area")
+                    conduit_internal_area = area_value
+                else:  # in²
+                    area_value = st.number_input("Conduit internal area", min_value=0.01, value=3.1, step=0.1, key="cf_manual_area")
+                    conduit_internal_area = area_value * 645.16  # Convert in² to mm²
 
             st.caption("Manual mode: allowable fill uses 53%/31%/40% convention (unless you override below).")
             n_cables_dummy = st.number_input("Cables in raceway (for allowable fill selection)", min_value=1, value=3, step=1, key="cf_manual_n_cables")
@@ -3785,7 +3795,13 @@ elif page == "Conduit Size & Fill & Bend Radius":
                     conduit_internal_area = _to_float(entry.get("area_mm2") if entry else None)
                     if conduit_internal_area is None:
                         st.warning("Could not infer internal area from Table 9 row — using manual entry for internal area.")
-                        conduit_internal_area = st.number_input("Conduit internal area override (mm²)", min_value=0.01, value=500.0, step=10.0, key="cf_area_override")
+                        area_unit_override = st.selectbox("Area unit", ["mm²", "in²"], key="cf_area_override_unit_1")
+                        if area_unit_override == "mm²":
+                            area_value = st.number_input("Conduit internal area override", min_value=0.01, value=500.0, step=10.0, key="cf_area_override")
+                            conduit_internal_area = area_value
+                        else:  # in²
+                            area_value = st.number_input("Conduit internal area override", min_value=0.01, value=3.1, step=0.1, key="cf_area_override")
+                            conduit_internal_area = area_value * 645.16  # Convert in² to mm²
             else:
                 # Fallback to parsing the combined Table 9 dataframe if helpers are unavailable.
                 # ======= OESC Table 9 column -> OESC trimmed header mapping =======
@@ -3885,7 +3901,13 @@ elif page == "Conduit Size & Fill & Bend Radius":
 
                     if conduit_internal_area is None:
                         st.warning("Could not infer internal area from Table 9 row — using manual entry for internal area.")
-                        conduit_internal_area = st.number_input("Conduit internal area override (mm²)", min_value=0.01, value=500.0, step=10.0, key="cf_area_override")
+                        area_unit_override = st.selectbox("Area unit", ["mm²", "in²"], key="cf_area_override_unit_2")
+                        if area_unit_override == "mm²":
+                            area_value = st.number_input("Conduit internal area override", min_value=0.01, value=500.0, step=10.0, key="cf_area_override")
+                            conduit_internal_area = area_value
+                        else:  # in²
+                            area_value = st.number_input("Conduit internal area override", min_value=0.01, value=3.1, step=0.1, key="cf_area_override")
+                            conduit_internal_area = area_value * 645.16  # Convert in² to mm²
 
         # ----------------------------
         # Cable groups (Table 6)
