@@ -3743,6 +3743,12 @@ elif page == "Conduit Size & Fill & Bend Radius":
             value=False if t9_index else True,
             key="cf_use_manual_conduit",
         )
+        
+        is_low_voltage = st.checkbox(
+            "This cable will be used for low voltage (no fill percentage limits apply)",
+            value=False,
+            key="cf_is_low_voltage",
+        )
 
         conduit_internal_area = None
         conduit_allowed_area = None
@@ -4508,7 +4514,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
             # Format fill percentage to 4 decimals
             st.metric("Actual fill (%)", f"{fill_pct * 100.0:.4f}%")
 
-        if conduit_allowed_area is not None and conduit_internal_area:
+        if conduit_allowed_area is not None and conduit_internal_area and not is_low_voltage:
             allowed_pct_disp = (conduit_allowed_area / conduit_internal_area) * 100.0
             display_allowable_for_info = conduit_allowed_area * area_conversion_factor
             st.info(f"Allowable fill: **{fmt(allowed_pct_disp, '%')}**  (allowable area: **{fmt(display_allowable_for_info, display_area_unit)}**)  — {allowed_source}")
@@ -4547,6 +4553,9 @@ elif page == "Conduit Size & Fill & Bend Radius":
                     )
                 else:
                     st.warning("No larger trade size found in Table 9 that meets fill (based on parsed data).")
+
+        elif is_low_voltage:
+            st.info("⚡ Low voltage mode: No fill percentage limits apply to this conduit.")
 
         else:
             st.warning("Allowable fill could not be determined (Table 9 not available or columns not recognized).")
@@ -5159,11 +5168,14 @@ elif page == "Conduit Size & Fill & Bend Radius":
 
             set_table_borders(t_cables)
 
-            if conduit_allowed_area is not None and conduit_internal_area:
+            if conduit_allowed_area is not None and conduit_internal_area and not is_low_voltage:
                 doc.add_heading("Compliance Status", level=1)
                 ok = total_cable_area <= conduit_allowed_area + 1e-9
                 status_text = "✓ PASS: Fill is within the allowable limit" if ok else "✗ FAIL: Fill exceeds the allowable limit"
                 doc.add_paragraph(status_text)
+            elif is_low_voltage:
+                doc.add_heading("Compliance Status", level=1)
+                doc.add_paragraph("⚡ Low voltage mode: No fill percentage limits apply to this conduit.")
 
             style = doc.styles["Normal"]
             style.font.name = "Calibri"
