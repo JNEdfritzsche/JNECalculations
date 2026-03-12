@@ -18,6 +18,9 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment
 from openpyxl.utils import get_column_letter
 
+
+#python -m streamlit run .\streamlit_app.py
+
 # Optional pandas (used for table processing on Conduit page)
 try:
     import pandas as pd  # type: ignore
@@ -2645,6 +2648,19 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
         header("Cable Tray Fill Calculator", "Enter tray dimensions and cable groups to calculate fill percentage.")
         show_code_note(code_mode)
 
+        # Cable Tray Name
+        st.markdown("### Cable Tray Name")
+        if "tray_name" not in st.session_state:
+            st.session_state["tray_name"] = ""
+        
+        tray_name = st.text_input(
+            "Give your cable tray a name (optional)",
+            value=st.session_state["tray_name"],
+            placeholder="e.g., 'Main Feeder Tray' or 'Lighting Tray'",
+            key="tray_name_input"
+        )
+        st.session_state["tray_name"] = tray_name
+
         st.markdown("### 1) Tray Dimensions")
         
         # Tray unit selection
@@ -2668,14 +2684,20 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
                 tray_depth_mm = tray_depth_in * 25.4
         
         tray_area_mm2 = tray_width_mm * tray_depth_mm
-        st.info(f"**Tray usable area: {tray_area_mm2:,.2f} mm²**")
+        
+        # Determine unit for display
+        area_unit = "in²" if tray_unit == "Imperial (inches)" else "mm²"
+        area_conversion = 645.16 if tray_unit == "Imperial (inches)" else 1.0
+        tray_area_display = tray_area_mm2 / area_conversion
+        
+        st.info(f"**Tray usable area: {tray_area_display:,.2f} {area_unit}**")
 
         st.markdown("### 2) Cable Groups")
         
         # Initialize session state for cable groups
         if "tray_cables_df" not in st.session_state:
             st.session_state["tray_cables_df"] = pd.DataFrame([
-                {"Name": "", "OD (mm)": 25.0, "Qty": 4, "Unit": "mm", "_row_id": 0}
+                {"Name": "", "OD (mm)": 1.0, "Qty": 1, "Unit": "mm", "_row_id": 0}
             ])
         
         df_cables = st.session_state["tray_cables_df"].copy()
@@ -2688,7 +2710,7 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
         # Ensure other columns exist
         for col in ["Name", "OD (mm)", "Qty", "Unit"]:
             if col not in st.session_state["tray_cables_df"].columns:
-                st.session_state["tray_cables_df"][col] = "" if col == "Name" else (25.0 if col == "OD (mm)" else 4 if col == "Qty" else "mm")
+                st.session_state["tray_cables_df"][col] = "" if col == "Name" else (25.0 if col == "OD (mm)" else 1 if col == "Qty" else "mm")
         
         df_cables = st.session_state["tray_cables_df"].copy()
         
@@ -2698,7 +2720,7 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
             row_id = row.get("_row_id", idx)
             cable_name = row.get("Name", "")
             od_value = row.get("OD (mm)", 25.0)
-            qty = row.get("Qty", 4)
+            qty = row.get("Qty", 1)
             od_unit = row.get("Unit", "mm")
             
             # Convert OD to mm if needed
@@ -2737,10 +2759,25 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
                         )
                     
                     with c4:
+                        # Determine the value to display based on unit selection
+                        prev_unit = st.session_state.get(f"tray_cable_od_unit_prev_{row_id}", "mm")
+                        if od_unit == prev_unit:
+                            # Unit hasn't changed, use existing value
+                            display_value = od_value
+                        elif od_unit == "in":
+                            # Switched to inches - default to 1 inch
+                            display_value = 1.0
+                        else:
+                            # Switched to mm - convert from inches
+                            display_value = od_mm
+                        
+                        # Store the previous unit to detect changes
+                        st.session_state[f"tray_cable_od_unit_prev_{row_id}"] = od_unit
+                        
                         od_value = st.number_input(
                             f"Cable OD ({od_unit})",
                             min_value=0.1,
-                            value=od_value if od_unit == st.session_state.get(f"tray_cable_od_unit_{row_id}", "mm") else (od_mm / 25.4 if od_unit == "in" else od_mm),
+                            value=display_value,
                             step=0.1,
                             key=f"tray_cable_od_{row_id}"
                         )
@@ -2762,9 +2799,12 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
                     # Display info
                     info_c1, info_c2 = st.columns([1, 1])
                     with info_c1:
-                        st.caption(f"Area per cable: {math.pi * (od_mm / 2.0) ** 2:.2f} mm²")
+                        cable_area_single_mm2 = math.pi * (od_mm / 2.0) ** 2
+                        cable_area_single_display = cable_area_single_mm2 / area_conversion
+                        st.caption(f"Area per cable: {cable_area_single_display:.2f} {area_unit}")
                     with info_c2:
-                        st.caption(f"Total group area: {cable_area_mm2:.2f} mm²")
+                        cable_area_display = cable_area_mm2 / area_conversion
+                        st.caption(f"Total group area: {cable_area_display:.2f} {area_unit}")
             
             # Minus button
             with minus_col:
@@ -2791,7 +2831,7 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
                 new_row = {
                     "Name": "",
                     "OD (mm)": 25.0,
-                    "Qty": 4,
+                    "Qty": 1,
                     "Unit": "mm",
                     "_row_id": new_row_id
                 }
@@ -2806,9 +2846,10 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
         fill_percentage = (total_cable_area_mm2 / tray_area_mm2 * 100) if tray_area_mm2 > 0 else 0
         
         # Display metrics
+        total_cable_area_display = total_cable_area_mm2 / area_conversion
         m1, m2, m3 = st.columns(3, gap="large")
-        m1.metric("Total Usable Area (mm²)", f"{tray_area_mm2:,.2f}")
-        m2.metric("Total Area Used (mm²)", f"{total_cable_area_mm2:,.2f}")
+        m1.metric(f"Total Usable Area ({area_unit})", f"{tray_area_display:,.2f}")
+        m2.metric(f"Total Area Used ({area_unit})", f"{total_cable_area_display:,.2f}")
         m3.metric("Fill Percentage (%)", f"{fill_percentage:.2f}%")
         
         # Display cable group breakdown
@@ -2816,11 +2857,14 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
             st.markdown("#### Cable Group Breakdown")
             breakdown_data = []
             for group in cable_groups_list:
+                cable_od_display = group['OD (mm)'] if tray_unit == "Metric (mm)" else group['OD (mm)'] / 25.4
+                od_unit_display = "mm" if tray_unit == "Metric (mm)" else "in"
+                group_area_display = group['Area (mm²)'] / area_conversion
                 breakdown_data.append({
                     "Name": group["Name"] if group["Name"] else "[Unnamed]",
-                    "Cable OD (mm)": f"{group['OD (mm)']:.2f}",
+                    f"Cable OD ({od_unit_display})": f"{cable_od_display:.2f}",
                     "Quantity": group["Qty"],
-                    "Total Area (mm²)": f"{group['Area (mm²)']:.2f}",
+                    f"Total Area ({area_unit})": f"{group_area_display:.2f}",
                     "% of Tray": f"{(group['Area (mm²)'] / tray_area_mm2 * 100):.2f}%" if tray_area_mm2 > 0 else "—"
                 })
             
@@ -2913,7 +2957,12 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
             append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
             append_to_value_line(table.cell(3, 3), "")
             append_to_value_line(table.cell(3, 4), "")
-            append_to_value_line(table.cell(3, 2), "Cable Tray Fill Calculation Report")
+            
+            # Build report title with tray name if provided
+            report_title = "Cable Tray Fill Calculation Report"
+            if tray_name:
+                report_title = f"Cable Tray Fill Calculation Report: {tray_name}"
+            append_to_value_line(table.cell(3, 2), report_title)
 
             # Equations
             doc.add_heading("Equations", level=1)
@@ -2932,23 +2981,30 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
 
             # Assumptions
             doc.add_heading("Assumptions", level=1)
+            tray_name_assumption = f"Tray name: {tray_name}." if tray_name else ""
+            width_display = tray_width_mm if tray_unit == "Metric (mm)" else tray_width_mm / 25.4
+            depth_display = tray_depth_mm if tray_unit == "Metric (mm)" else tray_depth_mm / 25.4
+            unit_label = "mm" if tray_unit == "Metric (mm)" else "inches"
             ctray_assumptions = [
                 "All cable outer diameters are measured in the same cross-sectional plane.",
-                f"Tray dimensions: width = {tray_width_mm:.2f} mm, depth = {tray_depth_mm:.2f} mm.",
+                f"Tray dimensions: width = {width_display:.2f} {unit_label}, depth = {depth_display:.2f} {unit_label}.",
                 "Tray area is calculated as the product of width and depth.",
                 "Cable area is calculated using the circular cross-section formula: A = π(OD/2)².",
                 "Total cable area is the sum of each cable group's area (OD × number of cables in group).",
                 "Fill percentage is calculated as (total cable area / tray area) × 100%.",
             ]
+            if tray_name_assumption:
+                ctray_assumptions.insert(0, tray_name_assumption)
             for a in ctray_assumptions:
                 doc.add_paragraph(a, style="CalcBullet")
 
             # Tray Dimensions
             doc.add_heading("Tray Dimensions", level=1)
+            tray_area_display = tray_area_mm2 / area_conversion
             ctray_dims = [
-                ("Tray width (mm)", f"{tray_width_mm:.2f}"),
-                ("Tray depth (mm)", f"{tray_depth_mm:.2f}"),
-                ("Tray usable area (mm²)", f"{tray_area_mm2:,.2f}"),
+                ("Tray width (mm)", f"{tray_width_mm:.2f}") if tray_unit == "Metric (mm)" else ("Tray width (inches)", f"{tray_width_mm/25.4:.2f}"),
+                ("Tray depth (mm)", f"{tray_depth_mm:.2f}") if tray_unit == "Metric (mm)" else ("Tray depth (inches)", f"{tray_depth_mm/25.4:.2f}"),
+                (f"Tray usable area ({area_unit})", f"{tray_area_display:,.2f}"),
             ]
 
             t = doc.add_table(rows=1, cols=2)
@@ -2973,9 +3029,10 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
             if cable_groups_list:
                 doc.add_heading("Cable Groups", level=1)
                 
+                od_unit_display = "mm" if tray_unit == "Metric (mm)" else "inches"
                 t = doc.add_table(rows=1, cols=5)
                 hdr = t.rows[0].cells
-                headers = ["Cable Name", "OD (mm)", "Quantity", "Area per Cable (mm²)", "Total Area (mm²)"]
+                headers = ["Cable Name", f"OD ({od_unit_display})", "Quantity", f"Area per Cable ({area_unit})", f"Total Area ({area_unit})"]
                 for i, header_text in enumerate(headers):
                     p = hdr[i].paragraphs[0]
                     p.clear()
@@ -2984,20 +3041,24 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
 
                 for group in cable_groups_list:
                     row = t.add_row().cells
-                    row[0].text = group["Name"] if group["Name"] else "[Unnamed]"
-                    row[1].text = f"{group['OD (mm)']:.2f}"
-                    row[2].text = str(group["Qty"])
+                    cable_od_display = group['OD (mm)'] if tray_unit == "Metric (mm)" else group['OD (mm)'] / 25.4
                     cable_area_single = math.pi * (group["OD (mm)"] / 2.0) ** 2
-                    row[3].text = f"{cable_area_single:.2f}"
-                    row[4].text = f"{group['Area (mm²)']:.2f}"
+                    cable_area_single_display = cable_area_single / area_conversion
+                    group_area_display = group['Area (mm²)'] / area_conversion
+                    row[0].text = group["Name"] if group["Name"] else "[Unnamed]"
+                    row[1].text = f"{cable_od_display:.2f}"
+                    row[2].text = str(group["Qty"])
+                    row[3].text = f"{cable_area_single_display:.2f}"
+                    row[4].text = f"{group_area_display:.2f}"
 
                 set_table_borders(t)
 
             # Results
             doc.add_heading("Calculation Results", level=1)
+            total_cable_area_display = total_cable_area_mm2 / area_conversion
             results_data = [
-                ("Total Cable Area (mm²)", f"{total_cable_area_mm2:,.2f}"),
-                ("Tray Usable Area (mm²)", f"{tray_area_mm2:,.2f}"),
+                (f"Total Cable Area ({area_unit})", f"{total_cable_area_display:,.2f}"),
+                (f"Tray Usable Area ({area_unit})", f"{tray_area_display:,.2f}"),
                 ("Fill Percentage (%)", f"{fill_percentage:.2f}%"),
             ]
 
@@ -3038,25 +3099,46 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
             ws = wb.active
             ws.title = "Cable Tray Fill"
 
-            ws["A1"] = "Cable Tray Fill Calculation Report"
+            # Build report title with tray name if provided
+            report_title = "Cable Tray Fill Calculation Report"
+            if tray_name:
+                report_title = f"Cable Tray Fill Calculation Report: {tray_name}"
+            
+            ws["A1"] = report_title
             ws["A1"].font = Font(bold=True, size=14)
             ws["A3"] = "Generated"
             ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+            # Tray name (if provided)
+            if tray_name:
+                row = 5
+                ws[f"A{row}"] = "Tray Name"
+                ws[f"B{row}"] = tray_name
+                row = 6
+            else:
+                row = 5
+            
             # Tray dimensions
-            row = 5
             ws[f"A{row}"] = "Tray Dimensions"
             ws[f"A{row}"].font = Font(bold=True)
 
             row += 1
-            ws[f"A{row}"] = "Width (mm)"
-            ws[f"B{row}"] = _safe_float(tray_width_mm)
+            width_label = "Width (mm)" if tray_unit == "Metric (mm)" else "Width (inches)"
+            depth_label = "Depth (mm)" if tray_unit == "Metric (mm)" else "Depth (inches)"
+            area_label = f"Usable Area ({area_unit})"
+            
+            width_value = _safe_float(tray_width_mm) if tray_unit == "Metric (mm)" else _safe_float(tray_width_mm / 25.4)
+            depth_value = _safe_float(tray_depth_mm) if tray_unit == "Metric (mm)" else _safe_float(tray_depth_mm / 25.4)
+            area_value = _safe_float(tray_area_display)
+            
+            ws[f"A{row}"] = width_label
+            ws[f"B{row}"] = width_value
             row += 1
-            ws[f"A{row}"] = "Depth (mm)"
-            ws[f"B{row}"] = _safe_float(tray_depth_mm)
+            ws[f"A{row}"] = depth_label
+            ws[f"B{row}"] = depth_value
             row += 1
-            ws[f"A{row}"] = "Usable Area (mm²)"
-            ws[f"B{row}"] = _safe_float(tray_area_mm2)
+            ws[f"A{row}"] = area_label
+            ws[f"B{row}"] = area_value
 
             # Cable groups
             if cable_groups_list:
@@ -3065,7 +3147,8 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
                 ws[f"A{row}"].font = Font(bold=True)
 
                 row += 1
-                headers = ["Cable Name", "OD (mm)", "Quantity", "Area/Cable (mm²)", "Total Area (mm²)"]
+                od_unit_display = "mm" if tray_unit == "Metric (mm)" else "inches"
+                headers = ["Cable Name", f"OD ({od_unit_display})", "Quantity", f"Area/Cable ({area_unit})", f"Total Area ({area_unit})"]
                 for col_num, header in enumerate(headers, 1):
                     cell = ws.cell(row=row, column=col_num)
                     cell.value = header
@@ -3073,12 +3156,15 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
 
                 for group in cable_groups_list:
                     row += 1
-                    ws.cell(row=row, column=1).value = group["Name"] if group["Name"] else "[Unnamed]"
-                    ws.cell(row=row, column=2).value = _safe_float(group["OD (mm)"])
-                    ws.cell(row=row, column=3).value = group["Qty"]
+                    cable_od_display = group["OD (mm)"] if tray_unit == "Metric (mm)" else group["OD (mm)"] / 25.4
                     cable_area_single = math.pi * (group["OD (mm)"] / 2.0) ** 2
-                    ws.cell(row=row, column=4).value = _safe_float(cable_area_single)
-                    ws.cell(row=row, column=5).value = _safe_float(group["Area (mm²)"])
+                    cable_area_single_display = cable_area_single / area_conversion
+                    group_area_display = group['Area (mm²)'] / area_conversion
+                    ws.cell(row=row, column=1).value = group["Name"] if group["Name"] else "[Unnamed]"
+                    ws.cell(row=row, column=2).value = _safe_float(cable_od_display)
+                    ws.cell(row=row, column=3).value = group["Qty"]
+                    ws.cell(row=row, column=4).value = _safe_float(cable_area_single_display)
+                    ws.cell(row=row, column=5).value = _safe_float(group_area_display)
 
             # Results
             row += 2
@@ -3086,11 +3172,12 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
             ws[f"A{row}"].font = Font(bold=True)
 
             row += 1
-            ws[f"A{row}"] = "Total Cable Area (mm²)"
-            ws[f"B{row}"] = _safe_float(total_cable_area_mm2)
+            total_cable_area_display = total_cable_area_mm2 / area_conversion
+            ws[f"A{row}"] = f"Total Cable Area ({area_unit})"
+            ws[f"B{row}"] = _safe_float(total_cable_area_display)
             row += 1
-            ws[f"A{row}"] = "Tray Usable Area (mm²)"
-            ws[f"B{row}"] = _safe_float(tray_area_mm2)
+            ws[f"A{row}"] = f"Tray Usable Area ({area_unit})"
+            ws[f"B{row}"] = _safe_float(tray_area_display)
             row += 1
             ws[f"A{row}"] = "Fill Percentage (%)"
             ws[f"B{row}"] = _safe_float(fill_percentage)
