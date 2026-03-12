@@ -43,7 +43,7 @@ except Exception as e:
     _TABLES_IMPORT_ERROR = str(e)
 
 # Set to False during development to disable password protection
-ENABLE_PASSWORD_PROTECTION = True
+ENABLE_PASSWORD_PROTECTION = False
 
 # ----------------------------
 # Global Variables
@@ -5770,7 +5770,6 @@ elif page == "Voltage Drop":
             "Uses voltage-drop factor f from the Appendix D system factor list.",
             "Uses one-way length L (m) directly in the formula; table equation divides by 1000 to convert m → km.",
             "If parallel conductors are used, current is divided by N_parallel (per conductor) for the VD calc.",
-            "Percent voltage drop is computed against nominal voltage V_nom.",
         ]
 
         constants = [
@@ -6043,37 +6042,6 @@ elif page == "Voltage Drop":
                     row[2].text = "—" if val is None else str(val)
 
             set_table_borders(t)
-
-            # -------------------------
-            # Constants
-            # -------------------------
-            doc.add_heading("Constants", level=1)
-
-            tc = doc.add_table(rows=1, cols=3)
-            hdr = tc.rows[0].cells
-            p = hdr[0].paragraphs[0]
-            p.clear()
-            r = p.add_run("Name")
-            r.bold = True
-            p = hdr[1].paragraphs[0]
-            p.clear()
-            r = p.add_run("Meaning")
-            r.bold = True
-            p = hdr[2].paragraphs[0]
-            p.clear()
-            r = p.add_run("Value")
-            r.bold = True
-
-            for c in constants:
-                row = tc.add_row().cells
-                row[0].text = str(c["Name"])
-                row[1].text = str(c["Meaning"])
-                try:
-                    row[2].text = f'{float(c["Value"]):.6g}'
-                except Exception:
-                    row[2].text = str(c["Value"])
-            
-            set_table_borders(tc)
 
             # -------------------------
             # Return Bytes
