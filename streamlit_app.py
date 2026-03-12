@@ -3749,6 +3749,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
         conduit_allowed_pct = None
         conduit_type_key = None
         allowed_source = "—"
+        area_unit = "mm²"  # Default for non-manual mode; will be set in manual mode
 
         if use_manual_conduit:
             conduit_name = st.text_input("Conduit name (optional)", value="Custom Conduit", key="cf_manual_name")
@@ -3986,6 +3987,14 @@ elif page == "Conduit Size & Fill & Bend Radius":
             st.session_state["cf_cable_df"]["Custom conductors"] = None
         if "Custom area per cable" not in st.session_state["cf_cable_df"].columns:
             st.session_state["cf_cable_df"]["Custom area per cable"] = None
+        if "Custom cable type" not in st.session_state["cf_cable_df"].columns:
+            st.session_state["cf_cable_df"]["Custom cable type"] = ""
+        if "Custom construction" not in st.session_state["cf_cable_df"].columns:
+            st.session_state["cf_cable_df"]["Custom construction"] = ""
+        if "Custom conductor size" not in st.session_state["cf_cable_df"].columns:
+            st.session_state["cf_cable_df"]["Custom conductor size"] = ""
+        if "Area unit" not in st.session_state["cf_cable_df"].columns:
+            st.session_state["cf_cable_df"]["Area unit"] = "mm²"
         
         df_in = st.session_state["cf_cable_df"].copy()
 
@@ -4006,6 +4015,10 @@ elif page == "Conduit Size & Fill & Bend Radius":
         # Initialize edited list to track changes
         edited_list = []
 
+        # Determine display unit for areas (based on conduit's area_unit)
+        display_area_unit = "in²" if area_unit == "in²" else "mm²"
+        area_conversion_factor = 1 / 645.16 if area_unit == "in²" else 1.0
+
         if cable_tables:
             # Table 6 mode: use hierarchical dropdown selections
             num_rows = len(df_in)
@@ -4016,6 +4029,10 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 use_custom = row.get("Use custom conductors", False)
                 custom_cond_count = row.get("Custom conductors", None)
                 custom_area = row.get("Custom area per cable", None)
+                custom_cable_type = row.get("Custom cable type", "")
+                custom_construction = row.get("Custom construction", "")
+                custom_conductor_size = row.get("Custom conductor size", "")
+                cable_input_area_unit = row.get("Area unit", "mm²")
                 table_key = row.get("Table", list(cable_tables.keys())[0])
                 construction = row.get("Construction", "stranded")
                 cond_size = row.get("Conductor size", "")
@@ -4065,48 +4082,28 @@ elif page == "Conduit Size & Fill & Bend Radius":
                         
                         # Cable selection controls - vertical stack
                         with col3:
-                            # Row 1: Cable Type
-                            st.selectbox(
-                                "Cable type",
-                                options=list(cable_tables.keys()),
-                                index=list(cable_tables.keys()).index(table_key) if table_key in cable_tables else 0,
-                                key=f"cf_cable_table_{row_id}",
-                                format_func=lambda k: cable_tables[k][0]
-                            )
-                            table_key = st.session_state[f"cf_cable_table_{row_id}"]
-                            table_data = cable_tables.get(table_key, (None, {}))[1] or {}
-                            available_constructions = list(table_data.keys())
-                            
-                            # Row 2: Construction (if multiple available)
-                            if len(available_constructions) > 1:
-                                construction = st.selectbox(
-                                    "Construction",
-                                    options=available_constructions,
-                                    index=available_constructions.index(construction) if construction in available_constructions else 0,
-                                    key=f"cf_cable_construction_{row_id}"
-                                )
-                            else:
-                                construction = available_constructions[0] if available_constructions else "stranded"
-                                st.write(f"**Construction:** {construction}")
-                            
-                            # Row 3: Conductor Size
-                            available_sizes = list(table_data.get(construction, {}).keys()) if construction in table_data else []
-                            cond_size = st.selectbox(
-                                "Conductor size",
-                                options=available_sizes,
-                                index=available_sizes.index(cond_size) if cond_size in available_sizes else 0,
-                                key=f"cf_cable_size_{row_id}"
-                            )
-                            
-                            # Row 4: Number of Conductors
+                            # Custom conductors checkbox at top
                             use_custom = st.checkbox(
-                                "Custom conductors",
+                                "Use custom values",
                                 value=use_custom,
                                 key=f"cf_cable_use_custom_{row_id}"
                             )
-                            
                             if use_custom:
-                                # Custom mode: input custom conductor count and area
+                                # Custom mode: show text inputs for cable type and conductor size
+                                custom_cable_type = st.text_input(
+                                    "Cable type",
+                                    value=row.get("Custom cable type", ""),
+                                    placeholder="e.g., 'R90XLPE'",
+                                    key=f"cf_custom_cable_type_{row_id}"
+                                )
+                                custom_conductor_size = st.text_input(
+                                    "Conductor size",
+                                    value=row.get("Custom conductor size", ""),
+                                    placeholder="e.g., '4 AWG'",
+                                    key=f"cf_custom_conductor_size_{row_id}"
+                                )
+                                
+                                # Custom conductor count
                                 custom_cond_count = st.number_input(
                                     "Number of conductors",
                                     min_value=1,
@@ -4114,18 +4111,70 @@ elif page == "Conduit Size & Fill & Bend Radius":
                                     step=1,
                                     key=f"cf_cable_custom_cond_{row_id}"
                                 )
-                                custom_area = st.number_input(
-                                    "Area per cable (mm²)",
+                                
+                                # Cable input area unit selection (right above area input) - independent from conduit unit
+                                cable_input_area_unit = st.selectbox(
+                                    "Area unit",
+                                    ["mm²", "in²"],
+                                    index=0 if area_unit == "mm²" else 1,
+                                    key=f"cf_cable_area_unit_{row_id}"
+                                )
+                                
+                                # Convert stored area (mm²) to input unit if needed for display
+                                if cable_input_area_unit == "in²" and custom_area:
+                                    display_area = float(custom_area) / 645.16
+                                else:
+                                    display_area = float(custom_area) if custom_area else 0.0
+                                
+                                custom_area_input = st.number_input(
+                                    f"Area per cable ({cable_input_area_unit})",
                                     min_value=0.0,
-                                    value=float(custom_area) if custom_area else 0.0,
+                                    value=display_area,
                                     step=0.01,
                                     format="%.2f",
                                     key=f"cf_cable_custom_area_{row_id}"
                                 )
+                                
+                                # Convert back to mm² for internal storage (always mm² internally)
+                                custom_area = custom_area_input * (645.16 if cable_input_area_unit == "in²" else 1.0)
+                                
                                 n_cond = custom_cond_count
                                 area_per_cable = custom_area
                             else:
-                                # Table mode: select from available options
+                                # Table mode: use lookup dropdowns
+                                # Row 1: Cable Type
+                                table_key = st.selectbox(
+                                    "Cable type",
+                                    options=list(cable_tables.keys()),
+                                    index=list(cable_tables.keys()).index(table_key) if table_key in cable_tables else 0,
+                                    key=f"cf_cable_table_{row_id}",
+                                    format_func=lambda k: cable_tables[k][0]
+                                )
+                                table_data = cable_tables.get(table_key, (None, {}))[1] or {}
+                                available_constructions = list(table_data.keys())
+                                
+                                # Row 2: Construction (if multiple available)
+                                if len(available_constructions) > 1:
+                                    construction = st.selectbox(
+                                        "Construction",
+                                        options=available_constructions,
+                                        index=available_constructions.index(construction) if construction in available_constructions else 0,
+                                        key=f"cf_cable_construction_{row_id}"
+                                    )
+                                else:
+                                    construction = available_constructions[0] if available_constructions else "stranded"
+                                    st.write(f"**Construction:** {construction}")
+                                
+                                # Row 3: Conductor Size
+                                available_sizes = list(table_data.get(construction, {}).keys()) if construction in table_data else []
+                                cond_size = st.selectbox(
+                                    "Conductor size",
+                                    options=available_sizes,
+                                    index=available_sizes.index(cond_size) if cond_size in available_sizes else 0,
+                                    key=f"cf_cable_size_{row_id}"
+                                )
+                                
+                                # Row 4: Number of Conductors
                                 size_data = table_data.get(construction, {}).get(cond_size, {})
                                 available_counts = sorted(size_data.get("areas_by_count", {}).keys()) if size_data else []
                                 n_cond = st.selectbox(
@@ -4147,12 +4196,14 @@ elif page == "Conduit Size & Fill & Bend Radius":
                         
                         # Display area information
                         if area_per_cable is not None:
+                            # Convert area to display unit (based on conduit's area_unit)
+                            display_area_per_cable = area_per_cable * area_conversion_factor
+                            display_total_area = display_area_per_cable * qty
                             area_display_col1, area_display_col2 = st.columns([1, 1])
                             with area_display_col1:
-                                st.caption(f"Area per cable: {area_per_cable:.2f} mm²")
+                                st.caption(f"Area per cable: {display_area_per_cable:.2f} {display_area_unit}")
                             with area_display_col2:
-                                total_area = area_per_cable * qty
-                                st.caption(f"Total area: {total_area:.2f} mm²")
+                                st.caption(f"Total area: {display_total_area:.2f} {display_area_unit}")
 
                         # Cable group color swatch (matches conduit diagram palette/layout)
                         area_per_conductor = None
@@ -4192,7 +4243,11 @@ elif page == "Conduit Size & Fill & Bend Radius":
                     "Area per cable (mm²)": area_per_cable,
                     "Use custom conductors": use_custom,
                     "Custom conductors": custom_cond_count,
-                    "Custom area per cable": custom_area
+                    "Custom area per cable": custom_area,
+                    "Custom cable type": custom_cable_type,
+                    "Custom construction": custom_construction,
+                    "Custom conductor size": custom_conductor_size,
+                    "Area unit": area_unit
                 })
             
             # Plus button after the last cable group
@@ -4217,6 +4272,10 @@ elif page == "Conduit Size & Fill & Bend Radius":
                         "Use custom conductors": False,
                         "Custom conductors": None,
                         "Custom area per cable": None,
+                        "Custom cable type": "",
+                        "Custom construction": "",
+                        "Custom conductor size": "",
+                        "Area unit": "mm²",
                         "_row_id": new_row_id
                     }
                     new_df = pd.concat([st.session_state["cf_cable_df"], pd.DataFrame([new_row])], ignore_index=True)
@@ -4256,6 +4315,18 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 # Update Custom area per cable
                 if f"cf_cable_custom_area_{row_id}" in st.session_state:
                     st.session_state["cf_cable_df"].loc[st.session_state["cf_cable_df"]["_row_id"] == row_id, "Custom area per cable"] = st.session_state[f"cf_cable_custom_area_{row_id}"]
+                # Update Custom cable type
+                if f"cf_custom_cable_type_{row_id}" in st.session_state:
+                    st.session_state["cf_cable_df"].loc[st.session_state["cf_cable_df"]["_row_id"] == row_id, "Custom cable type"] = st.session_state[f"cf_custom_cable_type_{row_id}"]
+                # Update Custom construction
+                if f"cf_custom_construction_{row_id}" in st.session_state:
+                    st.session_state["cf_cable_df"].loc[st.session_state["cf_cable_df"]["_row_id"] == row_id, "Custom construction"] = st.session_state[f"cf_custom_construction_{row_id}"]
+                # Update Custom conductor size
+                if f"cf_custom_conductor_size_{row_id}" in st.session_state:
+                    st.session_state["cf_cable_df"].loc[st.session_state["cf_cable_df"]["_row_id"] == row_id, "Custom conductor size"] = st.session_state[f"cf_custom_conductor_size_{row_id}"]
+                # Update Area unit (for custom cable input unit)
+                if f"cf_cable_area_unit_{row_id}" in st.session_state:
+                    st.session_state["cf_cable_df"].loc[st.session_state["cf_cable_df"]["_row_id"] == row_id, "Area unit"] = st.session_state[f"cf_cable_area_unit_{row_id}"]
 
         else:
             # Manual mode: allow entering area per cable directly
@@ -4410,18 +4481,26 @@ elif page == "Conduit Size & Fill & Bend Radius":
 
         m1, m2, m3, m4, m5 = st.columns([1, 1, 1, 1, 1], gap="large")
         m1.metric("Total cables in raceway", fmt(n_cables_total, ""))
-        m2.metric("Total cable area", fmt(total_cable_area, "mm²"))
+        
+        # Display total cable area
+        display_cable_area = total_cable_area * area_conversion_factor if total_cable_area else 0
+        m2.metric("Total cable area", fmt(display_cable_area, display_area_unit))
+        
         # Format conduit internal area in full form without scientific notation
         if conduit_internal_area:
-            m3.metric("Conduit internal area", f"{conduit_internal_area:,.2f} mm²")
+            display_conduit_area = conduit_internal_area * area_conversion_factor
+            m3.metric("Conduit internal area", f"{display_conduit_area:,.2f} {display_area_unit}")
         else:
             m3.metric("Conduit internal area", "—")
 
         total_allowable_area = conduit_allowed_area if conduit_allowed_area is not None else None
         remaining_allowable_area = (conduit_allowed_area - total_cable_area) if (conduit_allowed_area is not None) else None
 
-        m4.metric("Total allowable area", fmt(total_allowable_area, "mm²"))
-        m5.metric("Remaining allowable area", fmt(remaining_allowable_area, "mm²"))
+        display_allowable_area = total_allowable_area * area_conversion_factor if total_allowable_area else None
+        display_remaining_area = remaining_allowable_area * area_conversion_factor if remaining_allowable_area else None
+        
+        m4.metric("Total allowable area", fmt(display_allowable_area, display_area_unit))
+        m5.metric("Remaining allowable area", fmt(display_remaining_area, display_area_unit))
 
         if fill_pct is None:
             st.warning("Provide a conduit internal area to compute fill.")
@@ -4431,7 +4510,8 @@ elif page == "Conduit Size & Fill & Bend Radius":
 
         if conduit_allowed_area is not None and conduit_internal_area:
             allowed_pct_disp = (conduit_allowed_area / conduit_internal_area) * 100.0
-            st.info(f"Allowable fill: **{fmt(allowed_pct_disp, '%')}**  (allowable area: **{fmt(conduit_allowed_area, 'mm²')}**)  — {allowed_source}")
+            display_allowable_for_info = conduit_allowed_area * area_conversion_factor
+            st.info(f"Allowable fill: **{fmt(allowed_pct_disp, '%')}**  (allowable area: **{fmt(display_allowable_for_info, display_area_unit)}**)  — {allowed_source}")
             ok = total_cable_area <= conduit_allowed_area + 1e-9
             if ok:
                 st.success("✅ Fill is within the allowable limit for the selected conduit.")
@@ -4860,9 +4940,11 @@ elif page == "Conduit Size & Fill & Bend Radius":
 
         with st.expander("Show calculation details", expanded=False):
             st.write(f"- Conduit: **{conduit_type}** — **{conduit_trade}**")
-            st.write(f"- Conduit internal area: **{fmt(conduit_internal_area, 'mm²')}**")
+            display_conduit_area_detail = conduit_internal_area * area_conversion_factor if conduit_internal_area else None
+            st.write(f"- Conduit internal area: **{fmt(display_conduit_area_detail, display_area_unit)}**")
             st.write(f"- Total cables: **{n_cables_total}**")
-            st.write(f"- Total cable area: **{fmt(total_cable_area, 'mm²')}**")
+            display_cable_area_detail = total_cable_area * area_conversion_factor if total_cable_area else None
+            st.write(f"- Total cable area: **{fmt(display_cable_area_detail, display_area_unit)}**")
             if conduit_allowed_area is not None:
                 st.write(f"- Allowable area: **{fmt(conduit_allowed_area, 'mm²')}**  ({allowed_source})")
 
@@ -4981,13 +5063,16 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 doc.add_paragraph(a, style="CalcBullet")
 
             doc.add_heading("Input Summary", level=1)
+            display_conduit_internal_area = conduit_internal_area * area_conversion_factor if conduit_internal_area else None
+            display_total_cable_area = total_cable_area * area_conversion_factor if total_cable_area else None
+            display_total_allowable_area = conduit_allowed_area * area_conversion_factor if conduit_allowed_area else None
             summary_data = [
                 ("Conduit Type", conduit_type),
                 ("Trade Size", conduit_trade),
-                ("Conduit Internal Area (mm²)", fmt(conduit_internal_area, "mm²")),
+                (f"Conduit Internal Area ({display_area_unit})", fmt(display_conduit_internal_area, display_area_unit)),
                 ("Number of Cables", str(n_cables_total)),
-                ("Total Cable Area (mm²)", fmt(total_cable_area, "mm²")),
-                ("Total Allowable Area (mm²)", fmt(conduit_allowed_area, "mm²")),
+                (f"Total Cable Area ({display_area_unit})", fmt(display_total_cable_area, display_area_unit)),
+                (f"Total Allowable Area ({display_area_unit})", fmt(display_total_allowable_area, display_area_unit)),
                 ("Actual Fill (%)", f"{fill_pct * 100.0:.4f}%" if fill_pct else "—"),
             ]
             
@@ -5011,8 +5096,22 @@ elif page == "Conduit Size & Fill & Bend Radius":
             doc.add_heading("Cable Group Breakdown", level=1)
             try:
                 show_df = edited.copy()
-                cols_to_show = ["Name", "Table", "Construction", "Conductor size", "Conductors per cable", "Qty (cables)", "Area per cable (mm²)"]
-                available_cols = [c for c in cols_to_show if c in show_df.columns]
+                # Columns to show - use custom info when available
+                if "Use custom conductors" in show_df.columns:
+                    # Create display columns that show custom info when appropriate
+                    show_df["Cable Type Display"] = show_df.apply(
+                        lambda row: row.get("Custom cable type", "") if row.get("Use custom conductors") else row.get("Table", ""),
+                        axis=1
+                    )
+                    show_df["Conductor Size Display"] = show_df.apply(
+                        lambda row: row.get("Custom conductor size", "") if row.get("Use custom conductors") else row.get("Conductor size", ""),
+                        axis=1
+                    )
+                    cols_to_show = ["Name", "Cable Type Display", "Conductor Size Display", "Conductors per cable", "Qty (cables)", f"Area per cable ({display_area_unit})", f"Total area ({display_area_unit})"]
+                else:
+                    cols_to_show = ["Name", "Table", "Conductor size", "Conductors per cable", "Qty (cables)", f"Area per cable ({display_area_unit})", f"Total area ({display_area_unit})"]
+                
+                available_cols = [c for c in cols_to_show if c in show_df.columns or c.startswith("Area per cable") or c.startswith("Total area")]
                 
                 t_cables = doc.add_table(rows=1, cols=len(available_cols))
                 for j, col in enumerate(available_cols):
@@ -5025,11 +5124,36 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 for _, row_data in show_df.iterrows():
                     rr = t_cables.add_row().cells
                     for j, col in enumerate(available_cols):
-                        val = row_data.get(col, None)
-                        if isinstance(val, float):
-                            rr[j].text = f"{val:.2f}"
+                        if col == f"Area per cable ({display_area_unit})":
+                            # Get the area in mm² and convert to display unit
+                            area_mm2 = row_data.get("Area per cable (mm²)", None)
+                            if area_mm2 is not None:
+                                try:
+                                    area_display = float(area_mm2) * area_conversion_factor
+                                    rr[j].text = f"{area_display:.2f}"
+                                except Exception:
+                                    rr[j].text = "—"
+                            else:
+                                rr[j].text = "—"
+                        elif col == f"Total area ({display_area_unit})":
+                            # Calculate total area = area per cable * qty
+                            area_mm2 = row_data.get("Area per cable (mm²)", None)
+                            qty = row_data.get("Qty (cables)", None)
+                            if area_mm2 is not None and qty is not None:
+                                try:
+                                    total_area_mm2 = float(area_mm2) * float(qty)
+                                    total_area_display = total_area_mm2 * area_conversion_factor
+                                    rr[j].text = f"{total_area_display:.2f}"
+                                except Exception:
+                                    rr[j].text = "—"
+                            else:
+                                rr[j].text = "—"
                         else:
-                            rr[j].text = str(val) if val is not None else "—"
+                            val = row_data.get(col, None)
+                            if isinstance(val, float):
+                                rr[j].text = f"{val:.2f}"
+                            else:
+                                rr[j].text = str(val) if val is not None else "—"
             except Exception as e:
                 doc.add_paragraph(f"(Unable to render cable breakdown: {str(e)})")
 
@@ -5083,10 +5207,10 @@ elif page == "Conduit Size & Fill & Bend Radius":
             summary_data = [
                 ("Conduit Type", conduit_type),
                 ("Trade Size", conduit_trade),
-                ("Conduit Internal Area (mm²)", _safe_float(conduit_internal_area)),
+                (f"Conduit Internal Area ({display_area_unit})", _safe_float(display_conduit_internal_area)),
                 ("Number of Cables", n_cables_total),
-                ("Total Cable Area (mm²)", _safe_float(total_cable_area)),
-                ("Total Allowable Area (mm²)", _safe_float(conduit_allowed_area)),
+                (f"Total Cable Area ({display_area_unit})", _safe_float(display_total_cable_area)),
+                (f"Total Allowable Area ({display_area_unit})", _safe_float(display_total_allowable_area)),
                 ("Actual Fill (%)", _safe_float(fill_pct * 100.0) if fill_pct else None),
             ]
             
@@ -5105,8 +5229,21 @@ elif page == "Conduit Size & Fill & Bend Radius":
             ws = wb.create_sheet("Cable Groups")
             try:
                 show_df = edited.copy()
-                cols_to_show = ["Name", "Table", "Construction", "Conductor size", "Conductors per cable", "Qty (cables)", "Area per cable (mm²)"]
-                available_cols = [c for c in cols_to_show if c in show_df.columns]
+                # Create display columns that show custom info when appropriate
+                if "Use custom conductors" in show_df.columns:
+                    show_df["Cable Type Display"] = show_df.apply(
+                        lambda row: row.get("Custom cable type", "") if row.get("Use custom conductors") else row.get("Table", ""),
+                        axis=1
+                    )
+                    show_df["Conductor Size Display"] = show_df.apply(
+                        lambda row: row.get("Custom conductor size", "") if row.get("Use custom conductors") else row.get("Conductor size", ""),
+                        axis=1
+                    )
+                    cols_to_show = ["Name", "Cable Type Display", "Conductor Size Display", "Conductors per cable", "Qty (cables)", f"Area per cable ({display_area_unit})", f"Total area ({display_area_unit})"]
+                else:
+                    cols_to_show = ["Name", "Table", "Conductor size", "Conductors per cable", "Qty (cables)", f"Area per cable ({display_area_unit})", f"Total area ({display_area_unit})"]
+                
+                available_cols = [c for c in cols_to_show if c in show_df.columns or c.startswith("Area per cable") or c.startswith("Total area")]
                 
                 ws.append(available_cols)
                 for cell in ws[1]:
@@ -5115,11 +5252,36 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 for _, row_data in show_df.iterrows():
                     row_vals = []
                     for col in available_cols:
-                        val = row_data.get(col, None)
-                        if isinstance(val, float):
-                            row_vals.append(round(val, 2))
+                        if col == f"Area per cable ({display_area_unit})": 
+                            # Get the area in mm² and convert to display unit
+                            area_mm2 = row_data.get("Area per cable (mm²)", None)
+                            if area_mm2 is not None:
+                                try:
+                                    area_display = float(area_mm2) * area_conversion_factor
+                                    row_vals.append(round(area_display, 2))
+                                except Exception:
+                                    row_vals.append(None)
+                            else:
+                                row_vals.append(None)
+                        elif col == f"Total area ({display_area_unit})":
+                            # Calculate total area = area per cable * qty
+                            area_mm2 = row_data.get("Area per cable (mm²)", None)
+                            qty = row_data.get("Qty (cables)", None)
+                            if area_mm2 is not None and qty is not None:
+                                try:
+                                    total_area_mm2 = float(area_mm2) * float(qty)
+                                    total_area_display = total_area_mm2 * area_conversion_factor
+                                    row_vals.append(round(total_area_display, 2))
+                                except Exception:
+                                    row_vals.append(None)
+                            else:
+                                row_vals.append(None)
                         else:
-                            row_vals.append(val)
+                            val = row_data.get(col, None)
+                            if isinstance(val, float):
+                                row_vals.append(round(val, 2))
+                            else:
+                                row_vals.append(val)
                     ws.append(row_vals)
             except Exception:
                 ws["A1"] = "Unable to load cable groups"
