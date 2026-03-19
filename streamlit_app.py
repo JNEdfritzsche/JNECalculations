@@ -2246,7 +2246,13 @@ elif page == "Motor Feeder":
         with c1:
             phase = st.selectbox("System", ["3-phase", "1-phase", "DC motor"], index=0, key="mf_phase")
         with c2:
-            hp = st.number_input("Motor power (HP)", min_value=0.1, value=25.0, step=0.1, key="mf_hp")
+            power_unit = st.selectbox("Power unit", ["HP", "kW", "kVA"], index=0, key="mf_power_unit")
+            if power_unit == "HP":
+                power_value = st.number_input("Motor power (HP)", min_value=0.1, value=25.0, step=0.1, key="mf_hp")
+            elif power_unit == "kW":
+                power_value = st.number_input("Motor power (kW)", min_value=0.001, value=18.65, step=0.001, key="mf_kw")
+            else:
+                power_value = st.number_input("Motor power (kVA)", min_value=0.001, value=18.65, step=0.001, key="mf_kva")
         with c3:
             volts = st.number_input(
                 "Voltage (V)",
@@ -2257,7 +2263,10 @@ elif page == "Motor Feeder":
                 key="mf_volts",
             )
         with c4:
-            if phase == "DC motor":
+            if power_unit == "kVA":
+                pf = 1.0
+                st.text_input("Power factor (cosθ)", value="N/A (kVA input)", disabled=True, key="mf_pf_kva")
+            elif phase == "DC motor":
                 pf = 1.0
                 st.text_input("Power factor (cosθ)", value="N/A (DC)", disabled=True, key="mf_pf_dc")
             else:
@@ -2270,20 +2279,32 @@ elif page == "Motor Feeder":
                     key="mf_pf",
                 )
 
-        eff = st.number_input(
-            "Efficiency (%)",
-            min_value=1.0,
-            max_value=100.0,
-            value=92.0,
-            step=0.1,
-            key="mf_eff",
-        )
-
-        if phase == "DC motor":
-            denom = volts * (eff / 100.0)
+        if power_unit == "kVA":
+            eff = 100.0
+            st.text_input("Efficiency (%)", value="N/A (kVA input)", disabled=True, key="mf_eff_kva")
         else:
-            denom = (math.sqrt(3) if phase == "3-phase" else 1.0) * volts * pf * (eff / 100.0)
-        ifla = (hp * 745.7) / denom if denom > 0 else None
+            eff = st.number_input(
+                "Efficiency (%)",
+                min_value=1.0,
+                max_value=100.0,
+                value=92.0,
+                step=0.1,
+                key="mf_eff",
+            )
+
+        # kVA is already apparent power: I = S / (√3 · V)  — no PF or η needed.
+        # HP and kW are mechanical output: needs PF and η to reach apparent power.
+        if power_unit == "kVA":
+            phase_factor = math.sqrt(3) if phase == "3-phase" else 1.0
+            denom = phase_factor * volts
+            ifla = (power_value * 1000.0) / denom if denom > 0 else None
+        else:
+            watts = power_value * 745.7 if power_unit == "HP" else power_value * 1000.0
+            if phase == "DC motor":
+                denom = volts * (eff / 100.0)
+            else:
+                denom = (math.sqrt(3) if phase == "3-phase" else 1.0) * volts * pf * (eff / 100.0)
+            ifla = watts / denom if denom > 0 else None
 
         sizing_mult = st.selectbox(
             "Conductor sizing factor",
@@ -2298,12 +2319,25 @@ elif page == "Motor Feeder":
         c2.metric("Conductor ampacity target (A)", fmt(target, "A"))
 
         st.markdown("### Equation used")
-        if phase == "3-phase":
-            eq(r"I_{FLA}=\frac{HP\cdot 745.7}{\sqrt{3}\cdot V_{LL}\cdot \cos\theta\cdot \eta}")
-        elif phase == "1-phase":
-            eq(r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \cos\theta\cdot \eta}")
-        else:
-            eq(r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \eta}")
+        if power_unit == "kVA":
+            if phase == "3-phase":
+                eq(r"I_{FLA}=\frac{kVA\cdot 1000}{\sqrt{3}\cdot V_{LL}}")
+            else:
+                eq(r"I_{FLA}=\frac{kVA\cdot 1000}{V}")
+        elif power_unit == "kW":
+            if phase == "3-phase":
+                eq(r"I_{FLA}=\frac{kW\cdot 1000}{\sqrt{3}\cdot V_{LL}\cdot \cos\theta\cdot \eta}")
+            elif phase == "1-phase":
+                eq(r"I_{FLA}=\frac{kW\cdot 1000}{V\cdot \cos\theta\cdot \eta}")
+            else:
+                eq(r"I_{FLA}=\frac{kW\cdot 1000}{V\cdot \eta}")
+        else:  # HP
+            if phase == "3-phase":
+                eq(r"I_{FLA}=\frac{HP\cdot 745.7}{\sqrt{3}\cdot V_{LL}\cdot \cos\theta\cdot \eta}")
+            elif phase == "1-phase":
+                eq(r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \cos\theta\cdot \eta}")
+            else:
+                eq(r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \eta}")
         eq(r"I_{target}=k\cdot I_{FLA}")
 
         # =====================================================================
@@ -2379,6 +2413,111 @@ elif page == "Motor Feeder":
             </m:den>
         </m:f>
         """,
+            r"I_{FLA}=\frac{kVA\cdot 1000}{\sqrt{3}\cdot V_{LL}}": r"""
+        <m:sSub>
+            <m:e><m:r><m:t>I</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>FLA</m:t></m:r></m:sub>
+        </m:sSub>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num>
+                <m:r><m:t>kVA</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>1000</m:t></m:r>
+            </m:num>
+            <m:den>
+                <m:r><m:t>√3 </m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:sSub>
+                    <m:e><m:r><m:t>V</m:t></m:r></m:e>
+                    <m:sub><m:r><m:t>LL</m:t></m:r></m:sub>
+                </m:sSub>
+            </m:den>
+        </m:f>
+        """,
+            r"I_{FLA}=\frac{kVA\cdot 1000}{V}": r"""
+        <m:sSub>
+            <m:e><m:r><m:t>I</m:t></m:e>
+            <m:sub><m:r><m:t>FLA</m:t></m:r></m:sub>
+        </m:sSub>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num>
+                <m:r><m:t>kVA</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>1000</m:t></m:r>
+            </m:num>
+            <m:den>
+                <m:r><m:t>V</m:t></m:r>
+            </m:den>
+        </m:f>
+        """,
+            r"I_{FLA}=\frac{kW\cdot 1000}{\sqrt{3}\cdot V_{LL}\cdot \cos\theta\cdot \eta}": r"""
+        <m:sSub>
+            <m:e><m:r><m:t>I</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>FLA</m:t></m:r></m:sub>
+        </m:sSub>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num>
+                <m:r><m:t>kW</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>1000</m:t></m:r>
+            </m:num>
+            <m:den>
+                <m:r><m:t>√3 </m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:sSub>
+                    <m:e><m:r><m:t>V</m:t></m:r></m:e>
+                    <m:sub><m:r><m:t>LL</m:t></m:r></m:sub>
+                </m:sSub>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>cos θ</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>η</m:t></m:r>
+            </m:den>
+        </m:f>
+        """,
+            r"I_{FLA}=\frac{kW\cdot 1000}{V\cdot \cos\theta\cdot \eta}": r"""
+        <m:sSub>
+            <m:e><m:r><m:t>I</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>FLA</m:t></m:r></m:sub>
+        </m:sSub>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num>
+                <m:r><m:t>kW</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>1000</m:t></m:r>
+            </m:num>
+            <m:den>
+                <m:r><m:t>V</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>cos θ</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>η</m:t></m:r>
+            </m:den>
+        </m:f>
+        """,
+            r"I_{FLA}=\frac{kW\cdot 1000}{V\cdot \eta}": r"""
+        <m:sSub>
+            <m:e><m:r><m:t>I</m:t></m:r></m:e>
+            <m:sub><m:r><m:t>FLA</m:t></m:r></m:sub>
+        </m:sSub>
+        <m:r><m:t xml:space="preserve"> = </m:t></m:r>
+        <m:f>
+            <m:num>
+                <m:r><m:t>kW</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>1000</m:t></m:r>
+            </m:num>
+            <m:den>
+                <m:r><m:t>V</m:t></m:r>
+                <m:r><m:t xml:space="preserve"> × </m:t></m:r>
+                <m:r><m:t>η</m:t></m:r>
+            </m:den>
+        </m:f>
+        """,
             r"I_{target}=k\cdot I_{FLA}": r"""
         <m:sSub>
             <m:e><m:r><m:t>I</m:t></m:r></m:e>
@@ -2410,24 +2549,24 @@ elif page == "Motor Feeder":
             # Equations
             doc.add_heading("Equations", level=1)
             
-            if phase == "3-phase":
-                p = doc.add_paragraph()
-                p.add_run("Full-Load Current (three-phase): ").bold = True
-                omml = OMML_MF_EQUATIONS.get(r"I_{FLA}=\frac{HP\cdot 745.7}{\sqrt{3}\cdot V_{LL}\cdot \cos\theta\cdot \eta}")
-                if omml is not None:
-                    add_omml_equation_to_paragraph(p, omml)
-            elif phase == "1-phase":
-                p = doc.add_paragraph()
-                p.add_run("Full-Load Current (single-phase): ").bold = True
-                omml = OMML_MF_EQUATIONS.get(r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \cos\theta\cdot \eta}")
-                if omml is not None:
-                    add_omml_equation_to_paragraph(p, omml)
-            else:
-                p = doc.add_paragraph()
-                p.add_run("Full-Load Current (DC motor): ").bold = True
-                omml = OMML_MF_EQUATIONS.get(r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \eta}")
-                if omml is not None:
-                    add_omml_equation_to_paragraph(p, omml)
+            _eq_keys = {
+                ("HP",  "3-phase"):  r"I_{FLA}=\frac{HP\cdot 745.7}{\sqrt{3}\cdot V_{LL}\cdot \cos\theta\cdot \eta}",
+                ("HP",  "1-phase"):  r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \cos\theta\cdot \eta}",
+                ("HP",  "DC motor"): r"I_{FLA}=\frac{HP\cdot 745.7}{V\cdot \eta}",
+                ("kW",  "3-phase"):  r"I_{FLA}=\frac{kW\cdot 1000}{\sqrt{3}\cdot V_{LL}\cdot \cos\theta\cdot \eta}",
+                ("kW",  "1-phase"):  r"I_{FLA}=\frac{kW\cdot 1000}{V\cdot \cos\theta\cdot \eta}",
+                ("kW",  "DC motor"): r"I_{FLA}=\frac{kW\cdot 1000}{V\cdot \eta}",
+                ("kVA", "3-phase"):  r"I_{FLA}=\frac{kVA\cdot 1000}{\sqrt{3}\cdot V_{LL}}",
+                ("kVA", "1-phase"):  r"I_{FLA}=\frac{kVA\cdot 1000}{V}",
+                ("kVA", "DC motor"): r"I_{FLA}=\frac{kVA\cdot 1000}{V}",
+            }
+            _phase_labels = {"3-phase": "three-phase", "1-phase": "single-phase", "DC motor": "DC motor"}
+            p = doc.add_paragraph()
+            p.add_run(f"Full-Load Current ({_phase_labels[phase]}): ").bold = True
+            key = _eq_keys.get((power_unit, phase))
+            omml = OMML_MF_EQUATIONS.get(key) if key else None
+            if omml is not None:
+                add_omml_equation_to_paragraph(p, omml)
 
             p = doc.add_paragraph()
             p.add_run("Conductor Sizing (with feeder factor): ").bold = True
@@ -2437,12 +2576,22 @@ elif page == "Motor Feeder":
 
             # Assumptions
             doc.add_heading("Assumptions", level=1)
+            power_str = f"{power_value} {power_unit}"
+            if power_unit == "kVA":
+                pf_assumption = "Power factor: N/A (kVA is apparent power — PF already embedded)."
+                eff_assumption = "Efficiency: N/A (kVA is apparent power — not applied)."
+            elif phase == "DC motor":
+                pf_assumption = "Power factor: N/A (DC motor)."
+                eff_assumption = f"Efficiency: {eff}%."
+            else:
+                pf_assumption = f"Power factor: {pf:.2f}."
+                eff_assumption = f"Efficiency: {eff}%."
             mf_assumptions = [
                 f"Motor type: {phase}.",
-                f"Motor power: {hp} HP.",
+                f"Motor power: {power_str}.",
                 f"Voltage: {volts} V" + (" (line-to-line for three-phase)." if phase == "3-phase" else "."),
-                f"Power factor: {pf:.2f}" if phase != "DC motor" else "Power factor: N/A (DC motor).",
-                f"Efficiency: {eff}%.",
+                pf_assumption,
+                eff_assumption,
                 f"Sizing factor: {sizing_mult}.",
                 "Full-load current (I_FLA) is calculated from motor nameplate data.",
                 "Conductor ampacity target is I_FLA multiplied by the sizing factor k.",
@@ -2452,15 +2601,24 @@ elif page == "Motor Feeder":
 
             # Inputs
             doc.add_heading("Inputs", level=1)
+            if power_unit == "kVA":
+                pf_display = "N/A (kVA input)"
+                eff_display = "N/A (kVA input)"
+            elif phase == "DC motor":
+                pf_display = "N/A (DC)"
+                eff_display = str(eff)
+            else:
+                pf_display = f"{pf:.2f}"
+                eff_display = str(eff)
             mf_inputs = [
                 ("Motor Type", phase),
-                ("Power (HP)", str(hp)),
+                (f"Power ({power_unit})", str(power_value)),
                 ("Voltage (V)", str(volts)),
-                ("Power Factor", f"{pf:.2f}" if phase != "DC motor" else "N/A (DC)"),
-                ("Efficiency (%)", str(eff)),
+                ("Power Factor", pf_display),
+                ("Efficiency (%)", eff_display),
                 ("Sizing Factor (k)", sizing_mult),
             ]
-            
+
             t = doc.add_table(rows=1, cols=2)
             hdr = t.rows[0].cells
             p = hdr[0].paragraphs[0]
@@ -2533,12 +2691,21 @@ elif page == "Motor Feeder":
             ws[f"A{row}"].font = Font(bold=True)
 
             row += 1
+            if power_unit == "kVA":
+                xl_pf = "N/A (kVA input)"
+                xl_eff = "N/A (kVA input)"
+            elif phase == "DC motor":
+                xl_pf = "N/A (DC)"
+                xl_eff = eff
+            else:
+                xl_pf = pf
+                xl_eff = eff
             mf_inputs = [
                 ("Motor Type", phase),
-                ("Power (HP)", hp),
+                (f"Power ({power_unit})", power_value),
                 ("Voltage (V)", volts),
-                ("Power Factor", pf if phase != "DC motor" else "N/A (DC)"),
-                ("Efficiency (%)", eff),
+                ("Power Factor", xl_pf),
+                ("Efficiency (%)", xl_eff),
                 ("Sizing Factor (k)", float(sizing_mult)),
             ]
             
