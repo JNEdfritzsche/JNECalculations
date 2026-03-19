@@ -574,16 +574,15 @@ with st.sidebar:
             height=150,
             placeholder="Please describe the problem or feature as clearly as possible..."
         )
-        if st.button("Open GitHub Issue", key="submit_issue"):
+        if st.button("Send Report", key="submit_issue"):
             if issue_text.strip():
                 import urllib.parse
-                title = f"[{issue_type}] {issue_text[:60]}{'...' if len(issue_text) > 60 else ''}"
-                body = issue_text
-                base_url = "https://github.com/JNEdfritzsche/JNECalculations/issues/new"
-                params = urllib.parse.urlencode({"title": title, "body": body})
+                recipients = "kmurphy@jnegroup.com,DFritzsche@jnegroup.com,NZuvela@jnegroup.com"
+                subject = urllib.parse.quote(f"[{issue_type}] JNE Calculations Portal")
+                body = urllib.parse.quote(issue_text)
                 st.link_button(
-                    "Click here to submit on GitHub",
-                    f"{base_url}?{params}",
+                    "📧 Click here to open in Outlook",
+                    f"mailto:{recipients}?subject={subject}&body={body}",
                 )
             else:
                 st.warning("Please describe the issue before submitting.")
