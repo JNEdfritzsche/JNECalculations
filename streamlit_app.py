@@ -6936,7 +6936,7 @@ digraph G {
                 )
 
                 default_label = None
-                for candidate in ("90°C",):
+                for candidate in ("75°C", "90°C"):
                     if candidate in temp_options:
                         default_label = candidate
                         break
