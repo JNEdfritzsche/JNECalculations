@@ -7004,6 +7004,7 @@ digraph G {
         corr_table = None
         corr_needed = False
         corr_hint = ""
+        corr_conductor_count = None
 
         if install.startswith("Free air"):
             if is_multi:
@@ -7027,6 +7028,7 @@ digraph G {
                     corr_table = "Table 5C"
                     corr_needed = True
                     corr_hint = "Enter k_corr from Table 5C (4+ current-carrying conductors)."
+                    corr_conductor_count = n_ccc_freeair
             else:
                 n_single = st.number_input(
                     "Number of single conductors in the group",
@@ -7066,6 +7068,7 @@ digraph G {
                         corr_table = "Table 5C"
                         corr_needed = True
                         corr_hint = "Enter k_corr from Table 5C (spacing <25%, ≥5 singles)."
+                        corr_conductor_count = n_single
 
         elif install.startswith("Raceway"):
             n_ccc_label = (
@@ -7090,6 +7093,7 @@ digraph G {
                 corr_table = "Table 5C"
                 corr_needed = True
                 corr_hint = "Enter k_corr from Table 5C (4+ in raceway/cable)."
+                corr_conductor_count = n_ccc
 
         else:
             size_class = st.selectbox(
@@ -7260,6 +7264,43 @@ digraph G {
                         else:
                             corr_factor = float(selected_5d[2])
                             corr_factor_source = f"Table 5D (Horizontal {selected_h_5d}, Vertical {selected_v_5d})"
+            elif corr_table == "Table 5C":
+                def _lookup_table5c(n):
+                    if n <= 3:
+                        return 1.00
+                    elif n <= 6:
+                        return 0.80
+                    elif n <= 24:
+                        return 0.70
+                    elif n <= 42:
+                        return 0.60
+                    else:
+                        return 0.50
+
+                auto_factor = _lookup_table5c(int(corr_conductor_count))
+                st.info(
+                    f"Table 5C auto-selected: **{auto_factor}** "
+                    f"for **{int(corr_conductor_count)}** conductors."
+                )
+                use_table5c = st.checkbox(
+                    "Use Table 5C lookup (auto)",
+                    value=True,
+                    key="cond_use_table5c",
+                )
+                if use_table5c:
+                    corr_factor = auto_factor
+                    corr_factor_source = f"Table 5C ({int(corr_conductor_count)} conductors)"
+                else:
+                    corr_factor = st.number_input(
+                        "Correction factor k_corr (Table 5C)",
+                        min_value=0.01,
+                        max_value=1.00,
+                        value=auto_factor,
+                        step=0.01,
+                        key="cond_corr_factor_5c_manual",
+                        help=corr_hint,
+                    )
+                    corr_factor_source = "Manual (Table 5C)"
             else:
                 corr_factor = st.number_input(
                     f"Correction factor k_corr ({corr_table})",
