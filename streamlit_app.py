@@ -562,6 +562,32 @@ with st.sidebar:
     DESIGNER_NAME = st.text_input("Designer name", value=DESIGNER_NAME, key="designer_name")    
 
     st.divider()
+    with st.expander("🐛 Report an Issue / Request a Feature"):
+        issue_type = st.selectbox(
+            "Type",
+            ["Bug Report", "Feature Request"],
+            key="issue_type"
+        )
+        issue_text = st.text_area(
+            "Describe the issue or request",
+            key="issue_text",
+            height=150,
+            placeholder="Please describe the problem or feature as clearly as possible..."
+        )
+        if st.button("Open GitHub Issue", key="submit_issue"):
+            if issue_text.strip():
+                import urllib.parse
+                title = f"[{issue_type}] {issue_text[:60]}{'...' if len(issue_text) > 60 else ''}"
+                body = issue_text
+                base_url = "https://github.com/JNEdfritzsche/JNECalculations/issues/new"
+                params = urllib.parse.urlencode({"title": title, "body": body})
+                st.link_button(
+                    "Click here to submit on GitHub",
+                    f"{base_url}?{params}",
+                )
+            else:
+                st.warning("Please describe the issue before submitting.")
+
     st.caption("This portal is provided for educational purposes only and is intended to support the understanding of engineering concepts. The tutorials, examples, and tools are not a substitute for professional judgment. Always consult applicable codes, regulations, and qualified engineers before making design or compliance decisions.")
 
 
