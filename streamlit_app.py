@@ -18,7 +18,6 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment
 from openpyxl.utils import get_column_letter
 
-
 #python -m streamlit run .\streamlit_app.py
 
 # Optional pandas (used for table processing on Conduit page)
@@ -43,7 +42,7 @@ except Exception as e:
     _TABLES_IMPORT_ERROR = str(e)
 
 # Set to False during development to disable password protection
-ENABLE_PASSWORD_PROTECTION = True
+ENABLE_PASSWORD_PROTECTION = False
 
 # ----------------------------
 # Global Variables
@@ -613,17 +612,17 @@ if page == "Transformer Protection":
         show_code_note(code_mode)
 
         if code_mode == "OESC":
-            render_md_safe("transformer_protection_oesc.md")
+            render_md_safe("markdown/transformer_protection_oesc.md")
         else:
-            render_md_safe("transformer_protection_nec.md")
+            render_md_safe("markdown/transformer_protection_nec.md")
 
     with examples_tab:
         header("Transformer Protection — Examples")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("transformer_protection_examples_oesc.md")
+            render_md_safe("markdown/transformer_protection_examples_oesc.md")
         else:
-            render_md_safe("transformer_protection_examples_nec.md")
+            render_md_safe("markdown/transformer_protection_examples_nec.md")
 
     # ----------------------------
     # Calculator tab for Transformer Protection
@@ -1398,17 +1397,17 @@ elif page == "Transformer Feeders":
         header("Transformer Feeders — Theory")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("transformer_feeders_oesc.md")
+            render_md_safe("markdown/transformer_feeders_oesc.md")
         else:
-            render_md_safe("transformer_feeders_nec.md")
+            render_md_safe("markdown/transformer_feeders_nec.md")
 
     with examples_tab:
         header("Transformer Feeders — Examples")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("transformer_feeders_examples_oesc.md")
+            render_md_safe("markdown/transformer_feeders_examples_oesc.md")
         else:
-            render_md_safe("transformer_feeders_examples_nec.md")
+            render_md_safe("markdown/transformer_feeders_examples_nec.md")
 
     with calc_tab:
         header("Transformer Feeder Calculator", "Compute primary/secondary FLA, turns ratio, and transformer type.")
@@ -1817,17 +1816,17 @@ elif page == "Grounding/Bonding Conductor Sizing":
         header("Grounding & Bonding — Theory")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("grounding_bonding_oesc.md")
+            render_md_safe("markdown/grounding_bonding_oesc.md")
         else:
-            render_md_safe("grounding_bonding_nec.md")
+            render_md_safe("markdown/grounding_bonding_nec.md")
 
     with examples_tab:
         header("Grounding & Bonding — Examples")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("grounding_bonding_examples_oesc.md")
+            render_md_safe("markdown/grounding_bonding_examples_oesc.md")
         else:
-            render_md_safe("grounding_bonding_examples_nec.md")
+            render_md_safe("markdown/grounding_bonding_examples_nec.md")
 
     with calc_tab:
         header("Grounding/Bonding Helper", "Simple placeholder — replace with real NEC/OESC table logic.")
@@ -1859,17 +1858,17 @@ elif page == "Motor Protection":
         header("Motor Protection — Theory")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("motor_protection_oesc.md")
+            render_md_safe("markdown/motor_protection_oesc.md")
         else:
-            render_md_safe("motor_protection_nec.md")
+            render_md_safe("markdown/motor_protection_nec.md")
 
     with examples_tab:
         header("Motor Protection — Examples")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("motor_protection_examples_oesc.md")
+            render_md_safe("markdown/motor_protection_examples_oesc.md")
         else:
-            render_md_safe("motor_protection_examples_nec.md")
+            render_md_safe("markdown/motor_protection_examples_nec.md")
 
     with calc_tab:
         header("Motor Protection Calculator", "Calculate motor overcurrent device using Table 29 flowchart.")
@@ -2227,17 +2226,17 @@ elif page == "Motor Feeder":
         header("Motor Feeder — Theory")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("motor_feeder_oesc.md")
+            render_md_safe("markdown/motor_feeder_oesc.md")
         else:
-            render_md_safe("motor_feeder_nec.md")
+            render_md_safe("markdown/motor_feeder_nec.md")
 
     with examples_tab:
         header("Motor Feeder — Examples")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("motor_feeder_examples_oesc.md")
+            render_md_safe("markdown/motor_feeder_examples_oesc.md")
         else:
-            render_md_safe("motor_feeder_examples_nec.md")
+            render_md_safe("markdown/motor_feeder_examples_nec.md")
 
     with calc_tab:
         header("Motor Feeder Calculator", "Estimate motor I_FLA from nameplate data, then apply feeder factor.")
@@ -2632,17 +2631,17 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
         header("Cable Tray Size, Fill & Bend Radius — Theory")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("cable_tray_fill_oesc.md")
+            render_md_safe("markdown/cable_tray_fill_oesc.md")
         else:
-            render_md_safe("cable_tray_fill_nec.md")
+            render_md_safe("markdown/cable_tray_fill_nec.md")
 
     with examples_tab:
         header("Cable Tray Size, Fill & Bend Radius — Examples")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("cable_tray_fill_examples_oesc.md")
+            render_md_safe("markdown/cable_tray_fill_examples_oesc.md")
         else:
-            render_md_safe("cable_tray_fill_examples_nec.md")
+            render_md_safe("markdown/cable_tray_fill_examples_nec.md")
 
     with calc_tab:
         header("Cable Tray Fill Calculator", "Enter tray dimensions and cable groups to calculate fill percentage.")
@@ -3251,17 +3250,17 @@ elif page == "Conduit Size & Fill & Bend Radius":
         header("Conduit Size, Fill & Bend Radius — Theory")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("conduit_fill_oesc.md")
+            render_md_safe("markdown/conduit_fill_oesc.md")
         else:
-            render_md_safe("conduit_fill_nec.md")
+            render_md_safe("markdown/conduit_fill_nec.md")
 
     with examples_tab:
         header("Conduit Size, Fill & Bend Radius — Examples")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("conduit_fill_examples_oesc.md")
+            render_md_safe("markdown/conduit_fill_examples_oesc.md")
         else:
-            render_md_safe("conduit_fill_examples_nec.md")
+            render_md_safe("markdown/conduit_fill_examples_nec.md")
 
     with calc_tab:
         header("Conduit Fill Calculator — OESC Table 6 + Table 9 (dynamic cables)", "Select a conduit, add any number of cable groups, and the app computes conduit fill.")
@@ -5357,17 +5356,17 @@ elif page == "Heat Trace":
         header("Heat Trace — Theory")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("heat_trace_oesc.md")
+            render_md_safe("markdown/heat_trace_oesc.md")
         else:
-            render_md_safe("heat_trace_nec.md")
+            render_md_safe("markdown/heat_trace_nec.md")
 
     with examples_tab:
         header("Heat Trace — Examples")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("heat_trace_examples_oesc.md")
+            render_md_safe("markdown/heat_trace_examples_oesc.md")
         else:
-            render_md_safe("heat_trace_examples_nec.md")
+            render_md_safe("markdown/heat_trace_examples_nec.md")
 
     with calc_tab:
         header("Heat Trace Load Calculator", "Estimate circuit load from length and heat trace rating.")
@@ -5394,17 +5393,17 @@ elif page == "Demand Load":
         header("Demand Load — Theory")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("demand_load_oesc.md")
+            render_md_safe("markdown/demand_load_oesc.md")
         else:
-            render_md_safe("demand_load_nec.md")
+            render_md_safe("markdown/demand_load_nec.md")
 
     with examples_tab:
         header("Demand Load — Examples")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("demand_load_examples_oesc.md")
+            render_md_safe("markdown/demand_load_examples_oesc.md")
         else:
-            render_md_safe("demand_load_examples_nec.md")
+            render_md_safe("markdown/demand_load_examples_nec.md")
 
     with calc_tab:
         header("Demand Load Calculator", "Compute demand load from connected load and factor.")
@@ -5427,17 +5426,17 @@ elif page == "Power Factor Correction":
         header("Power Factor Correction — Theory")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("power_factor_correction_oesc.md")
+            render_md_safe("markdown/power_factor_correction_oesc.md")
         else:
-            render_md_safe("power_factor_correction_nec.md")
+            render_md_safe("markdown/power_factor_correction_nec.md")
 
     with examples_tab:
         header("Power Factor Correction — Examples")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("power_factor_correction_examples_oesc.md")
+            render_md_safe("markdown/power_factor_correction_examples_oesc.md")
         else:
-            render_md_safe("power_factor_correction_examples_nec.md")
+            render_md_safe("markdown/power_factor_correction_examples_nec.md")
 
     with calc_tab:
         header("Power Factor Correction — Calculator")
@@ -5450,90 +5449,90 @@ elif page == "Power Factor Correction":
 # ============================
 elif page == "Table Library":
 
-    # ---- NO TABS ON THIS PAGE ----
     header("Table Library — OESC Tables")
     show_code_note(code_mode)
 
-    st.markdown(
-        "Browse and search the embedded OESC tables included with this app. "
-        "Tables are stored in **lib/oesc_tables.py** and exposed through a small registry API."
-    )
-    st.markdown(
-        "- Use the search box to quickly filter by table number (e.g., `5A`) or keywords (e.g., `ampacity`, `conduit`).\n"
-        "- A dash/blank entry in the source tables is shown as `—` (stored internally as `None`)."
-    )
+    tl_tab, qr_tab = st.tabs(["📚 Table Library", "📋 Quick Reference"])
 
-    st.divider()
-
-    header("Table Lookup")
-
-    if _TABLES_IMPORT_ERROR:
-        st.error(
-            "Table library failed to import. Confirm your repo has `lib/oesc_tables.py` and `lib/__init__.py`.\n\n"
-            f"Import error: `{_TABLES_IMPORT_ERROR}`"
-        )
-    else:
-        q = st.text_input(
-            "Search tables",
-            value="",
-            placeholder="Examples: 1, 2, 5A, 9H, ampacity, conduit fill …",
-        )
-
-        table_ids = oesc_tables.search_tables(q)
-
-        if not table_ids:
-            st.warning("No tables match your search.")
+    with tl_tab:
+        if _TABLES_IMPORT_ERROR:
+            st.error(f"Table library failed to import: `{_TABLES_IMPORT_ERROR}`")
         else:
-            def _label(tid: str) -> str:
-                meta = oesc_tables.get_table_meta(tid)
-                title = meta.get("title") if meta else ""
-                if title and title.lower().startswith("table"):
-                    return title
-                return f"Table {tid} — {title}" if title else f"Table {tid}"
-
-            selected = st.selectbox(
-                "Select a table",
-                table_ids,
-                format_func=_label,
+            q = st.text_input(
+                "Search tables",
+                value="",
+                placeholder="Examples: 1, 2, 5A, 9H, ampacity, conduit fill …",
             )
 
-            meta = oesc_tables.get_table_meta(selected) or {}
-            st.markdown(f"### {_label(selected)}")
+            table_ids = oesc_tables.search_tables(q)
 
-            if meta.get("units"):
-                st.caption(f"Units: **{meta['units']}**")
-
-            df = oesc_tables.get_table_dataframe(selected)
-
-            if df is None:
-                st.info(
-                    "This table is available in the library, but it is stored in a specialized structure "
-                    "(raw format). Showing the raw object below."
-                )
-                st.json(meta.get("raw", {}))
+            if not table_ids:
+                st.warning("No tables match your search.")
             else:
-                try:
-                    st.dataframe(df, width="stretch", hide_index=True)
-                except TypeError:
-                    st.dataframe(df, width="stretch")
+                def _label(tid: str) -> str:
+                    meta = oesc_tables.get_table_meta(tid)
+                    title = meta.get("title") if meta else ""
+                    if title and title.lower().startswith("table"):
+                        return title
+                    return f"Table {tid} — {title}" if title else f"Table {tid}"
 
-                # Download CSV
-                if pd is not None and isinstance(df, pd.DataFrame):
-                    csv_bytes = df.to_csv(index=False).encode("utf-8")
-                    st.download_button(
-                        "Download table as CSV",
-                        data=csv_bytes,
-                        file_name=f"oesc_table_{str(selected).lower()}.csv",
-                        mime="text/csv",
-                    )
-                elif pd is not None:
-                    csv_bytes = pd.DataFrame(df).to_csv(index=False).encode("utf-8")
-                    st.download_button(
-                        "Download table as CSV",
-                        data=csv_bytes,
-                        file_name=f"oesc_table_{str(selected).lower()}.csv",
-                        mime="text/csv",
-                    )
+                selected = st.selectbox("Select a table", table_ids, format_func=_label)
+
+                meta = oesc_tables.get_table_meta(selected) or {}
+                st.markdown(f"### {_label(selected)}")
+
+                if meta.get("units"):
+                    st.caption(f"Units: **{meta['units']}**")
+
+                df = oesc_tables.get_table_dataframe(selected)
+
+                if df is None:
+                    st.info("This table is stored in raw format.")
+                    st.json(meta.get("raw", {}))
+                else:
+                    try:
+                        st.dataframe(df, width="stretch", hide_index=True)
+                    except TypeError:
+                        st.dataframe(df, width="stretch")
+
+                    if pd is not None:
+                        csv_bytes = pd.DataFrame(df).to_csv(index=False).encode("utf-8")
+                        st.download_button(
+                            "Download table as CSV",
+                            data=csv_bytes,
+                            file_name=f"oesc_table_{str(selected).lower()}.csv",
+                            mime="text/csv",
+                        )
+
+    with qr_tab:
+        QR_DIR = CONTENT_DIR / "quick_reference"
+        pdf_files = sorted(QR_DIR.glob("*.pdf")) if QR_DIR.exists() else []
+
+        if not pdf_files:
+            st.info("No quick reference PDFs found in `content/quick_reference/`.")
+        else:
+            def _qr_label(p) -> str:
+                return p.stem.replace("_", " ").replace("-", " — ")
+
+            selected_qr = st.selectbox(
+                "Select a reference table",
+                pdf_files,
+                format_func=_qr_label,
+                key="qr_select",
+            )
+
+            if selected_qr:
+                pdf_bytes = selected_qr.read_bytes()
+
+                from streamlit_pdf_viewer import pdf_viewer
+                pdf_viewer(pdf_bytes, width=700, height=800)
+
+                st.download_button(
+                    "⬇ Download PDF",
+                    data=pdf_bytes,
+                    file_name=selected_qr.name,
+                    mime="application/pdf",
+                )
 
 
 # ============================
@@ -5544,9 +5543,9 @@ elif page == "Voltage Drop":
         header("Voltage Drop — Theory")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("voltage_drop_oesc.md")
+            render_md_safe("markdown/voltage_drop_oesc.md")
         else:
-            render_md_safe("voltage_drop_nec.md")
+            render_md_safe("markdown/voltage_drop_nec.md")
 
         # -------------------------------------------------
         # Display Table D3 reference tables
@@ -5669,9 +5668,9 @@ elif page == "Voltage Drop":
         header("Voltage Drop — Examples")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("voltage_drop_examples_oesc.md")
+            render_md_safe("markdown/voltage_drop_examples_oesc.md")
         else:
-            render_md_safe("voltage_drop_examples_nec.md")
+            render_md_safe("markdown/voltage_drop_examples_nec.md")
 
     with calc_tab:
         header("Voltage Drop Calculator — Table D3 (OESC) + k-value helper")
@@ -6779,17 +6778,17 @@ elif page == "Conductors":
         header("Conductors — Theory")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("conductors_oesc.md")
+            render_md_safe("markdown/conductors_oesc.md")
         else:
-            render_md_safe("conductors_nec.md")
+            render_md_safe("markdown/conductors_nec.md")
 
     with examples_tab:
         header("Conductors — Examples")
         show_code_note(code_mode)
         if code_mode == "OESC":
-            render_md_safe("conductors_examples_oesc.md")
+            render_md_safe("markdown/conductors_examples_oesc.md")
         else:
-            render_md_safe("conductors_examples_nec.md")
+            render_md_safe("markdown/conductors_examples_nec.md")
 
     with calc_tab:
         header("Conductors — Calculator", "Workflow helper: design current, table selection, correction-factor math, and k-value voltage drop check.")
@@ -7796,4 +7795,3 @@ digraph G {
         eq(r"I_{per\_set} = \frac{I_{design}}{N_{parallel}}")
         eq(r"k_{total} = k_{corr}\cdot k_{temp}")
         eq(r"I_{table} = \frac{I_{per\_set}}{k_{total}}")
-
