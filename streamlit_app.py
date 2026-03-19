@@ -1913,21 +1913,29 @@ elif page == "Motor Protection":
             key="mp_voltage_system"
         )
 
+        # Table 29 multipliers keyed by (row, device_type)
+        # Columns: Time-delay fuse (TD), Non-time-delay fuse (NTD), Inverse-time circuit breaker (CB)
+        TABLE_29_MULTIPLIERS = {
+            1: {"TD": 1.75, "NTD": 3.00, "CB": 2.50},
+            2: {"TD": 1.75, "NTD": 3.00, "CB": 2.50},
+            3: {"TD": 1.75, "NTD": 2.50, "CB": 2.00},
+            4: {"TD": 1.75, "NTD": 2.00, "CB": 2.00},
+            5: {"TD": 1.50, "NTD": 1.50, "CB": 1.50},
+            6: {"TD": 1.50, "NTD": 1.50, "CB": 1.50},
+        }
+
         table_29_row = None
         table_29_row_desc = None
-        multiplier = None
 
         if voltage_system == "1Φ AC":
             # Table 29 Row 1: 1Φ AC
             table_29_row = 1
             table_29_row_desc = "1Φ AC (Row 1)"
-            multiplier = 1.75
 
         elif voltage_system == "DC":
             # Table 29 Row 6: DC
             table_29_row = 6
             table_29_row_desc = "DC (Row 6)"
-            multiplier = 1.75
 
         else:  # 3Φ AC
             # Step 2: Motor Type for 3Φ AC
@@ -1942,7 +1950,6 @@ elif page == "Motor Protection":
                 # Table 29 Row 5: Wound Rotor
                 table_29_row = 5
                 table_29_row_desc = "Wound Rotor (Row 5)"
-                multiplier = 1.75
 
             else:  # Squirrel-cage or Synchronous
                 # Step 3: Starter or Controller type
@@ -1957,7 +1964,6 @@ elif page == "Motor Protection":
                     # Table 29 Row 2: FV&R
                     table_29_row = 2
                     table_29_row_desc = "FV&R (Row 2)"
-                    multiplier = 1.75
 
                 else:  # Auto-TX or Star-Delta
                     # Step 4: Check if FLA > 30A
@@ -1965,24 +1971,39 @@ elif page == "Motor Protection":
                         # Table 29 Row 4: Auto-TX/Star-Delta with FLA > 30A
                         table_29_row = 4
                         table_29_row_desc = "Auto-TX or Star-Delta, FLA > 30A (Row 4)"
-                        multiplier = 2.2
                     else:
                         # Table 29 Row 3: Auto-TX/Star-Delta with FLA ≤ 30A
                         table_29_row = 3
                         table_29_row_desc = "Auto-TX or Star-Delta, FLA ≤ 30A (Row 3)"
-                        multiplier = 1.75
+
+        # Step: Overcurrent device type selection
+        if table_29_row is not None:
+            device_type = st.selectbox(
+                "Overcurrent Device Type",
+                [
+                    "Time-delay fuse (TD)",
+                    "Non-time-delay fuse (NTD)",
+                    "Inverse-time circuit breaker (CB)",
+                ],
+                index=0,
+                key="mp_device_type"
+            )
+            device_key = {"Time-delay fuse (TD)": "TD", "Non-time-delay fuse (NTD)": "NTD", "Inverse-time circuit breaker (CB)": "CB"}[device_type]
+            multiplier = TABLE_29_MULTIPLIERS[table_29_row][device_key]
+        else:
+            multiplier = None
 
         # Calculate OCPD
         if multiplier is not None:
             ocpd_raw = fla * multiplier
             st.markdown("### Calculation Result")
-            st.info(f"**Table 29 {table_29_row_desc}** → Multiplier: **{multiplier}×**")
+            st.info(f"**Table 29 {table_29_row_desc}** → Multiplier: **{multiplier}×** ({device_type})")
             st.metric("Overcurrent Device Setting (raw)", fmt(ocpd_raw, "A"))
             st.caption("Round to the next standard overcurrent device rating from Table 13.")
 
             st.markdown("### Equation used")
             eq(r"I_{OCPD}=k\cdot I_{FLA}")
-            st.caption(f"where k = {multiplier} (from Table 29 Row {table_29_row})")
+            st.caption(f"where k = {multiplier} (from Table 29 Row {table_29_row}, {device_type})")
 
             # =====================================================================
             # Export Motor Protection Report
@@ -2083,6 +2104,7 @@ elif page == "Motor Protection":
                 mp_results = [
                     ("Table 29 Row Selected", str(table_29_row)),
                     ("Table 29 Row Description", str(table_29_row_desc)),
+                    ("Overcurrent Device Type", device_type),
                     ("Multiplier (k) from Table 29", f"{multiplier}"),
                     ("Raw OCPD Setting (k × I_FLA)", f"{ocpd_raw:.2f} A"),
                 ]
