@@ -671,7 +671,7 @@ digraph G {
   d2 -> d5 [label= "Pri.\nonly"];
   d6 [label="For side", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
   d7 [label="For side", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
-  d3 -> d6 [taillabel="Z <= 7.5%", labeldistance=7, labelfontsize=10]; 
+  d3 -> d6 [taillabel="Z <= 7.5%", labeldistance=7, labelfontsize=10];
   d3 -> d7 [label="7.5% < Z <= 10%"];
   d8 [label="CB: 600%\nF:300%"];
   d9 [label="Voltage", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
@@ -688,7 +688,7 @@ digraph G {
   d9 -> d13 [label ="<=750V"];
   d10 -> d13 [label="<=750V"];
   d10 -> d14 [label=">750V"];
-  
+
   d15 [label ="Insulation", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
   d16 [label ="Protection \nlevel", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
   d17 [label ="Protection \nlevel", shape=diamond, fixedsize = true, width=1.2, height=0.8, margin=0.05];
@@ -767,22 +767,10 @@ d19 -> d20 [style=invis];
             with cc3:
                 round_to_std = st.checkbox("Round up to standard rating (Table 13 style)", value=True, key="tp_oesc_round")
 
-            rule_options = []
-            if voltage_class == "> 750 V":
-                rule_options = ["26-250 (>750V) — Primary fuses 150% / breakers 300% (direct primary protection)"]
-            else:
-                if xfmr_type == "Dry-type":
-                    rule_options = [
-                        "26-254 (≤750V dry-type) — Primary 125% (direct primary protection)",
-                        "26-254 (≤750V dry-type) — Secondary device 125% + Primary feeder device 300% (no individual primary at transformer)",
-                    ]
-                else:
-                    rule_options = [
-                        "26-252 (≤750V non-dry) — Primary per 150% / 167% / 300% allowances (direct primary protection)",
-                        "26-252 (≤750V non-dry) — Secondary device 125% + Primary feeder device 300% (no individual primary at transformer)",
-                    ]
+            # Defaults — overwritten by widget values in the >750V branch below
+            prot_config = "Primary only"
+            z_pct = 6.0
 
-            rule_path = st.selectbox("OESC rule path", rule_options, index=0, key="tp_oesc_rule_path")
             std_list = OESC_TABLE13_STANDARD
 
             def show_oesc_result(label, raw):
@@ -795,104 +783,169 @@ d19 -> d20 [style=invis];
                 else:
                     st.success(f"{label}: **{fmt(raw,'A')}**")
 
-            if rule_path.startswith("26-250"):
-                st.markdown("#### 26-250 (>750 V) — Direct primary protection (per calc document)")
-                if Ip is None:
-                    st.error("Primary FLA could not be computed. Check inputs.")
-                else:
-                    raw_fuse = 1.50 * Ip
-                    raw_brk = 3.00 * Ip
-                    show_oesc_result("Max Primary Fuse (150%)", raw_fuse)
-                    show_oesc_result("Max Primary Breaker (300%)", raw_brk)
+            if voltage_class == "> 750 V":
+                st.markdown("#### Rule 26-250 (>750 V) — OCPD sizing per OESC Table 50")
+                prot_config = st.radio(
+                    "Protection configuration",
+                    ["Primary only", "Primary & Secondary (P&S)"],
+                    horizontal=True,
+                    index=0,
+                    key="tp_oesc_gt750_prot_config",
+                )
+                rule_path = f"26-250 (>750V) — {prot_config}"
 
-                    with st.expander("Optional: show secondary reference values (not a required selection in this direct-primary example)", expanded=False):
-                        if Is is None:
-                            st.warning("Secondary FLA unavailable.")
-                        else:
-                            st.info("The attached calculation worksheet also shows secondary-side reference values using the same multipliers.")
-                            show_oesc_result("Secondary @ 150% (reference)", 1.50 * Is)
-                            show_oesc_result("Secondary @ 300% (reference)", 3.00 * Is)
-
-            elif rule_path.startswith("26-252") and "direct primary" in rule_path.lower():
-                st.markdown("#### 26-252 (≤750 V, non-dry) — Direct primary protection (per calc document)")
-                if Ip is None:
-                    st.error("Primary FLA could not be computed. Check inputs.")
-                else:
-                    if Ip < 2.0:
-                        mult = 3.00
-                        reason = "Ip < 2 A — up to 300% permitted."
-                    elif Ip < 9.0:
-                        mult = 1.67
-                        reason = "Ip < 9 A — up to 167% permitted."
+                if prot_config == "Primary only":
+                    st.markdown("**Rule 26-250(1): Primary-only protection**")
+                    if Ip is None:
+                        st.error("Primary FLA could not be computed. Check inputs.")
                     else:
-                        mult = 1.50
-                        reason = "Ip ≥ 9 A — up to 150% permitted; if not a standard size, next higher standard permitted."
+                        show_oesc_result("Max Primary Fuse (150% × Ip)", 1.50 * Ip)
+                        show_oesc_result("Max Primary Breaker (300% × Ip)", 3.00 * Ip)
+                        st.caption("Rule 26-250(1): Fuse ≤ 150% / Breaker ≤ 300% of rated primary current.")
 
-                    raw_primary = mult * Ip
-                    st.caption(reason)
-                    show_oesc_result(f"Max Primary OCPD ({mult:.2f}×)", raw_primary)
-
-                    with st.expander("Optional: show secondary reference value from worksheet style", expanded=False):
-                        if Is is None:
-                            st.warning("Secondary FLA unavailable.")
-                        else:
-                            st.info("The attached worksheet also shows a secondary reference value using the same multiplier for this example format.")
-                            show_oesc_result(f"Secondary @ {mult:.2f}× (reference)", mult * Is)
-
-            elif rule_path.startswith("26-252") and "secondary device" in rule_path.lower():
-                st.markdown("#### 26-252 (≤750 V, non-dry) — Secondary device + primary feeder allowance (per calc document)")
-                if (Ip is None) or (Is is None):
-                    st.error("Primary/Secondary FLA could not be computed. Check inputs.")
-                else:
-                    raw_sec_dev = 1.25 * Is
-                    raw_pri_feeder = 3.00 * Ip
-                    show_oesc_result("Max Secondary OCPD (125% of secondary FLA)", raw_sec_dev)
-                    show_oesc_result("Max Primary Feeder OCPD (300% of primary FLA)", raw_pri_feeder)
-                    st.caption(
-                        "This path reflects the allowance summarized in the attached OESC calculation: "
-                        "secondary-side device ≤125% and upstream primary feeder device ≤300% (verify rule conditions for your installation)."
+                else:  # P&S
+                    st.markdown("**Rule 26-250 — Table 50: Primary & Secondary protection**")
+                    z_pct = st.number_input(
+                        "Transformer impedance Z (%)",
+                        min_value=0.01,
+                        value=6.0,
+                        step=0.1,
+                        format="%.2f",
+                        key="tp_oesc_gt750_z_pct",
+                        help="Nameplate impedance. Determines which Table 50 column applies (Z ≤ 7.5% or 7.5% < Z ≤ 10%).",
                     )
-
-            elif rule_path.startswith("26-254") and "direct primary" in rule_path.lower():
-                st.markdown("#### 26-254 (≤750 V, dry-type) — Direct primary protection (per calc document)")
-                if Ip is None:
-                    st.error("Primary FLA could not be computed. Check inputs.")
-                else:
-                    raw_primary = 1.25 * Ip
-                    show_oesc_result("Max Primary OCPD (125%)", raw_primary)
-
-                    st.markdown("**Inrush withstand checks (Appendix guidance in calc):**")
-                    st.write(f"12× FLA for 0.1 s: **{fmt(Ip * 12, 'A')}**")
-                    st.write(f"25× FLA for 0.01 s: **{fmt(Ip * 25, 'A')}**")
-                    st.caption("Verify manufacturer curves to confirm withstand/ride-through capability.")
-
-                    with st.expander("Optional: show secondary reference value from worksheet style", expanded=False):
-                        if Is is None:
-                            st.warning("Secondary FLA unavailable.")
+                    rule_path = f"26-250 (>750V) P&S — Z={z_pct:.2f}%"
+                    if Ip is None or Is is None:
+                        st.error("Primary/Secondary FLA could not be computed. Check inputs.")
+                    elif z_pct > 10.0:
+                        st.error(
+                            f"Z = {z_pct:.2f}% exceeds 10%: Table 50 (Rule 26-250) does not cover this "
+                            f"impedance range for the P&S configuration. Consult OESC Rule 26-250 directly."
+                        )
+                    elif z_pct <= 7.5:
+                        st.caption(f"Z = {z_pct:.2f}% ≤ 7.5% — Table 50 column 1")
+                        st.markdown("**Primary OCPD (Vpri > 750 V):**")
+                        show_oesc_result("Max Primary Fuse (300% × Ip)", 3.00 * Ip)
+                        show_oesc_result("Max Primary Breaker (600% × Ip)", 6.00 * Ip)
+                        st.markdown("**Secondary OCPD:**")
+                        if vsec > 750:
+                            st.caption(f"Vsec = {vsec:.0f} V > 750 V:")
+                            show_oesc_result("Max Secondary Fuse (150% × Is)", 1.50 * Is)
+                            show_oesc_result("Max Secondary Breaker (300% × Is)", 3.00 * Is)
                         else:
-                            show_oesc_result("Secondary @ 125% (reference)", 1.25 * Is)
+                            st.caption(f"Vsec = {vsec:.0f} V ≤ 750 V:")
+                            show_oesc_result("Max Secondary Fuse (250% × Is)", 2.50 * Is)
+                            show_oesc_result("Max Secondary Breaker (250% × Is)", 2.50 * Is)
+                    else:  # 7.5% < Z <= 10%
+                        st.caption(f"Z = {z_pct:.2f}%: 7.5% < Z ≤ 10% — Table 50 column 2")
+                        st.markdown("**Primary OCPD (Vpri > 750 V):**")
+                        show_oesc_result("Max Primary Fuse (200% × Ip)", 2.00 * Ip)
+                        show_oesc_result("Max Primary Breaker (400% × Ip)", 4.00 * Ip)
+                        st.markdown("**Secondary OCPD:**")
+                        if vsec > 750:
+                            st.caption(f"Vsec = {vsec:.0f} V > 750 V:")
+                            show_oesc_result("Max Secondary Fuse (125% × Is)", 1.25 * Is)
+                            show_oesc_result("Max Secondary Breaker (250% × Is)", 2.50 * Is)
+                        else:
+                            st.caption(f"Vsec = {vsec:.0f} V ≤ 750 V:")
+                            show_oesc_result("Max Secondary Fuse (250% × Is)", 2.50 * Is)
+                            show_oesc_result("Max Secondary Breaker (250% × Is)", 2.50 * Is)
 
-            elif rule_path.startswith("26-254") and "secondary device" in rule_path.lower():
-                st.markdown("#### 26-254 (≤750 V, dry-type) — Secondary device + primary feeder allowance (per calc document)")
-                if (Ip is None) or (Is is None):
-                    st.error("Primary/Secondary FLA could not be computed. Check inputs.")
+            else:  # <= 750V
+                rule_options = []
+                if xfmr_type == "Dry-type":
+                    rule_options = [
+                        "26-254 (≤750V dry-type) — Primary 125% (direct primary protection)",
+                        "26-254 (≤750V dry-type) — Secondary device 125% + Primary feeder device 300% (no individual primary at transformer)",
+                    ]
                 else:
-                    raw_sec_dev = 1.25 * Is
-                    raw_pri_feeder = 3.00 * Ip
-                    show_oesc_result("Max Secondary OCPD (125% of secondary FLA)", raw_sec_dev)
-                    show_oesc_result("Max Primary Feeder OCPD (300% of primary FLA)", raw_pri_feeder)
+                    rule_options = [
+                        "26-252 (≤750V non-dry) — Primary per 150% / 167% / 300% allowances (direct primary protection)",
+                        "26-252 (≤750V non-dry) — Secondary device 125% + Primary feeder device 300% (no individual primary at transformer)",
+                    ]
 
-                    st.markdown("**Inrush withstand checks (Appendix guidance in calc):**")
-                    st.write(f"12× FLA for 0.1 s: **{fmt(Ip * 12, 'A')}**")
-                    st.write(f"25× FLA for 0.01 s: **{fmt(Ip * 25, 'A')}**")
+                rule_path = st.selectbox("OESC rule path", rule_options, index=0, key="tp_oesc_rule_path")
 
-                    st.caption(
-                        "This path reflects the allowance summarized in the attached OESC calculation: "
-                        "secondary-side device ≤125% and upstream primary feeder device ≤300% (verify rule conditions for your installation)."
-                    )
+                if rule_path.startswith("26-252") and "direct primary" in rule_path.lower():
+                    st.markdown("#### 26-252 (≤750 V, non-dry) — Direct primary protection (per calc document)")
+                    if Ip is None:
+                        st.error("Primary FLA could not be computed. Check inputs.")
+                    else:
+                        if Ip < 2.0:
+                            mult = 3.00
+                            reason = "Ip < 2 A — up to 300% permitted."
+                        elif Ip < 9.0:
+                            mult = 1.67
+                            reason = "Ip < 9 A — up to 167% permitted."
+                        else:
+                            mult = 1.50
+                            reason = "Ip ≥ 9 A — up to 150% permitted; if not a standard size, next higher standard permitted."
 
-            else:
-                st.warning("Selected OESC path not recognized. Check selections.")
+                        raw_primary = mult * Ip
+                        st.caption(reason)
+                        show_oesc_result(f"Max Primary OCPD ({mult:.2f}×)", raw_primary)
+
+                        with st.expander("Optional: show secondary reference value from worksheet style", expanded=False):
+                            if Is is None:
+                                st.warning("Secondary FLA unavailable.")
+                            else:
+                                st.info("The attached worksheet also shows a secondary reference value using the same multiplier for this example format.")
+                                show_oesc_result(f"Secondary @ {mult:.2f}× (reference)", mult * Is)
+
+                elif rule_path.startswith("26-252") and "secondary device" in rule_path.lower():
+                    st.markdown("#### 26-252 (≤750 V, non-dry) — Secondary device + primary feeder allowance (per calc document)")
+                    if (Ip is None) or (Is is None):
+                        st.error("Primary/Secondary FLA could not be computed. Check inputs.")
+                    else:
+                        raw_sec_dev = 1.25 * Is
+                        raw_pri_feeder = 3.00 * Ip
+                        show_oesc_result("Max Secondary OCPD (125% of secondary FLA)", raw_sec_dev)
+                        show_oesc_result("Max Primary Feeder OCPD (300% of primary FLA)", raw_pri_feeder)
+                        st.caption(
+                            "This path reflects the allowance summarized in the attached OESC calculation: "
+                            "secondary-side device ≤125% and upstream primary feeder device ≤300% (verify rule conditions for your installation)."
+                        )
+
+                elif rule_path.startswith("26-254") and "direct primary" in rule_path.lower():
+                    st.markdown("#### 26-254 (≤750 V, dry-type) — Direct primary protection (per calc document)")
+                    if Ip is None:
+                        st.error("Primary FLA could not be computed. Check inputs.")
+                    else:
+                        raw_primary = 1.25 * Ip
+                        show_oesc_result("Max Primary OCPD (125%)", raw_primary)
+
+                        st.markdown("**Inrush withstand checks (Appendix guidance in calc):**")
+                        st.write(f"12× FLA for 0.1 s: **{fmt(Ip * 12, 'A')}**")
+                        st.write(f"25× FLA for 0.01 s: **{fmt(Ip * 25, 'A')}**")
+                        st.caption("Verify manufacturer curves to confirm withstand/ride-through capability.")
+
+                        with st.expander("Optional: show secondary reference value from worksheet style", expanded=False):
+                            if Is is None:
+                                st.warning("Secondary FLA unavailable.")
+                            else:
+                                show_oesc_result("Secondary @ 125% (reference)", 1.25 * Is)
+
+                elif rule_path.startswith("26-254") and "secondary device" in rule_path.lower():
+                    st.markdown("#### 26-254 (≤750 V, dry-type) — Secondary device + primary feeder allowance (per calc document)")
+                    if (Ip is None) or (Is is None):
+                        st.error("Primary/Secondary FLA could not be computed. Check inputs.")
+                    else:
+                        raw_sec_dev = 1.25 * Is
+                        raw_pri_feeder = 3.00 * Ip
+                        show_oesc_result("Max Secondary OCPD (125% of secondary FLA)", raw_sec_dev)
+                        show_oesc_result("Max Primary Feeder OCPD (300% of primary FLA)", raw_pri_feeder)
+
+                        st.markdown("**Inrush withstand checks (Appendix guidance in calc):**")
+                        st.write(f"12× FLA for 0.1 s: **{fmt(Ip * 12, 'A')}**")
+                        st.write(f"25× FLA for 0.01 s: **{fmt(Ip * 25, 'A')}**")
+
+                        st.caption(
+                            "This path reflects the allowance summarized in the attached OESC calculation: "
+                            "secondary-side device ≤125% and upstream primary feeder device ≤300% (verify rule conditions for your installation)."
+                        )
+
+                else:
+                    st.warning("Selected OESC path not recognized. Check selections.")
 
         # ----------------------------
         # NEC calculator
@@ -1160,14 +1213,43 @@ d19 -> d20 [style=invis];
                 # Build results for OESC rule
                 tp_results = []
                 if rule_path.startswith("26-250"):
-                    if Ip is not None:
-                        raw_fuse = 1.50 * Ip
-                        raw_brk = 3.00 * Ip
-                        std_fuse = next_standard(raw_fuse, OESC_TABLE13_STANDARD) if round_to_std else raw_fuse
-                        std_brk = next_standard(raw_brk, OESC_TABLE13_STANDARD) if round_to_std else raw_brk
-                        tp_results.append(("Primary Fuse (150%)", f"{raw_fuse:.2f}A", f"{std_fuse:.2f}A" if std_fuse else "exceeds list"))
-                        tp_results.append(("Primary Breaker (300%)", f"{raw_brk:.2f}A", f"{std_brk:.2f}A" if std_brk else "exceeds list"))
-                        
+                    if Ip is not None and Is is not None:
+                        if prot_config == "Primary only":
+                            std_fuse = next_standard(1.50 * Ip, OESC_TABLE13_STANDARD) if round_to_std else 1.50 * Ip
+                            std_brk  = next_standard(3.00 * Ip, OESC_TABLE13_STANDARD) if round_to_std else 3.00 * Ip
+                            tp_results.append(("Primary Fuse (150% × Ip)", f"{1.50 * Ip:.2f}A", f"{std_fuse:.2f}A" if std_fuse else "exceeds list"))
+                            tp_results.append(("Primary Breaker (300% × Ip)", f"{3.00 * Ip:.2f}A", f"{std_brk:.2f}A" if std_brk else "exceeds list"))
+                        elif z_pct <= 7.5:  # P&S, Z <= 7.5%
+                            pf_f = next_standard(3.00 * Ip, OESC_TABLE13_STANDARD) if round_to_std else 3.00 * Ip
+                            pf_b = next_standard(6.00 * Ip, OESC_TABLE13_STANDARD) if round_to_std else 6.00 * Ip
+                            tp_results.append(("Primary Fuse (300% × Ip)", f"{3.00 * Ip:.2f}A", f"{pf_f:.2f}A" if pf_f else "exceeds list"))
+                            tp_results.append(("Primary Breaker (600% × Ip)", f"{6.00 * Ip:.2f}A", f"{pf_b:.2f}A" if pf_b else "exceeds list"))
+                            if vsec > 750:
+                                sf_f = next_standard(1.50 * Is, OESC_TABLE13_STANDARD) if round_to_std else 1.50 * Is
+                                sf_b = next_standard(3.00 * Is, OESC_TABLE13_STANDARD) if round_to_std else 3.00 * Is
+                                tp_results.append(("Secondary Fuse (150% × Is)", f"{1.50 * Is:.2f}A", f"{sf_f:.2f}A" if sf_f else "exceeds list"))
+                                tp_results.append(("Secondary Breaker (300% × Is)", f"{3.00 * Is:.2f}A", f"{sf_b:.2f}A" if sf_b else "exceeds list"))
+                            else:
+                                sf_f = next_standard(2.50 * Is, OESC_TABLE13_STANDARD) if round_to_std else 2.50 * Is
+                                sf_b = next_standard(2.50 * Is, OESC_TABLE13_STANDARD) if round_to_std else 2.50 * Is
+                                tp_results.append(("Secondary Fuse (250% × Is)", f"{2.50 * Is:.2f}A", f"{sf_f:.2f}A" if sf_f else "exceeds list"))
+                                tp_results.append(("Secondary Breaker (250% × Is)", f"{2.50 * Is:.2f}A", f"{sf_b:.2f}A" if sf_b else "exceeds list"))
+                        elif z_pct <= 10.0:  # P&S, 7.5% < Z <= 10%
+                            pf_f = next_standard(2.00 * Ip, OESC_TABLE13_STANDARD) if round_to_std else 2.00 * Ip
+                            pf_b = next_standard(4.00 * Ip, OESC_TABLE13_STANDARD) if round_to_std else 4.00 * Ip
+                            tp_results.append(("Primary Fuse (200% × Ip)", f"{2.00 * Ip:.2f}A", f"{pf_f:.2f}A" if pf_f else "exceeds list"))
+                            tp_results.append(("Primary Breaker (400% × Ip)", f"{4.00 * Ip:.2f}A", f"{pf_b:.2f}A" if pf_b else "exceeds list"))
+                            if vsec > 750:
+                                sf_f = next_standard(1.25 * Is, OESC_TABLE13_STANDARD) if round_to_std else 1.25 * Is
+                                sf_b = next_standard(2.50 * Is, OESC_TABLE13_STANDARD) if round_to_std else 2.50 * Is
+                                tp_results.append(("Secondary Fuse (125% × Is)", f"{1.25 * Is:.2f}A", f"{sf_f:.2f}A" if sf_f else "exceeds list"))
+                                tp_results.append(("Secondary Breaker (250% × Is)", f"{2.50 * Is:.2f}A", f"{sf_b:.2f}A" if sf_b else "exceeds list"))
+                            else:
+                                sf_f = next_standard(2.50 * Is, OESC_TABLE13_STANDARD) if round_to_std else 2.50 * Is
+                                sf_b = next_standard(2.50 * Is, OESC_TABLE13_STANDARD) if round_to_std else 2.50 * Is
+                                tp_results.append(("Secondary Fuse (250% × Is)", f"{2.50 * Is:.2f}A", f"{sf_f:.2f}A" if sf_f else "exceeds list"))
+                                tp_results.append(("Secondary Breaker (250% × Is)", f"{2.50 * Is:.2f}A", f"{sf_b:.2f}A" if sf_b else "exceeds list"))
+
                 elif rule_path.startswith("26-252") and "direct primary" in rule_path.lower():
                     if Ip is not None:
                         if Ip < 2.0:
