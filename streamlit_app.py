@@ -106,6 +106,136 @@ def remove_leading_blank_paragraphs(doc: Document):
         _delete_paragraph(doc.paragraphs[0])
 
 
+# ----------------------------
+# Shared report-building helpers
+# ----------------------------
+def _fill_doc_header(doc: Document, title: str) -> None:
+    """Fill the standard report header table in the Word template."""
+    hdr_table = doc.sections[0].header.tables[0]
+    append_to_value_line(hdr_table.cell(0, 3), PROJECT_NUMBER)
+    append_to_value_line(hdr_table.cell(0, 4), "#")
+    append_to_value_line(hdr_table.cell(2, 3), DESIGNER_NAME)
+    append_to_value_line(hdr_table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
+    append_to_value_line(hdr_table.cell(3, 3), "")
+    append_to_value_line(hdr_table.cell(3, 4), "")
+    append_to_value_line(hdr_table.cell(3, 2), title)
+
+
+def _add_word_table(doc: Document, headers: list, rows: list) -> None:
+    """Add a bordered Word table with bold column headers and data rows."""
+    t = doc.add_table(rows=1, cols=len(headers))
+    for i, heading in enumerate(headers):
+        p = t.rows[0].cells[i].paragraphs[0]
+        p.clear()
+        p.add_run(heading).bold = True
+    for row_data in rows:
+        cells = t.add_row().cells
+        for i, val in enumerate(row_data):
+            cells[i].text = str(val)
+    set_table_borders(t)
+
+
+def _autosize_excel_cols(ws) -> None:
+    """Auto-size all worksheet columns to fit their content."""
+    for col in ws.columns:
+        col_letter = get_column_letter(col[0].column)
+        max_len = max((len(str(cell.value or "")) for cell in col), default=0)
+        ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
+
+
+def _safe_float(x):
+    """Convert to float, returning None on failure."""
+    try:
+        return None if x is None else float(x)
+    except Exception:
+        return None
+
+
+def _norm(s):
+    """Normalize a value to a stripped string."""
+    return str(s).strip()
+
+
+def _lower(s):
+    """Normalize a value to a lowercase stripped string."""
+    return _norm(s).lower()
+
+
+def _to_float(x):
+    """Convert to float, handling None, dashes, commas, and empty strings."""
+    try:
+        if x is None:
+            return None
+        if isinstance(x, (int, float)):
+            return float(x)
+        s = str(x).strip()
+        if s in ("", "—", "-", "–", "None"):
+            return None
+        return float(s.replace(",", ""))
+    except Exception:
+        return None
+
+
+def _best_col(cols, include=(), exclude=()):
+    """Return first column name containing ALL include tokens and NONE of exclude tokens (case-insensitive)."""
+    for c in cols:
+        lc = _lower(c)
+        if all(t in lc for t in include) and not any(t in lc for t in exclude):
+            return c
+    return None
+
+
+def _show_result(label, raw, std_list, round_to_std, selected_label="Selected standard", over_1000v=False):
+    """Render a standard OCPD result with optional rounding to the standard list."""
+    std = next_standard(raw, std_list) if round_to_std else None
+    if round_to_std:
+        if std is None:
+            st.error(f"{label}: Raw = **{fmt(raw,'A')}** → exceeds standard list. Enter final device manually.")
+        else:
+            st.success(f"{label}: Raw = **{fmt(raw,'A')}** → {selected_label} = **{fmt(std,'A')}**")
+    else:
+        st.success(f"{label}: **{fmt(raw,'A')}**")
+    if over_1000v:
+        st.caption("For >1000 V cases, Table 450.3 Note 1 allows next higher **commercially available** rating/setting (not strictly the 240.6(A) list).")
+
+
+def _render_export_buttons(prefix, docx_file, xlsx_file, can_export, word_builder, excel_builder):
+    """Render the standard Word + Excel prepare/download button pair."""
+    c1, c2 = st.columns([1, 1], gap="large")
+    with c1:
+        if st.button("Prepare Word report (.docx)", key=f"{prefix}_build_docx"):
+            try:
+                st.session_state[f"{prefix}_docx_bytes"] = word_builder()
+                st.success("Word report prepared. Use the download button below.")
+            except Exception as e:
+                st.error(f"Failed to build Word report: {e}")
+        docx_bytes = st.session_state.get(f"{prefix}_docx_bytes")
+        st.download_button(
+            "⬇️ Download Word report (.docx)",
+            data=docx_bytes or b"",
+            file_name=docx_file,
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            disabled=(not can_export) or (docx_bytes is None),
+            key=f"{prefix}_download_docx",
+        )
+    with c2:
+        if st.button("Prepare Excel report (.xlsx)", key=f"{prefix}_build_xlsx"):
+            try:
+                st.session_state[f"{prefix}_xlsx_bytes"] = excel_builder()
+                st.success("Excel report prepared. Use the download button below.")
+            except Exception as e:
+                st.error(f"Failed to build Excel report: {e}")
+        xlsx_bytes = st.session_state.get(f"{prefix}_xlsx_bytes")
+        st.download_button(
+            "⬇️ Download Excel report (.xlsx)",
+            data=xlsx_bytes or b"",
+            file_name=xlsx_file,
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            disabled=(not can_export) or (xlsx_bytes is None),
+            key=f"{prefix}_download_xlsx",
+        )
+
+
 st.set_page_config(
     page_title="Electrical Calculations Hub",
     page_icon="⚡",
@@ -770,14 +900,7 @@ d19 -> d20 [style=invis];
             std_list = OESC_TABLE13_STANDARD
 
             def show_oesc_result(label, raw):
-                std = next_standard(raw, std_list) if round_to_std else None
-                if round_to_std:
-                    if std is None:
-                        st.error(f"{label}: Raw = **{fmt(raw,'A')}** → exceeds standard list. Enter final device manually.")
-                    else:
-                        st.success(f"{label}: Raw = **{fmt(raw,'A')}** → Selected standard = **{fmt(std,'A')}**")
-                else:
-                    st.success(f"{label}: **{fmt(raw,'A')}**")
+                _show_result(label, raw, std_list, round_to_std)
 
             prot_config = st.radio(
                 "Protection configuration",
@@ -786,6 +909,8 @@ d19 -> d20 [style=invis];
                 index=0,
                 key="tp_oesc_prot_config",
             )
+
+            z_pct = None  # set inside P&S branch; kept as default for export closures
 
             if voltage_class == "> 750 V":
                 st.markdown("#### Rule 26-250 (>750 V) — OCPD sizing per OESC Table 50")
@@ -919,17 +1044,7 @@ d19 -> d20 [style=invis];
             std_list = NEC_2406A_STANDARD
 
             def show_nec_result(label, raw, over_1000v=False):
-                std = next_standard(raw, std_list) if round_to_std else None
-                if round_to_std:
-                    if std is None:
-                        st.error(f"{label}: Raw = **{fmt(raw,'A')}** → exceeds standard list. Enter final device manually.")
-                    else:
-                        st.success(f"{label}: Raw = **{fmt(raw,'A')}** → Selected = **{fmt(std,'A')}**")
-                else:
-                    st.success(f"{label}: **{fmt(raw,'A')}**")
-
-                if over_1000v:
-                    st.caption("For >1000 V cases, Table 450.3 Note 1 allows next higher **commercially available** rating/setting (not strictly the 240.6(A) list).")
+                _show_result(label, raw, std_list, round_to_std, selected_label="Selected", over_1000v=over_1000v)
 
             if show_notes:
                 st.markdown(
@@ -990,6 +1105,24 @@ d19 -> d20 [style=invis];
                             "These multipliers match the attached NEC calculation 'Primary + Secondary' scheme for ≤1000 V with currents ≥ 9A."
                         )
 
+        # Compute rule_path display label for export (always defined after calculator UI)
+        if code_mode == "OESC":
+            if voltage_class == "> 750 V":
+                if prot_config == "Primary only":
+                    rule_path = "26-250 (>750V) — Primary only"
+                elif z_pct is not None and z_pct <= 7.5:
+                    rule_path = f"26-250 (>750V) — P&S, Z={z_pct:.2f}% (≤ 7.5%)"
+                elif z_pct is not None:
+                    rule_path = f"26-250 (>750V) — P&S, Z={z_pct:.2f}% (7.5–10%)"
+                else:
+                    rule_path = "26-250 (>750V) — P&S"
+            else:
+                _rule_ref = "26-254" if xfmr_type == "Dry-type" else "26-252"
+                _prot_label = "Primary only" if prot_config == "Primary only" else "P&S"
+                rule_path = f"{_rule_ref} (≤750V) — {_prot_label}"
+        else:
+            rule_path = ""
+
         # =====================================================================
         # Export Transformer Protection Report
         # =====================================================================
@@ -1021,36 +1154,24 @@ d19 -> d20 [style=invis];
         def build_tp_word_report():
             doc = Document("content/files/Template.docx")
             remove_leading_blank_paragraphs(doc)
-
-            table = doc.sections[0].header.tables[0]
-            append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
-            append_to_value_line(table.cell(0, 4), "#")
-            append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
-            append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
-            append_to_value_line(table.cell(3, 3), "")
-            append_to_value_line(table.cell(3, 4), "")
-            append_to_value_line(table.cell(3, 2), "Transformer Protection Calculation Report")
+            _fill_doc_header(doc, "Transformer Protection Calculation Report")
 
             # Equations
             doc.add_heading("Equations", level=1)
-            
+            p = doc.add_paragraph()
             if phase == "3Φ":
-                p = doc.add_paragraph()
                 p.add_run("Full-Load Current (three-phase): ").bold = True
                 omml = OMML_TP_EQUATIONS.get(r"I=\frac{S}{\sqrt{3}\,V}")
-                if omml is not None:
-                    add_omml_equation_to_paragraph(p, omml)
             else:
-                p = doc.add_paragraph()
                 p.add_run("Full-Load Current (single-phase): ").bold = True
                 omml = OMML_TP_EQUATIONS.get(r"I=\frac{S}{V}")
-                if omml is not None:
-                    add_omml_equation_to_paragraph(p, omml)
+            if omml is not None:
+                add_omml_equation_to_paragraph(p, omml)
 
             # Assumptions
             doc.add_heading("Assumptions", level=1)
-            tp_assumptions = [
-                f"System: {phase} (Three-phase)" if phase == "3Φ" else f"System: {phase} (Single-phase)",
+            for a in [
+                f"System: {'Three-phase' if phase == '3Φ' else 'Single-phase'} ({phase}).",
                 f"Transformer rating: {kva} kVA.",
                 f"Primary voltage: {vpri} V.",
                 f"Secondary voltage: {vsec} V.",
@@ -1058,68 +1179,30 @@ d19 -> d20 [style=invis];
                 f"Code standard: {code_mode}.",
                 "OCPD multipliers and allowed ratings follow the attached standard calculation document.",
                 "Rounding to standard/next higher rating: Yes." if round_to_std else "Rounding to standard/next higher rating: No.",
-            ]
-            for a in tp_assumptions:
+            ]:
                 doc.add_paragraph(a, style="CalcBullet")
 
             # Inputs
             doc.add_heading("Inputs", level=1)
-            tp_inputs = [
+            _add_word_table(doc, ["Parameter", "Value"], [
                 ("System Type", phase),
                 ("Transformer Rating (kVA)", str(kva)),
                 ("Primary Voltage (V)", str(vpri)),
                 ("Secondary Voltage (V)", str(vsec)),
                 ("Nameplate FLA Used", "Yes" if use_nameplate else "No"),
-            ]
-            
-            t = doc.add_table(rows=1, cols=2)
-            hdr = t.rows[0].cells
-            p = hdr[0].paragraphs[0]
-            p.clear()
-            r = p.add_run("Parameter")
-            r.bold = True
-            p = hdr[1].paragraphs[0]
-            p.clear()
-            r = p.add_run("Value")
-            r.bold = True
-
-            for param, val in tp_inputs:
-                row = t.add_row().cells
-                row[0].text = str(param)
-                row[1].text = str(val)
-
-            set_table_borders(t)
+            ])
 
             # Calculated FLA
             doc.add_heading("Full-Load Currents", level=1)
-            tp_fla = [
+            _add_word_table(doc, ["Current", "Value"], [
                 ("Primary FLA (A)", f"{Ip:.4f}" if Ip is not None else "—"),
                 ("Secondary FLA (A)", f"{Is:.4f}" if Is is not None else "—"),
-            ]
-
-            t = doc.add_table(rows=1, cols=2)
-            hdr = t.rows[0].cells
-            p = hdr[0].paragraphs[0]
-            p.clear()
-            r = p.add_run("Current")
-            r.bold = True
-            p = hdr[1].paragraphs[0]
-            p.clear()
-            r = p.add_run("Value")
-            r.bold = True
-
-            for param, val in tp_fla:
-                row = t.add_row().cells
-                row[0].text = str(param)
-                row[1].text = str(val)
-
-            set_table_borders(t)
+            ])
 
             # Code-based protection scheme
             doc.add_heading("Code-Based Protection Scheme", level=1)
-            
             if code_mode == "OESC":
-                tp_code_info = [
+                code_rows = [
                     ("Code Standard", "OESC"),
                     ("Transformer Type", xfmr_type),
                     ("Voltage Class", voltage_class),
@@ -1127,183 +1210,96 @@ d19 -> d20 [style=invis];
                     ("Round to Standard", "Yes" if round_to_std else "No"),
                 ]
             else:
-                tp_code_info = [
+                code_rows = [
                     ("Code Standard", "NEC"),
                     ("Case Selected", nec_case),
                     ("Round to Standard", "Yes" if round_to_std else "No"),
                 ]
                 if nec_case.startswith("450.3(B)"):
-                    tp_code_info.append(("Protection Scheme", scheme if scheme is not None else "—"))
+                    code_rows.append(("Protection Scheme", scheme if scheme is not None else "—"))
+            _add_word_table(doc, ["Parameter", "Value"], code_rows)
 
-            t = doc.add_table(rows=1, cols=2)
-            hdr = t.rows[0].cells
-            p = hdr[0].paragraphs[0]
-            p.clear()
-            r = p.add_run("Parameter")
-            r.bold = True
-            p = hdr[1].paragraphs[0]
-            p.clear()
-            r = p.add_run("Value")
-            r.bold = True
-
-            for param, val in tp_code_info:
-                row = t.add_row().cells
-                row[0].text = str(param)
-                row[1].text = str(val)
-
-            set_table_borders(t)
-
-            # Protection Results (vary by code/rule)
+            # Protection Results
             doc.add_heading("Calculated OCPD Limits", level=1)
-            
+            tp_results = []
             if code_mode == "OESC":
-                # Build results for OESC rule
-                tp_results = []
-                if rule_path.startswith("26-250"):
-                    if Ip is not None and Is is not None:
-                        if prot_config == "Primary only":
-                            std_fuse = next_standard(1.50 * Ip, OESC_TABLE13_STANDARD) if round_to_std else 1.50 * Ip
-                            std_brk  = next_standard(3.00 * Ip, OESC_TABLE13_STANDARD) if round_to_std else 3.00 * Ip
-                            tp_results.append(("Primary Fuse (150% × Ip)", f"{1.50 * Ip:.2f}A", f"{std_fuse:.2f}A" if std_fuse else "exceeds list"))
-                            tp_results.append(("Primary Breaker (300% × Ip)", f"{3.00 * Ip:.2f}A", f"{std_brk:.2f}A" if std_brk else "exceeds list"))
-                        elif z_pct <= 7.5:  # P&S, Z <= 7.5%
-                            pf_f = next_standard(3.00 * Ip, OESC_TABLE13_STANDARD) if round_to_std else 3.00 * Ip
-                            pf_b = next_standard(6.00 * Ip, OESC_TABLE13_STANDARD) if round_to_std else 6.00 * Ip
-                            tp_results.append(("Primary Fuse (300% × Ip)", f"{3.00 * Ip:.2f}A", f"{pf_f:.2f}A" if pf_f else "exceeds list"))
-                            tp_results.append(("Primary Breaker (600% × Ip)", f"{6.00 * Ip:.2f}A", f"{pf_b:.2f}A" if pf_b else "exceeds list"))
-                            if vsec > 750:
-                                sf_f = next_standard(1.50 * Is, OESC_TABLE13_STANDARD) if round_to_std else 1.50 * Is
-                                sf_b = next_standard(3.00 * Is, OESC_TABLE13_STANDARD) if round_to_std else 3.00 * Is
-                                tp_results.append(("Secondary Fuse (150% × Is)", f"{1.50 * Is:.2f}A", f"{sf_f:.2f}A" if sf_f else "exceeds list"))
-                                tp_results.append(("Secondary Breaker (300% × Is)", f"{3.00 * Is:.2f}A", f"{sf_b:.2f}A" if sf_b else "exceeds list"))
-                            else:
-                                sf_f = next_standard(2.50 * Is, OESC_TABLE13_STANDARD) if round_to_std else 2.50 * Is
-                                sf_b = next_standard(2.50 * Is, OESC_TABLE13_STANDARD) if round_to_std else 2.50 * Is
-                                tp_results.append(("Secondary Fuse (250% × Is)", f"{2.50 * Is:.2f}A", f"{sf_f:.2f}A" if sf_f else "exceeds list"))
-                                tp_results.append(("Secondary Breaker (250% × Is)", f"{2.50 * Is:.2f}A", f"{sf_b:.2f}A" if sf_b else "exceeds list"))
-                        elif z_pct <= 10.0:  # P&S, 7.5% < Z <= 10%
-                            pf_f = next_standard(2.00 * Ip, OESC_TABLE13_STANDARD) if round_to_std else 2.00 * Ip
-                            pf_b = next_standard(4.00 * Ip, OESC_TABLE13_STANDARD) if round_to_std else 4.00 * Ip
-                            tp_results.append(("Primary Fuse (200% × Ip)", f"{2.00 * Ip:.2f}A", f"{pf_f:.2f}A" if pf_f else "exceeds list"))
-                            tp_results.append(("Primary Breaker (400% × Ip)", f"{4.00 * Ip:.2f}A", f"{pf_b:.2f}A" if pf_b else "exceeds list"))
-                            if vsec > 750:
-                                sf_f = next_standard(1.25 * Is, OESC_TABLE13_STANDARD) if round_to_std else 1.25 * Is
-                                sf_b = next_standard(2.50 * Is, OESC_TABLE13_STANDARD) if round_to_std else 2.50 * Is
-                                tp_results.append(("Secondary Fuse (125% × Is)", f"{1.25 * Is:.2f}A", f"{sf_f:.2f}A" if sf_f else "exceeds list"))
-                                tp_results.append(("Secondary Breaker (250% × Is)", f"{2.50 * Is:.2f}A", f"{sf_b:.2f}A" if sf_b else "exceeds list"))
-                            else:
-                                sf_f = next_standard(2.50 * Is, OESC_TABLE13_STANDARD) if round_to_std else 2.50 * Is
-                                sf_b = next_standard(2.50 * Is, OESC_TABLE13_STANDARD) if round_to_std else 2.50 * Is
-                                tp_results.append(("Secondary Fuse (250% × Is)", f"{2.50 * Is:.2f}A", f"{sf_f:.2f}A" if sf_f else "exceeds list"))
-                                tp_results.append(("Secondary Breaker (250% × Is)", f"{2.50 * Is:.2f}A", f"{sf_b:.2f}A" if sf_b else "exceeds list"))
-
-                elif rule_path.startswith("26-252") and "direct primary" in rule_path.lower():
-                    if Ip is not None:
-                        if Ip < 2.0:
-                            mult = 3.00
-                        elif Ip < 9.0:
-                            mult = 1.67
+                def _std_oesc(v):
+                    s = next_standard(v, OESC_TABLE13_STANDARD) if round_to_std else v
+                    return f"{s:.2f}A" if s else "exceeds list"
+                if voltage_class == "> 750 V" and Ip is not None and Is is not None:
+                    if prot_config == "Primary only":
+                        tp_results += [
+                            ("Primary Fuse (150% × Ip)", f"{1.50*Ip:.2f}A", _std_oesc(1.50*Ip)),
+                            ("Primary Breaker (300% × Ip)", f"{3.00*Ip:.2f}A", _std_oesc(3.00*Ip)),
+                        ]
+                    elif z_pct is not None and z_pct <= 7.5:
+                        tp_results += [
+                            ("Primary Fuse (300% × Ip)", f"{3.00*Ip:.2f}A", _std_oesc(3.00*Ip)),
+                            ("Primary Breaker (600% × Ip)", f"{6.00*Ip:.2f}A", _std_oesc(6.00*Ip)),
+                        ]
+                        if vsec > 750:
+                            tp_results += [
+                                ("Secondary Fuse (150% × Is)", f"{1.50*Is:.2f}A", _std_oesc(1.50*Is)),
+                                ("Secondary Breaker (300% × Is)", f"{3.00*Is:.2f}A", _std_oesc(3.00*Is)),
+                            ]
                         else:
-                            mult = 1.50
-                        raw_primary = mult * Ip
-                        std_primary = next_standard(raw_primary, OESC_TABLE13_STANDARD) if round_to_std else raw_primary
-                        tp_results.append(("Primary OCPD (direct)", f"{raw_primary:.2f}A ({mult:.2f}×)", f"{std_primary:.2f}A" if std_primary else "exceeds list"))
-                        
-                elif rule_path.startswith("26-252") and "secondary device" in rule_path.lower():
-                    if (Ip is not None) and (Is is not None):
-                        raw_sec = 1.25 * Is
-                        raw_pri = 3.00 * Ip
-                        std_sec = next_standard(raw_sec, OESC_TABLE13_STANDARD) if round_to_std else raw_sec
-                        std_pri = next_standard(raw_pri, OESC_TABLE13_STANDARD) if round_to_std else raw_pri
-                        tp_results.append(("Secondary OCPD (125%)", f"{raw_sec:.2f}A", f"{std_sec:.2f}A" if std_sec else "exceeds list"))
-                        tp_results.append(("Primary Feeder OCPD (300%)", f"{raw_pri:.2f}A", f"{std_pri:.2f}A" if std_pri else "exceeds list"))
-                        
-                elif rule_path.startswith("26-254") and "direct primary" in rule_path.lower():
-                    if Ip is not None:
-                        raw_primary = 1.25 * Ip
-                        std_primary = next_standard(raw_primary, OESC_TABLE13_STANDARD) if round_to_std else raw_primary
-                        tp_results.append(("Primary OCPD (125%)", f"{raw_primary:.2f}A", f"{std_primary:.2f}A" if std_primary else "exceeds list"))
-                        
-                elif rule_path.startswith("26-254") and "secondary device" in rule_path.lower():
-                    if (Ip is not None) and (Is is not None):
-                        raw_sec = 1.25 * Is
-                        raw_pri = 3.00 * Ip
-                        std_sec = next_standard(raw_sec, OESC_TABLE13_STANDARD) if round_to_std else raw_sec
-                        std_pri = next_standard(raw_pri, OESC_TABLE13_STANDARD) if round_to_std else raw_pri
-                        tp_results.append(("Secondary OCPD (125%)", f"{raw_sec:.2f}A", f"{std_sec:.2f}A" if std_sec else "exceeds list"))
-                        tp_results.append(("Primary Feeder OCPD (300%)", f"{raw_pri:.2f}A", f"{std_pri:.2f}A" if std_pri else "exceeds list"))
-
-            else:
-                # Build results for NEC case
-                tp_results = []
-                if nec_case.startswith("450.3(A)"):
-                    if (Ip is not None) and (Is is not None):
-                        raw_pri_brk = 6.00 * Ip
-                        raw_pri_fuse = 3.00 * Ip
-                        raw_sec_brk = 3.00 * Is
-                        raw_sec_fuse = 2.50 * Is
-                        std_pri_brk = next_standard(raw_pri_brk, NEC_2406A_STANDARD) if round_to_std else raw_pri_brk
-                        std_pri_fuse = next_standard(raw_pri_fuse, NEC_2406A_STANDARD) if round_to_std else raw_pri_fuse
-                        std_sec_brk = next_standard(raw_sec_brk, NEC_2406A_STANDARD) if round_to_std else raw_sec_brk
-                        std_sec_fuse = next_standard(raw_sec_fuse, NEC_2406A_STANDARD) if round_to_std else raw_sec_fuse
-                        tp_results.append(("Primary Breaker (6.00×)", f"{raw_pri_brk:.2f}A", f"{std_pri_brk:.2f}A" if std_pri_brk else "exceeds list"))
-                        tp_results.append(("Primary Fuse (3.00×)", f"{raw_pri_fuse:.2f}A", f"{std_pri_fuse:.2f}A" if std_pri_fuse else "exceeds list"))
-                        tp_results.append(("Secondary Breaker (3.00×)", f"{raw_sec_brk:.2f}A", f"{std_sec_brk:.2f}A" if std_sec_brk else "exceeds list"))
-                        tp_results.append(("Secondary Fuse (2.50×)", f"{raw_sec_fuse:.2f}A", f"{std_sec_fuse:.2f}A" if std_sec_fuse else "exceeds list"))
-                        
-                else:  # 450.3(B)
-                    if (Ip is not None) and (Is is not None):
-                        if scheme == "Primary-only protection":
-                            raw_primary = 1.25 * Ip
-                            std_primary = next_standard(raw_primary, NEC_2406A_STANDARD) if round_to_std else raw_primary
-                            tp_results.append(("Primary OCPD (1.25×)", f"{raw_primary:.2f}A", f"{std_primary:.2f}A" if std_primary else "exceeds list"))
-                        else:  # Primary + Secondary
-                            raw_primary = 2.50 * Ip
-                            raw_secondary = 1.25 * Is
-                            std_primary = next_standard(raw_primary, NEC_2406A_STANDARD) if round_to_std else raw_primary
-                            std_secondary = next_standard(raw_secondary, NEC_2406A_STANDARD) if round_to_std else raw_secondary
-                            tp_results.append(("Primary OCPD (2.50×)", f"{raw_primary:.2f}A", f"{std_primary:.2f}A" if std_primary else "exceeds list"))
-                            tp_results.append(("Secondary OCPD (1.25×)", f"{raw_secondary:.2f}A", f"{std_secondary:.2f}A" if std_secondary else "exceeds list"))
+                            tp_results += [
+                                ("Secondary Fuse (250% × Is)", f"{2.50*Is:.2f}A", _std_oesc(2.50*Is)),
+                                ("Secondary Breaker (250% × Is)", f"{2.50*Is:.2f}A", _std_oesc(2.50*Is)),
+                            ]
+                    elif z_pct is not None and z_pct <= 10.0:
+                        tp_results += [
+                            ("Primary Fuse (200% × Ip)", f"{2.00*Ip:.2f}A", _std_oesc(2.00*Ip)),
+                            ("Primary Breaker (400% × Ip)", f"{4.00*Ip:.2f}A", _std_oesc(4.00*Ip)),
+                            ("Secondary Fuse (125% × Is)", f"{1.25*Is:.2f}A", _std_oesc(1.25*Is)),
+                            ("Secondary Breaker (250% × Is)", f"{2.50*Is:.2f}A", _std_oesc(2.50*Is)),
+                        ]
+                elif voltage_class == "≤ 750 V" and xfmr_type == "Oil-cooled (non-dry)" and prot_config == "Primary only" and Ip is not None:
+                    mult = 3.00 if Ip < 2.0 else (1.67 if Ip < 9.0 else 1.50)
+                    tp_results.append(("Primary OCPD (direct)", f"{mult*Ip:.2f}A ({mult:.2f}×)", _std_oesc(mult*Ip)))
+                elif voltage_class == "≤ 750 V" and xfmr_type == "Oil-cooled (non-dry)" and Ip is not None and Is is not None:
+                    tp_results += [
+                        ("Secondary OCPD (125%)", f"{1.25*Is:.2f}A", _std_oesc(1.25*Is)),
+                        ("Primary Feeder OCPD (300%)", f"{3.00*Ip:.2f}A", _std_oesc(3.00*Ip)),
+                    ]
+                elif voltage_class == "≤ 750 V" and xfmr_type == "Dry-type" and prot_config == "Primary only" and Ip is not None:
+                    tp_results.append(("Primary OCPD (125%)", f"{1.25*Ip:.2f}A", _std_oesc(1.25*Ip)))
+                elif voltage_class == "≤ 750 V" and xfmr_type == "Dry-type" and Ip is not None and Is is not None:
+                    tp_results += [
+                        ("Secondary OCPD (125%)", f"{1.25*Is:.2f}A", _std_oesc(1.25*Is)),
+                        ("Primary Feeder OCPD (300%)", f"{3.00*Ip:.2f}A", _std_oesc(3.00*Ip)),
+                    ]
+            else:  # NEC
+                def _std_nec(v):
+                    s = next_standard(v, NEC_2406A_STANDARD) if round_to_std else v
+                    return f"{s:.2f}A" if s else "exceeds list"
+                if nec_case.startswith("450.3(A)") and Ip is not None and Is is not None:
+                    tp_results += [
+                        ("Primary Breaker (6.00×)", f"{6.00*Ip:.2f}A", _std_nec(6.00*Ip)),
+                        ("Primary Fuse (3.00×)", f"{3.00*Ip:.2f}A", _std_nec(3.00*Ip)),
+                        ("Secondary Breaker (3.00×)", f"{3.00*Is:.2f}A", _std_nec(3.00*Is)),
+                        ("Secondary Fuse (2.50×)", f"{2.50*Is:.2f}A", _std_nec(2.50*Is)),
+                    ]
+                elif Ip is not None and Is is not None:  # 450.3(B)
+                    if scheme == "Primary-only protection":
+                        tp_results.append(("Primary OCPD (1.25×)", f"{1.25*Ip:.2f}A", _std_nec(1.25*Ip)))
+                    else:
+                        tp_results += [
+                            ("Primary OCPD (2.50×)", f"{2.50*Ip:.2f}A", _std_nec(2.50*Ip)),
+                            ("Secondary OCPD (1.25×)", f"{1.25*Is:.2f}A", _std_nec(1.25*Is)),
+                        ]
 
             if tp_results:
-                t = doc.add_table(rows=1, cols=3)
-                hdr = t.rows[0].cells
-                p = hdr[0].paragraphs[0]
-                p.clear()
-                r = p.add_run("Device Type")
-                r.bold = True
-                p = hdr[1].paragraphs[0]
-                p.clear()
-                r = p.add_run("Raw Value")
-                r.bold = True
-                p = hdr[2].paragraphs[0]
-                p.clear()
-                r = p.add_run("Selected Size")
-                r.bold = True
+                _add_word_table(doc, ["Device Type", "Raw Value", "Selected Size"], tp_results)
 
-                for device, raw_val, sel_val in tp_results:
-                    row = t.add_row().cells
-                    row[0].text = str(device)
-                    row[1].text = str(raw_val)
-                    row[2].text = str(sel_val)
-
-                set_table_borders(t)
-
-            style = doc.styles["Normal"]
-            style.font.name = "Calibri"
-            style.font.size = Pt(11)
+            doc.styles["Normal"].font.name = "Calibri"
+            doc.styles["Normal"].font.size = Pt(11)
 
             bio = io.BytesIO()
             doc.save(bio)
             return bio.getvalue()
 
         def build_tp_excel_report():
-            def _safe_float(x):
-                try:
-                    return None if x is None else float(x)
-                except Exception:
-                    return None
-
             wb = Workbook()
             ws = wb.active
             ws.title = "Transformer Protection"
@@ -1374,17 +1370,7 @@ d19 -> d20 [style=invis];
             ws[f"A{row}"] = "Round to Standard"
             ws[f"B{row}"] = "Yes" if round_to_std else "No"
 
-            # Auto-size columns
-            for col in ws.columns:
-                max_len = 0
-                col_letter = get_column_letter(col[0].column)
-                for cell in col:
-                    try:
-                        v = "" if cell.value is None else str(cell.value)
-                        max_len = max(max_len, len(v))
-                    except Exception:
-                        pass
-                ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
+            _autosize_excel_cols(ws)
 
             bio = io.BytesIO()
             wb.save(bio)
@@ -1393,42 +1379,10 @@ d19 -> d20 [style=invis];
         # Export buttons
         can_export_tp = (Ip is not None) and (Is is not None)
 
-        exp_c1, exp_c2 = st.columns([1, 1], gap="large")
-        with exp_c1:
-            if st.button("Prepare Word report (.docx)", key="tp_build_docx"):
-                try:
-                    st.session_state["tp_docx_bytes"] = build_tp_word_report()
-                    st.success("Word report prepared. Use the download button below.")
-                except Exception as e:
-                    st.error(f"Failed to build Word report: {e}")
-
-            docx_bytes_tp = st.session_state.get("tp_docx_bytes", None)
-            st.download_button(
-                "⬇️ Download Word report (.docx)",
-                data=docx_bytes_tp if docx_bytes_tp else b"",
-                file_name="Transformer_Protection_Report.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                disabled=(not can_export_tp) or (docx_bytes_tp is None),
-                key="tp_download_docx",
-            )
-
-        with exp_c2:
-            if st.button("Prepare Excel report (.xlsx)", key="tp_build_xlsx"):
-                try:
-                    st.session_state["tp_xlsx_bytes"] = build_tp_excel_report()
-                    st.success("Excel report prepared. Use the download button below.")
-                except Exception as e:
-                    st.error(f"Failed to build Excel report: {e}")
-
-            xlsx_bytes_tp = st.session_state.get("tp_xlsx_bytes", None)
-            st.download_button(
-                "⬇️ Download Excel report (.xlsx)",
-                data=xlsx_bytes_tp if xlsx_bytes_tp else b"",
-                file_name="Transformer_Protection_Report.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                disabled=(not can_export_tp) or (xlsx_bytes_tp is None),
-                key="tp_download_xlsx",
-            )
+        _render_export_buttons(
+            "tp", "Transformer_Protection_Report.docx", "Transformer_Protection_Report.xlsx",
+            can_export_tp, build_tp_word_report, build_tp_excel_report,
+        )
 
         st.caption(
             "Export includes: equations, assumptions, inputs, calculated FLAs, selected code/rule, and OCPD limits."
@@ -1642,31 +1596,19 @@ elif page == "Transformer Feeders":
         def build_tf_word_report():
             doc = Document("content/files/Template.docx")
             remove_leading_blank_paragraphs(doc)
-
-            table = doc.sections[0].header.tables[0]
-            append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
-            append_to_value_line(table.cell(0, 4), "#")
-            append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
-            append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
-            append_to_value_line(table.cell(3, 3), "")
-            append_to_value_line(table.cell(3, 4), "")
-            append_to_value_line(table.cell(3, 2), "Transformer Feeder Calculation Report")
+            _fill_doc_header(doc, "Transformer Feeder Calculation Report")
 
             # Equations
             doc.add_heading("Equations", level=1)
-            
+            p = doc.add_paragraph()
             if phase == "Three-phase":
-                p = doc.add_paragraph()
                 p.add_run("Primary/Secondary Full-Load Current (three-phase): ").bold = True
                 omml = OMML_TF_EQUATIONS.get(r"I=\frac{S}{\sqrt{3}\,V}")
-                if omml is not None:
-                    add_omml_equation_to_paragraph(p, omml)
             else:
-                p = doc.add_paragraph()
                 p.add_run("Primary/Secondary Full-Load Current (single-phase): ").bold = True
                 omml = OMML_TF_EQUATIONS.get(r"I=\frac{S}{V}")
-                if omml is not None:
-                    add_omml_equation_to_paragraph(p, omml)
+            if omml is not None:
+                add_omml_equation_to_paragraph(p, omml)
 
             p = doc.add_paragraph()
             p.add_run("Transformer Turns Ratio and Current Relationship: ").bold = True
@@ -1676,7 +1618,7 @@ elif page == "Transformer Feeders":
 
             # Assumptions
             doc.add_heading("Assumptions", level=1)
-            tf_assumptions = [
+            for a in [
                 f"Transformer type: {phase}.",
                 f"Transformer rating: {rating_value} {rating_unit}.",
                 f"Primary voltage: {vpri_value} {vpri_unit} (line-to-line for three-phase).",
@@ -1685,79 +1627,35 @@ elif page == "Transformer Feeders":
                 "Turns ratio is calculated from voltage ratio: N₁/N₂ = V₁/V₂.",
                 "Ampere ratio is inverse of turns ratio: I₂/I₁ = N₁/N₂ = V₁/V₂.",
                 "No-load losses and impedance effects are not included in this simplified FLA calculation.",
-            ]
-            for a in tf_assumptions:
+            ]:
                 doc.add_paragraph(a, style="CalcBullet")
 
             # Inputs
             doc.add_heading("Inputs", level=1)
-            tf_inputs = [
+            _add_word_table(doc, ["Parameter", "Value"], [
                 ("Number of Phases", phase),
                 ("Transformer Rating", f"{rating_value} {rating_unit}"),
                 ("Primary Voltage", f"{vpri_value} {vpri_unit}"),
                 ("Secondary Voltage", f"{vsec_value} {vsec_unit}"),
-            ]
-            
-            t = doc.add_table(rows=1, cols=2)
-            hdr = t.rows[0].cells
-            p = hdr[0].paragraphs[0]
-            p.clear()
-            r = p.add_run("Parameter")
-            r.bold = True
-            p = hdr[1].paragraphs[0]
-            p.clear()
-            r = p.add_run("Value")
-            r.bold = True
+            ])
 
-            for param, val in tf_inputs:
-                row = t.add_row().cells
-                row[0].text = str(param)
-                row[1].text = str(val)
-
-            set_table_borders(t)
-
-            # Results/Variables
+            # Results
             doc.add_heading("Results", level=1)
-            tf_results = [
+            _add_word_table(doc, ["Parameter", "Value"], [
                 ("Primary Full-Load Current (I₁)", f"{I1:.4f} A" if I1 is not None else "—"),
                 ("Secondary Full-Load Current (I₂)", f"{I2:.4f} A" if I2 is not None else "—"),
                 ("Turns Ratio (V₁/V₂)", f"{turns_ratio:.4f}" if turns_ratio is not None else "—"),
                 ("Transformer Type", xform_type),
-            ]
+            ])
 
-            t = doc.add_table(rows=1, cols=2)
-            hdr = t.rows[0].cells
-            p = hdr[0].paragraphs[0]
-            p.clear()
-            r = p.add_run("Parameter")
-            r.bold = True
-            p = hdr[1].paragraphs[0]
-            p.clear()
-            r = p.add_run("Value")
-            r.bold = True
-
-            for param, val in tf_results:
-                row = t.add_row().cells
-                row[0].text = str(param)
-                row[1].text = str(val)
-
-            set_table_borders(t)
-
-            style = doc.styles["Normal"]
-            style.font.name = "Calibri"
-            style.font.size = Pt(11)
+            doc.styles["Normal"].font.name = "Calibri"
+            doc.styles["Normal"].font.size = Pt(11)
 
             bio = io.BytesIO()
             doc.save(bio)
             return bio.getvalue()
 
         def build_tf_excel_report():
-            def _safe_float(x):
-                try:
-                    return None if x is None else float(x)
-                except Exception:
-                    return None
-
             wb = Workbook()
             ws = wb.active
             ws.title = "Transformer Feeder"
@@ -1801,17 +1699,7 @@ elif page == "Transformer Feeders":
                 ws[f"B{row}"] = val
                 row += 1
 
-            # Auto-size columns
-            for col in ws.columns:
-                max_len = 0
-                col_letter = get_column_letter(col[0].column)
-                for cell in col:
-                    try:
-                        v = "" if cell.value is None else str(cell.value)
-                        max_len = max(max_len, len(v))
-                    except Exception:
-                        pass
-                ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
+            _autosize_excel_cols(ws)
 
             bio = io.BytesIO()
             wb.save(bio)
@@ -1820,42 +1708,10 @@ elif page == "Transformer Feeders":
         # Export buttons
         can_export_tf = (I1 is not None) and (I2 is not None) and (turns_ratio is not None)
 
-        exp_c1, exp_c2 = st.columns([1, 1], gap="large")
-        with exp_c1:
-            if st.button("Prepare Word report (.docx)", key="tf_build_docx"):
-                try:
-                    st.session_state["tf_docx_bytes"] = build_tf_word_report()
-                    st.success("Word report prepared. Use the download button below.")
-                except Exception as e:
-                    st.error(f"Failed to build Word report: {e}")
-
-            docx_bytes_tf = st.session_state.get("tf_docx_bytes", None)
-            st.download_button(
-                "⬇️ Download Word report (.docx)",
-                data=docx_bytes_tf if docx_bytes_tf else b"",
-                file_name="Transformer_Feeder_Report.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                disabled=(not can_export_tf) or (docx_bytes_tf is None),
-                key="tf_download_docx",
-            )
-
-        with exp_c2:
-            if st.button("Prepare Excel report (.xlsx)", key="tf_build_xlsx"):
-                try:
-                    st.session_state["tf_xlsx_bytes"] = build_tf_excel_report()
-                    st.success("Excel report prepared. Use the download button below.")
-                except Exception as e:
-                    st.error(f"Failed to build Excel report: {e}")
-
-            xlsx_bytes_tf = st.session_state.get("tf_xlsx_bytes", None)
-            st.download_button(
-                "⬇️ Download Excel report (.xlsx)",
-                data=xlsx_bytes_tf if xlsx_bytes_tf else b"",
-                file_name="Transformer_Feeder_Report.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                disabled=(not can_export_tf) or (xlsx_bytes_tf is None),
-                key="tf_download_xlsx",
-            )
+        _render_export_buttons(
+            "tf", "Transformer_Feeder_Report.docx", "Transformer_Feeder_Report.xlsx",
+            can_export_tf, build_tf_word_report, build_tf_excel_report,
+        )
 
         st.caption(
             "Export includes: equations, assumptions, inputs, turns ratio, FLA calculations, and transformer type."
@@ -2068,15 +1924,7 @@ elif page == "Motor Protection":
             def build_mp_word_report():
                 doc = Document("content/files/Template.docx")
                 remove_leading_blank_paragraphs(doc)
-
-                table = doc.sections[0].header.tables[0]
-                append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
-                append_to_value_line(table.cell(0, 4), "#")
-                append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
-                append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
-                append_to_value_line(table.cell(3, 3), "")
-                append_to_value_line(table.cell(3, 4), "")
-                append_to_value_line(table.cell(3, 2), "Motor Protection Calculation Report")
+                _fill_doc_header(doc, "Motor Protection Calculation Report")
 
                 # Equations
                 doc.add_heading("Equations", level=1)
@@ -2088,73 +1936,33 @@ elif page == "Motor Protection":
 
                 # Assumptions
                 doc.add_heading("Assumptions", level=1)
-                mp_assumptions = [
+                for a in [
                     "Motor overcurrent device sizing follows OESC Table 29 flowchart methodology.",
                     "Full-load current (FLA) is the motor's nameplate FLA.",
                     "Multiplier k is determined by motor type, starter type, and voltage system per Table 29.",
                     "Raw OCPD value is rounded to the next standard rating from Table 13 (overcurrent device ratings).",
                     "All motor configurations and selection criteria follow the flowchart depicted in OESC Rule 28-200 & 28-204.",
-                ]
-                for a in mp_assumptions:
+                ]:
                     doc.add_paragraph(a, style="CalcBullet")
 
                 # Flowchart Path and Inputs
                 doc.add_heading("Flowchart Path & Inputs", level=1)
-                mp_inputs = [
-                    ("Motor FLA (A)", str(fla)),
-                    ("Voltage System", voltage_system),
-                ]
-                
+                mp_inputs = [("Motor FLA (A)", str(fla)), ("Voltage System", voltage_system)]
                 if voltage_system == "3Φ AC":
                     mp_inputs.append(("Motor Type", motor_type))
                     if motor_type == "Squirrel-cage or Synchronous":
                         mp_inputs.append(("Starter Type", starter_type))
-
-                t = doc.add_table(rows=1, cols=2)
-                hdr = t.rows[0].cells
-                p = hdr[0].paragraphs[0]
-                p.clear()
-                r = p.add_run("Parameter")
-                r.bold = True
-                p = hdr[1].paragraphs[0]
-                p.clear()
-                r = p.add_run("Value")
-                r.bold = True
-
-                for param, val in mp_inputs:
-                    row = t.add_row().cells
-                    row[0].text = str(param)
-                    row[1].text = str(val)
-
-                set_table_borders(t)
+                _add_word_table(doc, ["Parameter", "Value"], mp_inputs)
 
                 # Results
                 doc.add_heading("Table 29 Selection & Results", level=1)
-                mp_results = [
+                _add_word_table(doc, ["Parameter", "Value"], [
                     ("Table 29 Row Selected", str(table_29_row)),
                     ("Table 29 Row Description", str(table_29_row_desc)),
                     ("Overcurrent Device Type", device_type),
                     ("Multiplier (k) from Table 29", f"{multiplier}"),
                     ("Raw OCPD Setting (k × I_FLA)", f"{ocpd_raw:.2f} A"),
-                ]
-
-                t = doc.add_table(rows=1, cols=2)
-                hdr = t.rows[0].cells
-                p = hdr[0].paragraphs[0]
-                p.clear()
-                r = p.add_run("Parameter")
-                r.bold = True
-                p = hdr[1].paragraphs[0]
-                p.clear()
-                r = p.add_run("Value")
-                r.bold = True
-
-                for param, val in mp_results:
-                    row = t.add_row().cells
-                    row[0].text = str(param)
-                    row[1].text = str(val)
-
-                set_table_borders(t)
+                ])
 
                 doc.add_heading("Notes", level=1)
                 doc.add_paragraph(
@@ -2163,21 +1971,14 @@ elif page == "Motor Protection":
                     style="CalcBullet"
                 )
 
-                style = doc.styles["Normal"]
-                style.font.name = "Calibri"
-                style.font.size = Pt(11)
+                doc.styles["Normal"].font.name = "Calibri"
+                doc.styles["Normal"].font.size = Pt(11)
 
                 bio = io.BytesIO()
                 doc.save(bio)
                 return bio.getvalue()
 
             def build_mp_excel_report():
-                def _safe_float(x):
-                    try:
-                        return None if x is None else float(x)
-                    except Exception:
-                        return None
-
                 wb = Workbook()
                 ws = wb.active
                 ws.title = "Motor Protection"
@@ -2233,17 +2034,7 @@ elif page == "Motor Protection":
                 ws[f"A{row}"] = "Notes"
                 ws[f"B{row}"] = f"Round {ocpd_raw:.2f} A to next standard rating from Table 13"
 
-                # Auto-size columns
-                for col in ws.columns:
-                    max_len = 0
-                    col_letter = get_column_letter(col[0].column)
-                    for cell in col:
-                        try:
-                            v = "" if cell.value is None else str(cell.value)
-                            max_len = max(max_len, len(v))
-                        except Exception:
-                            pass
-                    ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
+                _autosize_excel_cols(ws)
 
                 bio = io.BytesIO()
                 wb.save(bio)
@@ -2252,42 +2043,10 @@ elif page == "Motor Protection":
             # Export buttons
             can_export_mp = True  # Always exportable when we have a result
 
-            exp_c1, exp_c2 = st.columns([1, 1], gap="large")
-            with exp_c1:
-                if st.button("Prepare Word report (.docx)", key="mp_build_docx"):
-                    try:
-                        st.session_state["mp_docx_bytes"] = build_mp_word_report()
-                        st.success("Word report prepared. Use the download button below.")
-                    except Exception as e:
-                        st.error(f"Failed to build Word report: {e}")
-
-                docx_bytes_mp = st.session_state.get("mp_docx_bytes", None)
-                st.download_button(
-                    "⬇️ Download Word report (.docx)",
-                    data=docx_bytes_mp if docx_bytes_mp else b"",
-                    file_name="Motor_Protection_Report.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    disabled=(not can_export_mp) or (docx_bytes_mp is None),
-                    key="mp_download_docx",
-                )
-
-            with exp_c2:
-                if st.button("Prepare Excel report (.xlsx)", key="mp_build_xlsx"):
-                    try:
-                        st.session_state["mp_xlsx_bytes"] = build_mp_excel_report()
-                        st.success("Excel report prepared. Use the download button below.")
-                    except Exception as e:
-                        st.error(f"Failed to build Excel report: {e}")
-
-                xlsx_bytes_mp = st.session_state.get("mp_xlsx_bytes", None)
-                st.download_button(
-                    "⬇️ Download Excel report (.xlsx)",
-                    data=xlsx_bytes_mp if xlsx_bytes_mp else b"",
-                    file_name="Motor_Protection_Report.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    disabled=(not can_export_mp) or (xlsx_bytes_mp is None),
-                    key="mp_download_xlsx",
-                )
+            _render_export_buttons(
+                "mp", "Motor_Protection_Report.docx", "Motor_Protection_Report.xlsx",
+                can_export_mp, build_mp_word_report, build_mp_excel_report,
+            )
 
             st.caption(
                 "Export includes: equations, assumptions, flowchart path selections, Table 29 row selection, multiplier, and calculated OCPD value."
@@ -2612,15 +2371,7 @@ elif page == "Motor Feeder":
         def build_mf_word_report():
             doc = Document("content/files/Template.docx")
             remove_leading_blank_paragraphs(doc)
-
-            table = doc.sections[0].header.tables[0]
-            append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
-            append_to_value_line(table.cell(0, 4), "#")
-            append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
-            append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
-            append_to_value_line(table.cell(3, 3), "")
-            append_to_value_line(table.cell(3, 4), "")
-            append_to_value_line(table.cell(3, 2), "Motor Feeder Calculation Report")
+            _fill_doc_header(doc, "Motor Feeder Calculation Report")
 
             # Equations
             doc.add_heading("Equations", level=1)
@@ -2695,64 +2446,23 @@ elif page == "Motor Feeder":
                 ("Sizing Factor (k)", sizing_mult),
             ]
 
-            t = doc.add_table(rows=1, cols=2)
-            hdr = t.rows[0].cells
-            p = hdr[0].paragraphs[0]
-            p.clear()
-            r = p.add_run("Parameter")
-            r.bold = True
-            p = hdr[1].paragraphs[0]
-            p.clear()
-            r = p.add_run("Value")
-            r.bold = True
-
-            for param, val in mf_inputs:
-                row = t.add_row().cells
-                row[0].text = str(param)
-                row[1].text = str(val)
-
-            set_table_borders(t)
+            _add_word_table(doc, ["Parameter", "Value"], mf_inputs)
 
             # Results
             doc.add_heading("Results", level=1)
-            mf_results = [
+            _add_word_table(doc, ["Parameter", "Value"], [
                 ("Full-Load Current (I_FLA)", f"{ifla:.4f} A" if ifla is not None else "—"),
                 ("Conductor Ampacity Target", f"{target:.4f} A" if target is not None else "—"),
-            ]
+            ])
 
-            t = doc.add_table(rows=1, cols=2)
-            hdr = t.rows[0].cells
-            p = hdr[0].paragraphs[0]
-            p.clear()
-            r = p.add_run("Parameter")
-            r.bold = True
-            p = hdr[1].paragraphs[0]
-            p.clear()
-            r = p.add_run("Value")
-            r.bold = True
-
-            for param, val in mf_results:
-                row = t.add_row().cells
-                row[0].text = str(param)
-                row[1].text = str(val)
-
-            set_table_borders(t)
-
-            style = doc.styles["Normal"]
-            style.font.name = "Calibri"
-            style.font.size = Pt(11)
+            doc.styles["Normal"].font.name = "Calibri"
+            doc.styles["Normal"].font.size = Pt(11)
 
             bio = io.BytesIO()
             doc.save(bio)
             return bio.getvalue()
 
         def build_mf_excel_report():
-            def _safe_float(x):
-                try:
-                    return None if x is None else float(x)
-                except Exception:
-                    return None
-
             wb = Workbook()
             ws = wb.active
             ws.title = "Motor Feeder"
@@ -2805,17 +2515,7 @@ elif page == "Motor Feeder":
                 ws[f"B{row}"] = val
                 row += 1
 
-            # Auto-size columns
-            for col in ws.columns:
-                max_len = 0
-                col_letter = get_column_letter(col[0].column)
-                for cell in col:
-                    try:
-                        v = "" if cell.value is None else str(cell.value)
-                        max_len = max(max_len, len(v))
-                    except Exception:
-                        pass
-                ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
+            _autosize_excel_cols(ws)
 
             bio = io.BytesIO()
             wb.save(bio)
@@ -2824,42 +2524,10 @@ elif page == "Motor Feeder":
         # Export buttons
         can_export_mf = (ifla is not None) and (target is not None)
 
-        exp_c1, exp_c2 = st.columns([1, 1], gap="large")
-        with exp_c1:
-            if st.button("Prepare Word report (.docx)", key="mf_build_docx"):
-                try:
-                    st.session_state["mf_docx_bytes"] = build_mf_word_report()
-                    st.success("Word report prepared. Use the download button below.")
-                except Exception as e:
-                    st.error(f"Failed to build Word report: {e}")
-
-            docx_bytes_mf = st.session_state.get("mf_docx_bytes", None)
-            st.download_button(
-                "⬇️ Download Word report (.docx)",
-                data=docx_bytes_mf if docx_bytes_mf else b"",
-                file_name="Motor_Feeder_Report.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                disabled=(not can_export_mf) or (docx_bytes_mf is None),
-                key="mf_download_docx",
-            )
-
-        with exp_c2:
-            if st.button("Prepare Excel report (.xlsx)", key="mf_build_xlsx"):
-                try:
-                    st.session_state["mf_xlsx_bytes"] = build_mf_excel_report()
-                    st.success("Excel report prepared. Use the download button below.")
-                except Exception as e:
-                    st.error(f"Failed to build Excel report: {e}")
-
-            xlsx_bytes_mf = st.session_state.get("mf_xlsx_bytes", None)
-            st.download_button(
-                "⬇️ Download Excel report (.xlsx)",
-                data=xlsx_bytes_mf if xlsx_bytes_mf else b"",
-                file_name="Motor_Feeder_Report.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                disabled=(not can_export_mf) or (xlsx_bytes_mf is None),
-                key="mf_download_xlsx",
-            )
+        _render_export_buttons(
+            "mf", "Motor_Feeder_Report.docx", "Motor_Feeder_Report.xlsx",
+            can_export_mf, build_mf_word_report, build_mf_excel_report,
+        )
 
         st.caption(
             "Export includes: equations, assumptions, inputs, full-load current calculation, and conductor sizing target."
@@ -3191,20 +2859,7 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
         def build_ctray_word_report():
             doc = Document("content/files/Template.docx")
             remove_leading_blank_paragraphs(doc)
-
-            table = doc.sections[0].header.tables[0]
-            append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
-            append_to_value_line(table.cell(0, 4), "#")
-            append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
-            append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
-            append_to_value_line(table.cell(3, 3), "")
-            append_to_value_line(table.cell(3, 4), "")
-            
-            # Build report title with tray name if provided
-            report_title = "Cable Tray Fill Calculation Report"
-            if tray_name:
-                report_title = f"Cable Tray Fill Calculation Report: {tray_name}"
-            append_to_value_line(table.cell(3, 2), report_title)
+            _fill_doc_header(doc, f"Cable Tray Fill Calculation Report: {tray_name}" if tray_name else "Cable Tray Fill Calculation Report")
 
             # Equations
             doc.add_heading("Equations", level=1)
@@ -3249,51 +2904,25 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
                 (f"Tray usable area ({area_unit})", f"{tray_area_display:,.2f}"),
             ]
 
-            t = doc.add_table(rows=1, cols=2)
-            hdr = t.rows[0].cells
-            p = hdr[0].paragraphs[0]
-            p.clear()
-            r = p.add_run("Parameter")
-            r.bold = True
-            p = hdr[1].paragraphs[0]
-            p.clear()
-            r = p.add_run("Value")
-            r.bold = True
-
-            for param, val in ctray_dims:
-                row = t.add_row().cells
-                row[0].text = str(param)
-                row[1].text = str(val)
-
-            set_table_borders(t)
+            _add_word_table(doc, ["Parameter", "Value"], ctray_dims)
 
             # Cable Groups
             if cable_groups_list:
                 doc.add_heading("Cable Groups", level=1)
-                
                 od_unit_display = "mm" if tray_unit == "Metric (mm)" else "inches"
-                t = doc.add_table(rows=1, cols=5)
-                hdr = t.rows[0].cells
-                headers = ["Cable Name", f"OD ({od_unit_display})", "Quantity", f"Area per Cable ({area_unit})", f"Total Area ({area_unit})"]
-                for i, header_text in enumerate(headers):
-                    p = hdr[i].paragraphs[0]
-                    p.clear()
-                    r = p.add_run(header_text)
-                    r.bold = True
-
+                cable_headers = ["Cable Name", f"OD ({od_unit_display})", "Quantity", f"Area per Cable ({area_unit})", f"Total Area ({area_unit})"]
+                cable_rows = []
                 for group in cable_groups_list:
-                    row = t.add_row().cells
                     cable_od_display = group['OD (mm)'] if tray_unit == "Metric (mm)" else group['OD (mm)'] / 25.4
                     cable_area_single = math.pi * (group["OD (mm)"] / 2.0) ** 2
-                    cable_area_single_display = cable_area_single / area_conversion
-                    group_area_display = group['Area (mm²)'] / area_conversion
-                    row[0].text = group["Name"] if group["Name"] else "[Unnamed]"
-                    row[1].text = f"{cable_od_display:.2f}"
-                    row[2].text = str(group["Qty"])
-                    row[3].text = f"{cable_area_single_display:.2f}"
-                    row[4].text = f"{group_area_display:.2f}"
-
-                set_table_borders(t)
+                    cable_rows.append((
+                        group["Name"] if group["Name"] else "[Unnamed]",
+                        f"{cable_od_display:.2f}",
+                        str(group["Qty"]),
+                        f"{cable_area_single / area_conversion:.2f}",
+                        f"{group['Area (mm²)'] / area_conversion:.2f}",
+                    ))
+                _add_word_table(doc, cable_headers, cable_rows)
 
             # Results
             doc.add_heading("Calculation Results", level=1)
@@ -3303,40 +2932,16 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
                 (f"Tray Usable Area ({area_unit})", f"{tray_area_display:,.2f}"),
                 ("Fill Percentage (%)", f"{fill_percentage:.2f}%"),
             ]
+            _add_word_table(doc, ["Parameter", "Value"], results_data)
 
-            t = doc.add_table(rows=1, cols=2)
-            hdr = t.rows[0].cells
-            p = hdr[0].paragraphs[0]
-            p.clear()
-            r = p.add_run("Parameter")
-            r.bold = True
-            p = hdr[1].paragraphs[0]
-            p.clear()
-            r = p.add_run("Value")
-            r.bold = True
-
-            for param, val in results_data:
-                row = t.add_row().cells
-                row[0].text = str(param)
-                row[1].text = str(val)
-
-            set_table_borders(t)
-
-            style = doc.styles["Normal"]
-            style.font.name = "Calibri"
-            style.font.size = Pt(11)
+            doc.styles["Normal"].font.name = "Calibri"
+            doc.styles["Normal"].font.size = Pt(11)
 
             bio = io.BytesIO()
             doc.save(bio)
             return bio.getvalue()
 
         def build_ctray_excel_report():
-            def _safe_float(x):
-                try:
-                    return None if x is None else float(x)
-                except Exception:
-                    return None
-
             wb = Workbook()
             ws = wb.active
             ws.title = "Cable Tray Fill"
@@ -3424,17 +3029,7 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
             ws[f"A{row}"] = "Fill Percentage (%)"
             ws[f"B{row}"] = _safe_float(fill_percentage)
 
-            # Auto-size columns
-            for col in ws.columns:
-                max_len = 0
-                col_letter = get_column_letter(col[0].column)
-                for cell in col:
-                    try:
-                        v = "" if cell.value is None else str(cell.value)
-                        max_len = max(max_len, len(v))
-                    except Exception:
-                        pass
-                ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
+            _autosize_excel_cols(ws)
 
             bio = io.BytesIO()
             wb.save(bio)
@@ -3443,42 +3038,10 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
         # Export buttons
         can_export_ctray = tray_area_mm2 > 0
 
-        exp_c1, exp_c2 = st.columns([1, 1], gap="large")
-        with exp_c1:
-            if st.button("Prepare Word report (.docx)", key="ctray_build_docx"):
-                try:
-                    st.session_state["ctray_docx_bytes"] = build_ctray_word_report()
-                    st.success("Word report prepared. Use the download button below.")
-                except Exception as e:
-                    st.error(f"Failed to build Word report: {e}")
-
-            docx_bytes_ctray = st.session_state.get("ctray_docx_bytes", None)
-            st.download_button(
-                "⬇️ Download Word report (.docx)",
-                data=docx_bytes_ctray if docx_bytes_ctray else b"",
-                file_name="Cable_Tray_Fill_Report.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                disabled=(not can_export_ctray) or (docx_bytes_ctray is None),
-                key="ctray_download_docx",
-            )
-
-        with exp_c2:
-            if st.button("Prepare Excel report (.xlsx)", key="ctray_build_xlsx"):
-                try:
-                    st.session_state["ctray_xlsx_bytes"] = build_ctray_excel_report()
-                    st.success("Excel report prepared. Use the download button below.")
-                except Exception as e:
-                    st.error(f"Failed to build Excel report: {e}")
-
-            xlsx_bytes_ctray = st.session_state.get("ctray_xlsx_bytes", None)
-            st.download_button(
-                "⬇️ Download Excel report (.xlsx)",
-                data=xlsx_bytes_ctray if xlsx_bytes_ctray else b"",
-                file_name="Cable_Tray_Fill_Report.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                disabled=(not can_export_ctray) or (xlsx_bytes_ctray is None),
-                key="ctray_download_xlsx",
-            )
+        _render_export_buttons(
+            "ctray", "Cable_Tray_Fill_Report.docx", "Cable_Tray_Fill_Report.xlsx",
+            can_export_ctray, build_ctray_word_report, build_ctray_excel_report,
+        )
 
         st.caption(
             "Export includes: equations, assumptions, tray dimensions, cable group details, and fill calculation results."
@@ -3520,46 +3083,6 @@ elif page == "Conduit Size & Fill & Bend Radius":
         # ----------------------------
         # Table helpers (Table 6 + Table 9)
         # ----------------------------
-        def _norm(s):
-            return str(s).strip()
-
-        def _lower(s):
-            return _norm(s).lower()
-
-        def _to_float(x):
-            try:
-                if x is None:
-                    return None
-                if isinstance(x, (int, float)):
-                    return float(x)
-                s = str(x).strip()
-                if s in ("", "—", "-", "–", "None"):
-                    return None
-                # remove commas
-                s = s.replace(",", "")
-                return float(s)
-            except Exception:
-                return None
-
-        def _best_col(cols, include=(), exclude=()):
-            """Return first column name that contains ALL include tokens and NONE of exclude tokens (case-insensitive)."""
-            for c in cols:
-                lc = _lower(c)
-                ok = True
-                for t in include:
-                    if t not in lc:
-                        ok = False
-                        break
-                if not ok:
-                    continue
-                for t in exclude:
-                    if t in lc:
-                        ok = False
-                        break
-                if ok:
-                    return c
-            return None
-
         @st.cache_data(show_spinner=False)
         def _load_table_df(table_id: str):
             if oesc_tables is None:
@@ -5428,26 +4951,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
             return bio.getvalue()
 
         def build_conduit_excel_report():
-
-            def _safe_float(x):
-                try:
-                    return None if x is None else float(x)
-                except Exception:
-                    return None
-
             wb = Workbook()
-
-            def autosize_ws(ws):
-                for col in ws.columns:
-                    max_len = 0
-                    col_letter = get_column_letter(col[0].column)
-                    for cell in col:
-                        try:
-                            v = "" if cell.value is None else str(cell.value)
-                            max_len = max(max_len, len(v))
-                        except Exception:
-                            pass
-                    ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
 
             # --- Summary
             ws = wb.active
@@ -5477,7 +4981,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
             ok = total_cable_area <= conduit_allowed_area + 1e-9 if conduit_allowed_area else False
             ws[f"A{row}"] = "Compliance Status"
             ws[f"B{row}"] = "PASS: Within allowable fill" if ok else "FAIL: Exceeds allowable fill"
-            autosize_ws(ws)
+            _autosize_excel_cols(ws)
 
             # --- Cable Groups
             ws = wb.create_sheet("Cable Groups")
@@ -5540,7 +5044,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
             except Exception:
                 ws["A1"] = "Unable to load cable groups"
 
-            autosize_ws(ws)
+            _autosize_excel_cols(ws)
 
             bio = io.BytesIO()
             wb.save(bio)
@@ -5553,42 +5057,10 @@ elif page == "Conduit Size & Fill & Bend Radius":
             and n_cables_total > 0
         )
 
-        exp_c1, exp_c2 = st.columns([1, 1], gap="large")
-        with exp_c1:
-            if st.button("Prepare Word report (.docx)", key="cf_build_docx"):
-                try:
-                    st.session_state["cf_docx_bytes"] = build_conduit_word_report()
-                    st.success("Word report prepared. Use the download button below.")
-                except Exception as e:
-                    st.error(f"Failed to build Word report: {e}")
-
-            docx_bytes_cf = st.session_state.get("cf_docx_bytes", None)
-            st.download_button(
-                "⬇️ Download Word report (.docx)",
-                data=docx_bytes_cf if docx_bytes_cf else b"",
-                file_name="Conduit_Fill_Report.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                disabled=(not can_export_cf) or (docx_bytes_cf is None),
-                key="cf_download_docx",
-            )
-
-        with exp_c2:
-            if st.button("Prepare Excel report (.xlsx)", key="cf_build_xlsx"):
-                try:
-                    st.session_state["cf_xlsx_bytes"] = build_conduit_excel_report()
-                    st.success("Excel report prepared. Use the download button below.")
-                except Exception as e:
-                    st.error(f"Failed to build Excel report: {e}")
-
-            xlsx_bytes_cf = st.session_state.get("cf_xlsx_bytes", None)
-            st.download_button(
-                "⬇️ Download Excel report (.xlsx)",
-                data=xlsx_bytes_cf if xlsx_bytes_cf else b"",
-                file_name="Conduit_Fill_Report.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                disabled=(not can_export_cf) or (xlsx_bytes_cf is None),
-                key="cf_download_xlsx",
-            )
+        _render_export_buttons(
+            "cf", "Conduit_Fill_Report.docx", "Conduit_Fill_Report.xlsx",
+            can_export_cf, build_conduit_word_report, build_conduit_excel_report,
+        )
 
 
 # ============================
@@ -6298,12 +5770,6 @@ elif page == "Voltage Drop":
                 "Raceway 80%": cols.get("Raceway 80%", None),
             })
 
-        def _safe_float(x):
-            try:
-                return None if x is None else float(x)
-            except Exception:
-                return None
-
         # ✅ FIX: safe formatter for Word tables (prevents "Unknown format code 'g' for object of type 'str'")
         def _cell_text(val):
             """Safe text for Word/Excel cells: format numbers, otherwise stringify."""
@@ -6493,18 +5959,6 @@ elif page == "Voltage Drop":
 
             wb = Workbook()
 
-            def autosize(ws):
-                for col in ws.columns:
-                    max_len = 0
-                    col_letter = get_column_letter(col[0].column)
-                    for cell in col:
-                        try:
-                            v = "" if cell.value is None else str(cell.value)
-                            max_len = max(max_len, len(v))
-                        except Exception:
-                            pass
-                    ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
-
             # --- Summary
             ws = wb.active
             ws.title = "Summary"
@@ -6557,7 +6011,7 @@ elif page == "Voltage Drop":
             row += 1
             ws[f"A{row}"] = "%ΔV (%)"
             ws[f"B{row}"] = _safe_float(pct)
-            autosize(ws)
+            _autosize_excel_cols(ws)
 
             # --- Variables
             ws = wb.create_sheet("Variables")
@@ -6567,7 +6021,7 @@ elif page == "Voltage Drop":
             for v in variables:
                 val = v["Value"]
                 ws.append([v["Symbol"], v["Description"], None if val is None else float(val)])
-            autosize(ws)
+            _autosize_excel_cols(ws)
 
             # --- Assumptions
             ws = wb.create_sheet("Assumptions")
@@ -6596,7 +6050,7 @@ elif page == "Voltage Drop":
                 cell.font = Font(bold=True)
             for c in constants:
                 ws.append([c["Name"], c["Meaning"], c["Value"]])
-            autosize(ws)
+            _autosize_excel_cols(ws)
 
             bio = io.BytesIO()
             wb.save(bio)
@@ -6605,42 +6059,10 @@ elif page == "Voltage Drop":
         # Only enable downloads when we have enough info to populate the report meaningfully
         can_export = (k_used is not None) and (I is not None) and (L_m is not None) and (V_nom is not None)
 
-        exp_c1, exp_c2 = st.columns([1, 1], gap="large")
-        with exp_c1:
-            if st.button("Prepare Word report (.docx)", key="vd_build_docx"):
-                try:
-                    st.session_state["vd_docx_bytes"] = build_vd_word_report()
-                    st.success("Word report prepared. Use the download button below.")
-                except Exception as e:
-                    st.error(f"Failed to build Word report: {e}")
-
-            docx_bytes = st.session_state.get("vd_docx_bytes", None)
-            st.download_button(
-                "⬇️ Download Word report (.docx)",
-                data=docx_bytes if docx_bytes else b"",
-                file_name="Voltage_Drop_Report.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                disabled=(not can_export) or (docx_bytes is None),
-                key="vd_download_docx",
-            )
-
-        with exp_c2:
-            if st.button("Prepare Excel report (.xlsx)", key="vd_build_xlsx"):
-                try:
-                    st.session_state["vd_xlsx_bytes"] = build_vd_excel_report()
-                    st.success("Excel report prepared. Use the download button below.")
-                except Exception as e:
-                    st.error(f"Failed to build Excel report: {e}")
-
-            xlsx_bytes = st.session_state.get("vd_xlsx_bytes", None)
-            st.download_button(
-                "⬇️ Download Excel report (.xlsx)",
-                data=xlsx_bytes if xlsx_bytes else b"",
-                file_name="Voltage_Drop_Report.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                disabled=(not can_export) or (xlsx_bytes is None),
-                key="vd_download_xlsx",
-            )
+        _render_export_buttons(
+            "vd", "Voltage_Drop_Report.docx", "Voltage_Drop_Report.xlsx",
+            can_export, build_vd_word_report, build_vd_excel_report,
+        )
 
         st.caption(
             "Export includes: equations, assumptions, variables/inputs/results, constants, "
@@ -7588,14 +7010,6 @@ digraph G {
         recommended_temp_col_c = None
         recommended_base_ampacity = None
         recommended_adjusted_ampacity_per_set = None
-        def _to_float_local(x):
-            try:
-                if x is None or x in ("—", "-"):
-                    return None
-                return float(x)
-            except Exception:
-                return None
-
         amp_table_id = None
         m = re.search(r"Table\s*([1-4])", str(amp_table))
         if m:
@@ -7642,7 +7056,7 @@ digraph G {
                 col_label = temp_col_map.get(temp_choice)
                 if col_label:
                     for r in table_rows:
-                        base_val = _to_float_local(r.get(col_label))
+                        base_val = _to_float(r.get(col_label))
                         if base_val is not None and base_val >= float(I_table_required):
                             selected_row = r
                             selected_base = base_val
@@ -7833,19 +7247,6 @@ digraph G {
                 p = cell.add_paragraph()
             p.add_run(f" {value}")
 
-        def set_table_borders(table):
-            tbl = table._tbl
-            tblPr = tbl.tblPr
-            borders = OxmlElement("w:tblBorders")
-            for border_name in ("top", "left", "bottom", "right", "insideH", "insideV"):
-                border = OxmlElement(f"w:{border_name}")
-                border.set(qn("w:val"), "single")
-                border.set(qn("w:sz"), "8")
-                border.set(qn("w:space"), "0")
-                border.set(qn("w:color"), "000000")
-                borders.append(border)
-            tblPr.append(borders)
-
         corr_math = "Adjusted ampacity = Base ampacity x k_corr x k_temp"
         if recommended_base_ampacity is not None and corr_factor is not None and temp_factor is not None:
             corr_math = (
@@ -7958,23 +7359,6 @@ digraph G {
 
         def build_cond_excel_report():
             wb = Workbook()
-            def _cond_safe_float(x):
-                try:
-                    return None if x is None else float(x)
-                except Exception:
-                    return None
-
-            def autosize(ws):
-                for col in ws.columns:
-                    max_len = 0
-                    col_letter = get_column_letter(col[0].column)
-                    for cell in col:
-                        try:
-                            v = "" if cell.value is None else str(cell.value)
-                            max_len = max(max_len, len(v))
-                        except Exception:
-                            pass
-                    ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
 
             ws = wb.active
             ws.title = "Summary"
@@ -8003,11 +7387,11 @@ digraph G {
             ws[f"B{row}"] = recommended_temp_col_c if recommended_temp_col_c is not None else "—"
             row += 1
             ws[f"A{row}"] = "Base ampacity (A)"
-            ws[f"B{row}"] = _cond_safe_float(recommended_base_ampacity)
+            ws[f"B{row}"] = _safe_float(recommended_base_ampacity)
             row += 1
             ws[f"A{row}"] = "Adjusted ampacity per set (A)"
-            ws[f"B{row}"] = _cond_safe_float(recommended_adjusted_ampacity_per_set)
-            autosize(ws)
+            ws[f"B{row}"] = _safe_float(recommended_adjusted_ampacity_per_set)
+            _autosize_excel_cols(ws)
 
             ws = wb.create_sheet("Tables Used")
             ws.append(["Item", "Selection"])
@@ -8015,7 +7399,7 @@ digraph G {
                 c.font = Font(bold=True)
             for label, value in table_rows:
                 ws.append([label, value])
-            autosize(ws)
+            _autosize_excel_cols(ws)
 
             ws = wb.create_sheet("Correction Factors")
             ws.append(["Factor", "Value", "Source"])
@@ -8025,7 +7409,7 @@ digraph G {
                 ws.append([label, value, source])
             ws.append([])
             ws.append(["Ampacity math", corr_math, ""])
-            autosize(ws)
+            _autosize_excel_cols(ws)
 
             bio = io.BytesIO()
             wb.save(bio)
@@ -8033,42 +7417,10 @@ digraph G {
 
         can_export_cond = (I_table_required is not None) and (k_total is not None)
 
-        exp_c1, exp_c2 = st.columns([1, 1], gap="large")
-        with exp_c1:
-            if st.button("Prepare Word report (.docx)", key="cond_build_docx"):
-                try:
-                    st.session_state["cond_docx_bytes"] = build_cond_word_report()
-                    st.success("Word report prepared. Use the download button below.")
-                except Exception as e:
-                    st.error(f"Failed to build Word report: {e}")
-
-            cond_docx_bytes = st.session_state.get("cond_docx_bytes", None)
-            st.download_button(
-                "⬇️ Download Word report (.docx)",
-                data=cond_docx_bytes if cond_docx_bytes else b"",
-                file_name="Conductor_Cable_Size_Report.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                disabled=(not can_export_cond) or (cond_docx_bytes is None),
-                key="cond_download_docx",
-            )
-
-        with exp_c2:
-            if st.button("Prepare Excel report (.xlsx)", key="cond_build_xlsx"):
-                try:
-                    st.session_state["cond_xlsx_bytes"] = build_cond_excel_report()
-                    st.success("Excel report prepared. Use the download button below.")
-                except Exception as e:
-                    st.error(f"Failed to build Excel report: {e}")
-
-            cond_xlsx_bytes = st.session_state.get("cond_xlsx_bytes", None)
-            st.download_button(
-                "⬇️ Download Excel report (.xlsx)",
-                data=cond_xlsx_bytes if cond_xlsx_bytes else b"",
-                file_name="Conductor_Cable_Size_Report.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                disabled=(not can_export_cond) or (cond_xlsx_bytes is None),
-                key="cond_download_xlsx",
-            )
+        _render_export_buttons(
+            "cond", "Conductor_Cable_Size_Report.docx", "Conductor_Cable_Size_Report.xlsx",
+            can_export_cond, build_cond_word_report, build_cond_excel_report,
+        )
 
         st.caption(
             "Export includes: cable name, inputs, correction factors, ampacity correction math, tables used, and recommended cable size."
