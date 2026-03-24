@@ -199,6 +199,42 @@ def _show_result(label, raw, std_list, round_to_std, selected_label="Selected st
         st.caption("For >1000 V cases, Table 450.3 Note 1 allows next higher **commercially available** rating/setting (not strictly the 240.6(A) list).")
 
 
+def _init_word_doc(title: str) -> Document:
+    """Load the report template, strip leading blank paragraphs, and fill the standard header."""
+    doc = Document("content/files/Template.docx")
+    remove_leading_blank_paragraphs(doc)
+    _fill_doc_header(doc, title)
+    return doc
+
+
+def _save_word_doc(doc: Document) -> bytes:
+    """Apply standard Calibri 11pt body font, serialize to bytes, and return."""
+    doc.styles["Normal"].font.name = "Calibri"
+    doc.styles["Normal"].font.size = Pt(11)
+    bio = io.BytesIO()
+    doc.save(bio)
+    return bio.getvalue()
+
+
+def _init_excel_report(title: str, sheet_name: str):
+    """Create a workbook with the standard title/timestamp header. Returns (wb, ws, start_row=5)."""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = sheet_name
+    ws["A1"] = title
+    ws["A1"].font = Font(bold=True, size=14)
+    ws["A3"] = "Generated"
+    ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return wb, ws, 5
+
+
+def _wb_to_bytes(wb: Workbook) -> bytes:
+    """Serialize a workbook to bytes and return."""
+    bio = io.BytesIO()
+    wb.save(bio)
+    return bio.getvalue()
+
+
 def _render_export_buttons(prefix, docx_file, xlsx_file, can_export, word_builder, excel_builder):
     """Render the standard Word + Excel prepare/download button pair."""
     c1, c2 = st.columns([1, 1], gap="large")
@@ -1250,9 +1286,7 @@ d19 -> d20 [style=invis];
         }
 
         def build_tp_word_report():
-            doc = Document("content/files/Template.docx")
-            remove_leading_blank_paragraphs(doc)
-            _fill_doc_header(doc, "Transformer Protection Calculation Report")
+            doc = _init_word_doc("Transformer Protection Calculation Report")
 
             # Equations
             doc.add_heading("Equations", level=1)
@@ -1390,24 +1424,10 @@ d19 -> d20 [style=invis];
             if tp_results:
                 _add_word_table(doc, ["Device Type", "Raw Value", "Selected Size"], tp_results)
 
-            doc.styles["Normal"].font.name = "Calibri"
-            doc.styles["Normal"].font.size = Pt(11)
-
-            bio = io.BytesIO()
-            doc.save(bio)
-            return bio.getvalue()
+            return _save_word_doc(doc)
 
         def build_tp_excel_report():
-            wb = Workbook()
-            ws = wb.active
-            ws.title = "Transformer Protection"
-
-            ws["A1"] = "Transformer Protection Calculation Report"
-            ws["A1"].font = Font(bold=True, size=14)
-            ws["A3"] = "Generated"
-            ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            row = 5
+            wb, ws, row = _init_excel_report("Transformer Protection Calculation Report", "Transformer Protection")
             ws[f"A{row}"] = "Inputs"
             ws[f"A{row}"].font = Font(bold=True)
 
@@ -1469,10 +1489,7 @@ d19 -> d20 [style=invis];
             ws[f"B{row}"] = "Yes" if round_to_std else "No"
 
             _autosize_excel_cols(ws)
-
-            bio = io.BytesIO()
-            wb.save(bio)
-            return bio.getvalue()
+            return _wb_to_bytes(wb)
 
         # Export buttons
         can_export_tp = (Ip is not None) and (Is is not None)
@@ -1692,9 +1709,7 @@ elif page == "Transformer Feeders":
         }
 
         def build_tf_word_report():
-            doc = Document("content/files/Template.docx")
-            remove_leading_blank_paragraphs(doc)
-            _fill_doc_header(doc, "Transformer Feeder Calculation Report")
+            doc = _init_word_doc("Transformer Feeder Calculation Report")
 
             # Equations
             doc.add_heading("Equations", level=1)
@@ -1746,24 +1761,10 @@ elif page == "Transformer Feeders":
                 ("Transformer Type", xform_type),
             ])
 
-            doc.styles["Normal"].font.name = "Calibri"
-            doc.styles["Normal"].font.size = Pt(11)
-
-            bio = io.BytesIO()
-            doc.save(bio)
-            return bio.getvalue()
+            return _save_word_doc(doc)
 
         def build_tf_excel_report():
-            wb = Workbook()
-            ws = wb.active
-            ws.title = "Transformer Feeder"
-
-            ws["A1"] = "Transformer Feeder Calculation Report"
-            ws["A1"].font = Font(bold=True, size=14)
-            ws["A3"] = "Generated"
-            ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            row = 5
+            wb, ws, row = _init_excel_report("Transformer Feeder Calculation Report", "Transformer Feeder")
             ws[f"A{row}"] = "Inputs"
             ws[f"A{row}"].font = Font(bold=True)
 
@@ -1798,10 +1799,7 @@ elif page == "Transformer Feeders":
                 row += 1
 
             _autosize_excel_cols(ws)
-
-            bio = io.BytesIO()
-            wb.save(bio)
-            return bio.getvalue()
+            return _wb_to_bytes(wb)
 
         # Export buttons
         can_export_tf = (I1 is not None) and (I2 is not None) and (turns_ratio is not None)
@@ -2020,9 +2018,7 @@ elif page == "Motor Protection":
                         mp_flowchart_path += f" → FLA {'>' if fla > 30.0 else '≤'} 30A"
 
             def build_mp_word_report():
-                doc = Document("content/files/Template.docx")
-                remove_leading_blank_paragraphs(doc)
-                _fill_doc_header(doc, "Motor Protection Calculation Report")
+                doc = _init_word_doc("Motor Protection Calculation Report")
 
                 # Equations
                 doc.add_heading("Equations", level=1)
@@ -2069,24 +2065,10 @@ elif page == "Motor Protection":
                     style="CalcBullet"
                 )
 
-                doc.styles["Normal"].font.name = "Calibri"
-                doc.styles["Normal"].font.size = Pt(11)
-
-                bio = io.BytesIO()
-                doc.save(bio)
-                return bio.getvalue()
+                return _save_word_doc(doc)
 
             def build_mp_excel_report():
-                wb = Workbook()
-                ws = wb.active
-                ws.title = "Motor Protection"
-
-                ws["A1"] = "Motor Protection Calculation Report"
-                ws["A1"].font = Font(bold=True, size=14)
-                ws["A3"] = "Generated"
-                ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-                row = 5
+                wb, ws, row = _init_excel_report("Motor Protection Calculation Report", "Motor Protection")
                 ws[f"A{row}"] = "Motor Specifications"
                 ws[f"A{row}"].font = Font(bold=True)
 
@@ -2133,10 +2115,7 @@ elif page == "Motor Protection":
                 ws[f"B{row}"] = f"Round {ocpd_raw:.2f} A to next standard rating from Table 13"
 
                 _autosize_excel_cols(ws)
-
-                bio = io.BytesIO()
-                wb.save(bio)
-                return bio.getvalue()
+                return _wb_to_bytes(wb)
 
             # Export buttons
             can_export_mp = True  # Always exportable when we have a result
@@ -2467,9 +2446,7 @@ elif page == "Motor Feeder":
         }
 
         def build_mf_word_report():
-            doc = Document("content/files/Template.docx")
-            remove_leading_blank_paragraphs(doc)
-            _fill_doc_header(doc, "Motor Feeder Calculation Report")
+            doc = _init_word_doc("Motor Feeder Calculation Report")
 
             # Equations
             doc.add_heading("Equations", level=1)
@@ -2553,24 +2530,10 @@ elif page == "Motor Feeder":
                 ("Conductor Ampacity Target", f"{target:.4f} A" if target is not None else "—"),
             ])
 
-            doc.styles["Normal"].font.name = "Calibri"
-            doc.styles["Normal"].font.size = Pt(11)
-
-            bio = io.BytesIO()
-            doc.save(bio)
-            return bio.getvalue()
+            return _save_word_doc(doc)
 
         def build_mf_excel_report():
-            wb = Workbook()
-            ws = wb.active
-            ws.title = "Motor Feeder"
-
-            ws["A1"] = "Motor Feeder Calculation Report"
-            ws["A1"].font = Font(bold=True, size=14)
-            ws["A3"] = "Generated"
-            ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            row = 5
+            wb, ws, row = _init_excel_report("Motor Feeder Calculation Report", "Motor Feeder")
             ws[f"A{row}"] = "Inputs"
             ws[f"A{row}"].font = Font(bold=True)
 
@@ -2614,10 +2577,7 @@ elif page == "Motor Feeder":
                 row += 1
 
             _autosize_excel_cols(ws)
-
-            bio = io.BytesIO()
-            wb.save(bio)
-            return bio.getvalue()
+            return _wb_to_bytes(wb)
 
         # Export buttons
         can_export_mf = (ifla is not None) and (target is not None)
@@ -2955,9 +2915,7 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
         }
 
         def build_ctray_word_report():
-            doc = Document("content/files/Template.docx")
-            remove_leading_blank_paragraphs(doc)
-            _fill_doc_header(doc, f"Cable Tray Fill Calculation Report: {tray_name}" if tray_name else "Cable Tray Fill Calculation Report")
+            doc = _init_word_doc(f"Cable Tray Fill Calculation Report: {tray_name}" if tray_name else "Cable Tray Fill Calculation Report")
 
             # Equations
             doc.add_heading("Equations", level=1)
@@ -3032,36 +2990,16 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
             ]
             _add_word_table(doc, ["Parameter", "Value"], results_data)
 
-            doc.styles["Normal"].font.name = "Calibri"
-            doc.styles["Normal"].font.size = Pt(11)
-
-            bio = io.BytesIO()
-            doc.save(bio)
-            return bio.getvalue()
+            return _save_word_doc(doc)
 
         def build_ctray_excel_report():
-            wb = Workbook()
-            ws = wb.active
-            ws.title = "Cable Tray Fill"
+            report_title = f"Cable Tray Fill Calculation Report: {tray_name}" if tray_name else "Cable Tray Fill Calculation Report"
+            wb, ws, row = _init_excel_report(report_title, "Cable Tray Fill")
 
-            # Build report title with tray name if provided
-            report_title = "Cable Tray Fill Calculation Report"
             if tray_name:
-                report_title = f"Cable Tray Fill Calculation Report: {tray_name}"
-            
-            ws["A1"] = report_title
-            ws["A1"].font = Font(bold=True, size=14)
-            ws["A3"] = "Generated"
-            ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            # Tray name (if provided)
-            if tray_name:
-                row = 5
                 ws[f"A{row}"] = "Tray Name"
                 ws[f"B{row}"] = tray_name
                 row = 6
-            else:
-                row = 5
             
             # Tray dimensions
             ws[f"A{row}"] = "Tray Dimensions"
@@ -3128,10 +3066,7 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
             ws[f"B{row}"] = _safe_float(fill_percentage)
 
             _autosize_excel_cols(ws)
-
-            bio = io.BytesIO()
-            wb.save(bio)
-            return bio.getvalue()
+            return _wb_to_bytes(wb)
 
         # Export buttons
         can_export_ctray = tray_area_mm2 > 0
@@ -4793,18 +4728,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
 
         def build_conduit_word_report():
 
-            doc = Document("content/files/Template.docx")
-            remove_leading_blank_paragraphs(doc)
-
-            table = doc.sections[0].header.tables[0]
-
-            append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
-            append_to_value_line(table.cell(0, 4), "#")
-            append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
-            append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
-            append_to_value_line(table.cell(3, 3), "")
-            append_to_value_line(table.cell(3, 4), "")
-            append_to_value_line(table.cell(3, 2), "Conduit Fill Calculation Report")
+            doc = _init_word_doc("Conduit Fill Calculation Report")
 
             doc.add_heading("Equations", level=1)
             p = doc.add_paragraph()
@@ -4836,22 +4760,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 ("Actual Fill (%)", f"{fill_pct * 100.0:.4f}%" if fill_pct else "—"),
             ]
             
-            t = doc.add_table(rows=1, cols=2)
-            hdr = t.rows[0].cells
-            p = hdr[0].paragraphs[0]
-            p.clear()
-            r = p.add_run("Parameter")
-            r.bold = True
-            p = hdr[1].paragraphs[0]
-            p.clear()
-            r = p.add_run("Value")
-            r.bold = True
-            for param, val in summary_data:
-                row = t.add_row().cells
-                row[0].text = str(param)
-                row[1].text = str(val)
-            
-            set_table_borders(t)
+            _add_word_table(doc, ["Parameter", "Value"], summary_data)
 
             doc.add_heading("Cable Group Breakdown", level=1)
             try:
@@ -4928,26 +4837,11 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 doc.add_heading("Compliance Status", level=1)
                 doc.add_paragraph("⚡ Low voltage mode: No fill percentage limits apply to this conduit.")
 
-            style = doc.styles["Normal"]
-            style.font.name = "Calibri"
-            style.font.size = Pt(11)
-
-            bio = io.BytesIO()
-            doc.save(bio)
-            return bio.getvalue()
+            return _save_word_doc(doc)
 
         def build_conduit_excel_report():
-            wb = Workbook()
-
             # --- Summary
-            ws = wb.active
-            ws.title = "Summary"
-            ws["A1"] = "Conduit Fill Calculation Report"
-            ws["A1"].font = Font(bold=True, size=14)
-            ws["A3"] = "Generated"
-            ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            
-            row = 5
+            wb, ws, row = _init_excel_report("Conduit Fill Calculation Report", "Summary")
             summary_data = [
                 ("Conduit Type", conduit_type),
                 ("Trade Size", conduit_trade),
@@ -5031,10 +4925,7 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 ws["A1"] = "Unable to load cable groups"
 
             _autosize_excel_cols(ws)
-
-            bio = io.BytesIO()
-            wb.save(bio)
-            return bio.getvalue()
+            return _wb_to_bytes(wb)
 
         # Export buttons
         can_export_cf = (
@@ -5837,19 +5728,7 @@ elif page == "Voltage Drop":
 
         def build_vd_word_report():
 
-            doc = Document("content/files/Template.docx")
-
-            remove_leading_blank_paragraphs(doc)
-
-            table = doc.sections[0].header.tables[0]
-
-            append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
-            append_to_value_line(table.cell(0, 4), "#")
-            append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
-            append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
-            append_to_value_line(table.cell(3, 3), "")
-            append_to_value_line(table.cell(3, 4), "")
-            append_to_value_line(table.cell(3, 2), "Voltage Drop Calculation Report")
+            doc = _init_word_doc("Voltage Drop Calculation Report")
 
 
             # -------------------------
@@ -5933,25 +5812,13 @@ elif page == "Voltage Drop":
 
             set_table_borders(t)
 
-            # -------------------------
-            # Return Bytes
-            # -------------------------
-            bio = io.BytesIO()
-            doc.save(bio)
-            return bio.getvalue()
+            return _save_word_doc(doc)
 
 
         def build_vd_excel_report():
 
-            wb = Workbook()
-
             # --- Summary
-            ws = wb.active
-            ws.title = "Summary"
-            ws["A1"] = "Voltage Drop Calculation Report"
-            ws["A1"].font = Font(bold=True, size=14)
-            ws["A3"] = "Generated"
-            ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            wb, ws, _ = _init_excel_report("Voltage Drop Calculation Report", "Summary")
             ws["A4"] = "k-mode"
             ws["B4"] = k_mode
 
@@ -6037,10 +5904,7 @@ elif page == "Voltage Drop":
             for c in constants:
                 ws.append([c["Name"], c["Meaning"], c["Value"]])
             _autosize_excel_cols(ws)
-
-            bio = io.BytesIO()
-            wb.save(bio)
-            return bio.getvalue()
+            return _wb_to_bytes(wb)
 
         # Only enable downloads when we have enough info to populate the report meaningfully
         can_export = (k_used is not None) and (I is not None) and (L_m is not None) and (V_nom is not None)
@@ -7273,16 +7137,7 @@ digraph G {
         ]
 
         def build_cond_word_report():
-            doc = Document("content/files/Template.docx")
-            table = doc.sections[0].header.tables[0]
-
-            append_to_value_line(table.cell(0, 3), PROJECT_NUMBER)
-            append_to_value_line(table.cell(0, 4), "#")
-            append_to_value_line(table.cell(2, 3), DESIGNER_NAME)
-            append_to_value_line(table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
-            append_to_value_line(table.cell(3, 3), "checked by")
-            append_to_value_line(table.cell(3, 4), "checked date")
-            append_to_value_line(table.cell(3, 2), "Conductor Cable Size Report")
+            doc = _init_word_doc("Conductor Cable Size Report")
 
             doc.add_heading("Cable Name", level=1)
             doc.add_paragraph(cable_name.strip() if cable_name and cable_name.strip() else "(not provided)")
@@ -7339,19 +7194,10 @@ digraph G {
             if recommended_adjusted_ampacity_per_set is not None:
                 doc.add_paragraph(f"Adjusted ampacity per set: {fmt(recommended_adjusted_ampacity_per_set, 'A')}")
 
-            bio = io.BytesIO()
-            doc.save(bio)
-            return bio.getvalue()
+            return _save_word_doc(doc)
 
         def build_cond_excel_report():
-            wb = Workbook()
-
-            ws = wb.active
-            ws.title = "Summary"
-            ws["A1"] = "Conductor Cable Size Report"
-            ws["A1"].font = Font(bold=True, size=14)
-            ws["A3"] = "Generated"
-            ws["B3"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            wb, ws, _ = _init_excel_report("Conductor Cable Size Report", "Summary")
             ws["A4"] = "Cable Name"
             ws["B4"] = cable_name.strip() if cable_name and cable_name.strip() else "(not provided)"
 
@@ -7396,10 +7242,7 @@ digraph G {
             ws.append([])
             ws.append(["Ampacity math", corr_math, ""])
             _autosize_excel_cols(ws)
-
-            bio = io.BytesIO()
-            wb.save(bio)
-            return bio.getvalue()
+            return _wb_to_bytes(wb)
 
         can_export_cond = (I_table_required is not None) and (k_total is not None)
 
