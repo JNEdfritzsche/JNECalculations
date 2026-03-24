@@ -52,97 +52,8 @@ DESIGNER_NAME = ""
 PANEL_TEMPLATE_PATH = Path("content/files/panel_schedule_template.xlsx")
 
 # ----------------------------
-# Report Export Helpers
+# Data / math utilities
 # ----------------------------
-def append_to_value_line(cell, value: str, paragraph_index: int = 1):
-# Ensure the paragraph exists
-    while len(cell.paragraphs) <= paragraph_index:
-        cell.add_paragraph("")
-
-    p = cell.paragraphs[paragraph_index]
-
-    # Append text to existing formatting
-    p.add_run(value)
-
-
-def add_omml_equation_to_paragraph(p, omml_inner: str) -> None:
-    """
-    Appends an inline Word equation (<m:oMath>) to an existing paragraph.
-    `omml_inner` is the content inside <m:oMath>...</m:oMath>.
-    """
-    xml = f'<m:oMath {nsdecls("m")}>{omml_inner}</m:oMath>'
-    p._p.append(parse_xml(xml))
-
-
-def set_table_borders(table):
-    tbl = table._tbl
-    tblPr = tbl.tblPr
-
-    borders = OxmlElement('w:tblBorders')
-
-    for border_name in (
-        'top', 'left', 'bottom', 'right',
-        'insideH', 'insideV'
-    ):
-        border = OxmlElement(f'w:{border_name}')
-        border.set(qn('w:val'), 'single')   # line style
-        border.set(qn('w:sz'), '8')         # thickness (8 = 1pt)
-        border.set(qn('w:space'), '0')
-        border.set(qn('w:color'), '000000') # black
-        borders.append(border)
-
-    tblPr.append(borders)
-
-
-def _delete_paragraph(p):
-    # python-docx has no public delete API; remove the underlying XML element
-    p._element.getparent().remove(p._element)
-    p._p = p._element = None
-
-
-def remove_leading_blank_paragraphs(doc: Document):
-    # Remove any completely empty paragraphs at the very start of the document body
-    while doc.paragraphs and doc.paragraphs[0].text.strip() == "":
-        _delete_paragraph(doc.paragraphs[0])
-
-
-# ----------------------------
-# Shared report-building helpers
-# ----------------------------
-def _fill_doc_header(doc: Document, title: str) -> None:
-    """Fill the standard report header table in the Word template."""
-    hdr_table = doc.sections[0].header.tables[0]
-    append_to_value_line(hdr_table.cell(0, 3), PROJECT_NUMBER)
-    append_to_value_line(hdr_table.cell(0, 4), "#")
-    append_to_value_line(hdr_table.cell(2, 3), DESIGNER_NAME)
-    append_to_value_line(hdr_table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
-    append_to_value_line(hdr_table.cell(3, 3), "")
-    append_to_value_line(hdr_table.cell(3, 4), "")
-    append_to_value_line(hdr_table.cell(3, 2), title)
-
-
-def _add_word_table(doc: Document, headers: list, rows: list) -> None:
-    """Add a bordered Word table with bold column headers and data rows."""
-    t = doc.add_table(rows=1, cols=len(headers))
-    for i, heading in enumerate(headers):
-        p = t.rows[0].cells[i].paragraphs[0]
-        p.clear()
-        p.add_run(heading).bold = True
-    for row_data in rows:
-        cells = t.add_row().cells
-        for i, val in enumerate(row_data):
-            cells[i].text = str(val)
-    set_table_borders(t)
-
-
-def _autosize_excel_cols(ws) -> None:
-    """Auto-size all worksheet columns to fit their content."""
-    for col in ws.columns:
-        col_letter = get_column_letter(col[0].column)
-        max_len = max((len(str(cell.value or "")) for cell in col), default=0)
-        ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
-
-
 def _safe_float(x):
     """Convert to float, returning None on failure."""
     try:
@@ -185,6 +96,9 @@ def _best_col(cols, include=(), exclude=()):
     return None
 
 
+# ----------------------------
+# UI utilities
+# ----------------------------
 def _show_result(label, raw, std_list, round_to_std, selected_label="Selected standard", over_1000v=False):
     """Render a standard OCPD result with optional rounding to the standard list."""
     std = next_standard(raw, std_list) if round_to_std else None
@@ -197,6 +111,87 @@ def _show_result(label, raw, std_list, round_to_std, selected_label="Selected st
         st.success(f"{label}: **{fmt(raw,'A')}**")
     if over_1000v:
         st.caption("For >1000 V cases, Table 450.3 Note 1 allows next higher **commercially available** rating/setting (not strictly the 240.6(A) list).")
+
+
+# ----------------------------
+# Word document helpers
+# ----------------------------
+def append_to_value_line(cell, value: str, paragraph_index: int = 1):
+    # Ensure the paragraph exists
+    while len(cell.paragraphs) <= paragraph_index:
+        cell.add_paragraph("")
+
+    p = cell.paragraphs[paragraph_index]
+
+    # Append text to existing formatting
+    p.add_run(value)
+
+
+def add_omml_equation_to_paragraph(p, omml_inner: str) -> None:
+    """
+    Appends an inline Word equation (<m:oMath>) to an existing paragraph.
+    `omml_inner` is the content inside <m:oMath>...</m:oMath>.
+    """
+    xml = f'<m:oMath {nsdecls("m")}>{omml_inner}</m:oMath>'
+    p._p.append(parse_xml(xml))
+
+
+def _delete_paragraph(p):
+    # python-docx has no public delete API; remove the underlying XML element
+    p._element.getparent().remove(p._element)
+    p._p = p._element = None
+
+
+def remove_leading_blank_paragraphs(doc: Document):
+    # Remove any completely empty paragraphs at the very start of the document body
+    while doc.paragraphs and doc.paragraphs[0].text.strip() == "":
+        _delete_paragraph(doc.paragraphs[0])
+
+
+def set_table_borders(table):
+    tbl = table._tbl
+    tblPr = tbl.tblPr
+
+    borders = OxmlElement('w:tblBorders')
+
+    for border_name in (
+        'top', 'left', 'bottom', 'right',
+        'insideH', 'insideV'
+    ):
+        border = OxmlElement(f'w:{border_name}')
+        border.set(qn('w:val'), 'single')   # line style
+        border.set(qn('w:sz'), '8')         # thickness (8 = 1pt)
+        border.set(qn('w:space'), '0')
+        border.set(qn('w:color'), '000000') # black
+        borders.append(border)
+
+    tblPr.append(borders)
+
+
+def _fill_doc_header(doc: Document, title: str) -> None:
+    """Fill the standard report header table in the Word template."""
+    hdr_table = doc.sections[0].header.tables[0]
+    append_to_value_line(hdr_table.cell(0, 3), PROJECT_NUMBER)
+    append_to_value_line(hdr_table.cell(0, 4), "#")
+    append_to_value_line(hdr_table.cell(2, 3), DESIGNER_NAME)
+    append_to_value_line(hdr_table.cell(2, 4), datetime.now().strftime("%m/%d/%Y"))
+    append_to_value_line(hdr_table.cell(3, 3), "")
+    append_to_value_line(hdr_table.cell(3, 4), "")
+    append_to_value_line(hdr_table.cell(3, 2), title)
+
+
+def _add_word_table(doc: Document, headers: list, rows: list) -> None:
+    """Add a bordered Word table with bold column headers and data rows."""
+    t = doc.add_table(rows=1, cols=len(headers))
+    for i, heading in enumerate(headers):
+        p = t.rows[0].cells[i].paragraphs[0]
+        p.clear()
+        p.add_run(heading).bold = True
+    for row_data in rows:
+        cells = t.add_row().cells
+        for i, val in enumerate(row_data):
+            cells[i].text = str(val)
+    set_table_borders(t)
 
 
 def _init_word_doc(title: str) -> Document:
@@ -214,6 +209,17 @@ def _save_word_doc(doc: Document) -> bytes:
     bio = io.BytesIO()
     doc.save(bio)
     return bio.getvalue()
+
+
+# ----------------------------
+# Excel helpers
+# ----------------------------
+def _autosize_excel_cols(ws) -> None:
+    """Auto-size all worksheet columns to fit their content."""
+    for col in ws.columns:
+        col_letter = get_column_letter(col[0].column)
+        max_len = max((len(str(cell.value or "")) for cell in col), default=0)
+        ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
 
 
 def _init_excel_report(title: str, sheet_name: str):
@@ -235,6 +241,9 @@ def _wb_to_bytes(wb: Workbook) -> bytes:
     return bio.getvalue()
 
 
+# ----------------------------
+# Export button renderer
+# ----------------------------
 def _render_export_buttons(prefix, docx_file, xlsx_file, can_export, word_builder, excel_builder):
     """Render the standard Word + Excel prepare/download button pair."""
     c1, c2 = st.columns([1, 1], gap="large")
@@ -272,6 +281,9 @@ def _render_export_buttons(prefix, docx_file, xlsx_file, can_export, word_builde
         )
 
 
+# ----------------------------
+# Geometry utilities
+# ----------------------------
 def _circle_intersections(x0, y0, r0, x1, y1, r1):
     """Return the (up to 2) intersection points of two circles."""
     dx = x1 - x0
@@ -444,11 +456,117 @@ st.title("⚡ Electrical Calculations Hub")
 st.caption("Theory • Examples • Calculators")
 
 # ----------------------------
-# Helpers
+# Formatting utilities
 # ----------------------------
+def fmt(x, unit=""):
+    if x is None:
+        return "—"
+    try:
+        x = float(x)
+    except Exception:
+        return str(x)
+    if abs(x) >= 1e6:
+        s = f"{x:,.3g}"
+    elif abs(x) >= 1:
+        s = f"{x:,.4g}"
+    else:
+        s = f"{x:.6g}"
+    return f"{s} {unit}".strip()
+
+
+def safe_div(a, b):
+    return None if b == 0 else a / b
+
+
+def _numeric_sort_key(s):
+    """
+    Generate a sort key that handles numeric strings properly.
+    Converts strings like '12', '103', '1/0' to sortable tuples.
+    '1/0' and fractions are treated as having a fractional part for sorting.
+    """
+    s = str(s).strip()
+    try:
+        # Try simple float conversion first (handles "12", "103", etc.)
+        return (0, float(s))
+    except ValueError:
+        # Handle fractions like "1/0", "2/0", etc.
+        if "/" in s:
+            try:
+                parts = s.split("/")
+                numerator = float(parts[0])
+                denominator = float(parts[1])
+                value = numerator / denominator
+                return (0, value)
+            except Exception:
+                pass
+        # Fallback to string sort for non-numeric values
+        return (1, s)
+
+
+def _numeric_sort(items):
+    """Sort items numerically, handling strings with fractions and regular numbers."""
+    return sorted(items, key=_numeric_sort_key)
+
+
+def format_cond_size(size_value):
+    """Format conductor size with AWG/kcmil suffix based on numeric value."""
+    s = str(size_value).strip()
+    if not s or s == "(size not found)":
+        return s
+    s_lower = s.lower()
+    if "kcmil" in s_lower or "mcm" in s_lower:
+        return re.sub(r"\s*(kcmil|mcm)\s*", " kcmil", s, flags=re.IGNORECASE).strip()
+    if "awg" in s_lower:
+        return re.sub(r"\s*awg\s*", " AWG", s, flags=re.IGNORECASE).strip()
+    if "/" in s:
+        return f"{s} AWG"
+    try:
+        val = float(s)
+        return f"{s} kcmil" if val >= 250 else f"{s} AWG"
+    except Exception:
+        return s
+
+
 # ----------------------------
-# Conduit fill rule selector (CEC / OESC Table 9 logic)
+# Calculation utilities
 # ----------------------------
+NEC_2406A_STANDARD = [
+    15, 20, 25, 30, 35, 40, 45, 50,
+    60, 70, 80, 90, 100, 110, 125, 150,
+    175, 200, 225, 250, 300, 350, 400, 450,
+    500, 600, 700, 800, 1000, 1200, 1600, 2000,
+    2500, 3000, 4000, 5000, 6000
+]
+
+# Practical "standard" list used by the attached OESC calc (Table 13 style). This list is commonly aligned with the NEC list.
+OESC_TABLE13_STANDARD = NEC_2406A_STANDARD[:]
+
+
+def next_standard(value, standard_list):
+    """Return the next standard value >= value. If value exceeds list, return None."""
+    try:
+        v = float(value)
+    except Exception:
+        return None
+    for s in standard_list:
+        if s >= v - 1e-12:
+            return s
+    return None
+
+
+def calc_fla(kva, volts, phase):
+    """
+    FLA from kVA and voltage.
+    - 3Φ: I = S / (sqrt(3)*V_LL)
+    - 1Φ: I = S / V
+    """
+    s_va = float(kva) * 1000.0
+    v = float(volts)
+    if phase == "3Φ":
+        return s_va / (math.sqrt(3) * v) if v > 0 else None
+    return s_va / v if v > 0 else None
+
+
 def select_table9_fill_rule(num_cables: int):
     """
     Returns which Table 9 group to use based on number of cables.
@@ -476,26 +594,64 @@ def select_table9_fill_rule(num_cables: int):
         }
 
 
-def fmt(x, unit=""):
-    if x is None:
-        return "—"
-    try:
-        x = float(x)
-    except Exception:
-        return str(x)
-    if abs(x) >= 1e6:
-        s = f"{x:,.3g}"
-    elif abs(x) >= 1:
-        s = f"{x:,.4g}"
-    else:
-        s = f"{x:.6g}"
-    return f"{s} {unit}".strip()
+# ----------------------------
+# UI helpers
+# ----------------------------
+def header(title: str, subtitle: str = ""):
+    st.header(title)
+    if subtitle:
+        st.write(subtitle)
 
 
-def safe_div(a, b):
-    return None if b == 0 else a / b
+def show_code_note(selected_code: str):
+    st.info(
+        f"Code mode: **{selected_code}**. "
+        "This site is written to be easy to follow. Always verify final selections against the code, "
+        "project specs, equipment data, and a coordination study where required."
+    )
 
 
+def eq(latex: str):
+    """Render a LaTeX equation in a consistent display style."""
+    st.latex(latex)
+
+
+APP_DIR = Path(__file__).parent
+CONTENT_DIR = APP_DIR / "content"
+
+
+def render_md_safe(rel_path: str):
+    """
+    Render markdown from /content safely.
+    - Uses lib.theory.render_md if available
+    - Otherwise shows a friendly error instead of crashing the app
+    """
+    md_path = CONTENT_DIR / rel_path
+
+    if render_md is None:
+        st.error(
+            "Theory renderer failed to import. This usually means the `lib/` package is missing in your repo. "
+            "Make sure you have:\n\n"
+            "- `lib/__init__.py`\n"
+            "- `lib/theory.py`\n"
+        )
+        if _THEORY_IMPORT_ERROR is not None:
+            with st.expander("Import error details"):
+                st.exception(_THEORY_IMPORT_ERROR)
+        st.info(f"Expected markdown path: `{md_path}`")
+        if md_path.exists():
+            st.warning("Markdown file exists, but renderer is unavailable due to the import error above.")
+        else:
+            st.warning("Markdown file not found at the expected path.")
+        return
+
+    # renderer exists
+    render_md(str(md_path))
+
+
+# ----------------------------
+# Panel schedule helpers
+# ----------------------------
 def _panel_safe_number(value):
     if value is None:
         return None
@@ -634,147 +790,6 @@ def default_panel_right_rows():
         {"Cct No": n, "Brkr Size": "", "No. of Fixt.": "", "RCCB Rating": "", "Conn Load (W)": "", "Load Description": ""}
         for n in [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24]
     ]
-
-
-def header(title: str, subtitle: str = ""):
-    st.header(title)
-    if subtitle:
-        st.write(subtitle)
-
-
-def show_code_note(selected_code: str):
-    st.info(
-        f"Code mode: **{selected_code}**. "
-        "This site is written to be easy to follow. Always verify final selections against the code, "
-        "project specs, equipment data, and a coordination study where required."
-    )
-
-
-def _numeric_sort_key(s):
-    """
-    Generate a sort key that handles numeric strings properly.
-    Converts strings like '12', '103', '1/0' to sortable tuples.
-    '1/0' and fractions are treated as having a fractional part for sorting.
-    """
-    s = str(s).strip()
-    try:
-        # Try simple float conversion first (handles "12", "103", etc.)
-        return (0, float(s))
-    except ValueError:
-        # Handle fractions like "1/0", "2/0", etc.
-        if "/" in s:
-            try:
-                parts = s.split("/")
-                numerator = float(parts[0])
-                denominator = float(parts[1])
-                value = numerator / denominator
-                return (0, value)
-            except Exception:
-                pass
-        # Fallback to string sort for non-numeric values
-        return (1, s)
-
-
-def _numeric_sort(items):
-    """Sort items numerically, handling strings with fractions and regular numbers."""
-    return sorted(items, key=_numeric_sort_key)
-
-def format_cond_size(size_value):
-    """Format conductor size with AWG/kcmil suffix based on numeric value."""
-    s = str(size_value).strip()
-    if not s or s == "(size not found)":
-        return s
-    s_lower = s.lower()
-    if "kcmil" in s_lower or "mcm" in s_lower:
-        return re.sub(r"\s*(kcmil|mcm)\s*", " kcmil", s, flags=re.IGNORECASE).strip()
-    if "awg" in s_lower:
-        return re.sub(r"\s*awg\s*", " AWG", s, flags=re.IGNORECASE).strip()
-    if "/" in s:
-        return f"{s} AWG"
-    try:
-        val = float(s)
-        return f"{s} kcmil" if val >= 250 else f"{s} AWG"
-    except Exception:
-        return s
-
-
-def eq(latex: str):
-    """Render a LaTeX equation in a consistent display style."""
-    st.latex(latex)
-
-
-# ----------------------------
-# Content paths (reliable on Streamlit Cloud)
-# ----------------------------
-APP_DIR = Path(__file__).parent
-CONTENT_DIR = APP_DIR / "content"
-
-
-def render_md_safe(rel_path: str):
-    """
-    Render markdown from /content safely.
-    - Uses lib.theory.render_md if available
-    - Otherwise shows a friendly error instead of crashing the app
-    """
-    md_path = CONTENT_DIR / rel_path
-
-    if render_md is None:
-        st.error(
-            "Theory renderer failed to import. This usually means the `lib/` package is missing in your repo. "
-            "Make sure you have:\n\n"
-            "- `lib/__init__.py`\n"
-            "- `lib/theory.py`\n"
-        )
-        if _THEORY_IMPORT_ERROR is not None:
-            with st.expander("Import error details"):
-                st.exception(_THEORY_IMPORT_ERROR)
-        st.info(f"Expected markdown path: `{md_path}`")
-        if md_path.exists():
-            st.warning("Markdown file exists, but renderer is unavailable due to the import error above.")
-        else:
-            st.warning("Markdown file not found at the expected path.")
-        return
-
-    # renderer exists
-    render_md(str(md_path))
-
-
-# Standard device rating helpers
-NEC_2406A_STANDARD = [
-    15, 20, 25, 30, 35, 40, 45, 50,
-    60, 70, 80, 90, 100, 110, 125, 150,
-    175, 200, 225, 250, 300, 350, 400, 450,
-    500, 600, 700, 800, 1000, 1200, 1600, 2000,
-    2500, 3000, 4000, 5000, 6000
-]
-
-# Practical "standard" list used by the attached OESC calc (Table 13 style). This list is commonly aligned with the NEC list.
-OESC_TABLE13_STANDARD = NEC_2406A_STANDARD[:]
-
-
-def next_standard(value, standard_list):
-    """Return the next standard value >= value. If value exceeds list, return None."""
-    try:
-        v = float(value)
-    except Exception:
-        return None
-    for s in standard_list:
-        if s >= v - 1e-12:
-            return s
-    return None
-
-
-def calc_fla(kva, volts, phase):
-    """
-    FLA from kVA and voltage.
-    - 3Φ: I = S / (sqrt(3)*V_LL)
-    - 1Φ: I = S / V
-    """
-    s_va = float(kva) * 1000.0
-    v = float(volts)
-    if phase == "3Φ":
-        return s_va / (math.sqrt(3) * v) if v > 0 else None
-    return s_va / v if v > 0 else None
 
 
 # ----------------------------
