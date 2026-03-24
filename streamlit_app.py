@@ -4740,6 +4740,9 @@ elif page == "Conduit Size & Fill & Bend Radius":
         </m:f>
         """
 
+        display_conduit_internal_area = conduit_internal_area * area_conversion_factor if conduit_internal_area else None
+        display_total_cable_area = total_cable_area * area_conversion_factor if total_cable_area else None
+        display_total_allowable_area = conduit_allowed_area * area_conversion_factor if conduit_allowed_area else None
 
         def build_conduit_word_report():
 
@@ -4762,9 +4765,6 @@ elif page == "Conduit Size & Fill & Bend Radius":
                 doc.add_paragraph(a, style="CalcBullet")
 
             doc.add_heading("Input Summary", level=1)
-            display_conduit_internal_area = conduit_internal_area * area_conversion_factor if conduit_internal_area else None
-            display_total_cable_area = total_cable_area * area_conversion_factor if total_cable_area else None
-            display_total_allowable_area = conduit_allowed_area * area_conversion_factor if conduit_allowed_area else None
             summary_data = [
                 ("Conduit Type", conduit_type),
                 ("Trade Size", conduit_trade),
