@@ -2591,6 +2591,336 @@ TABLE_D16 = {
     "rows": _rows_from_columns(_D16_COLUMNS, _D16_DATA),
 }
 
+# ══════════════════════════════════════════════════════════════════════════════
+# UNDERGROUND CABLE AMPACITY TABLES (D8–D11)
+# All tables: 90 °C rated; multiply by 0.886 for 75 °C rating. (See Rule 4-004.)
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ----------------------------
+# Table D8A — Insulated copper conductor ampacities (≤5000 V, unshielded, directly buried, Diagram D8)
+# ----------------------------
+
+_D8A_COLUMNS = [
+    "Size (AWG or kcmil)",
+    "1/Phase Detail 1",
+    "2/Phase Detail 2",
+    "2/Phase Detail 3",
+    "4/Phase Detail 4",
+    "4/Phase Detail 5",
+    "6/Phase Detail 6",
+    "6/Phase Detail 7",
+]
+
+_D8A_DATA = [
+    ["1/0",  315,  269,  288,  204,  221,  171,  186],
+    ["2/0",  357,  304,  326,  230,  249,  192,  209],
+    ["3/0",  405,  343,  369,  259,  281,  217,  236],
+    ["4/0",  458,  388,  418,  292,  317,  244,  265],
+    ["250",  499,  422,  454,  317,  344,  265,  289],
+    ["300",  550,  464,  500,  348,  378,  291,  317],
+    ["350",  597,  503,  543,  376,  409,  314,  342],
+    ["400",  642,  540,  582,  403,  439,  336,  366],
+    ["500",  721,  605,  654,  451,  491,  375,  409],
+    ["600",  790,  662,  716,  493,  536,  410,  447],
+    ["750",  885,  740,  801,  549,  598,  457,  498],
+    ["900",  972,  810,  877,  599,  653,  498,  543],
+    ["1000", 1020, 850,  921,  629,  686,  522,  570],
+    ["1250", 1132, 941,  1020, 694,  757,  576,  629],
+    ["1500", 1227, 1017, 1104, 749,  817,  621,  678],
+    ["1750", 1308, 1083, 1176, 796,  869,  659,  720],
+    ["2000", 1376, 1138, 1236, 835,  911,  691,  755],
+]
+
+TABLE_D8A = {
+    "title": "Table D8A — Insulated copper conductor ampacities for cables rated not more than 5000 V and unshielded for the installation configurations of Diagram D8",
+    "units": "A",
+    "columns": _D8A_COLUMNS,
+    "rows": _rows_from_columns(_D8A_COLUMNS, _D8A_DATA),
+    "notes": [
+        "Ampacities are for 90 °C rated single copper conductor cables with spacings directly buried in earth.",
+        "For a conductor or cable temperature of 75 °C, multiply the 90 °C ampacity by the derating factor 0.886.",
+    ],
+}
+
+# ----------------------------
+# Table D8B — Insulated aluminum conductor ampacities (≤5000 V, unshielded, directly buried, Diagram D8)
+# ----------------------------
+
+_D8B_COLUMNS = _D8A_COLUMNS  # identical column headers
+
+_D8B_DATA = [
+    ["1/0",  244,  208,  223,  158,  172,  133,  144],
+    ["2/0",  276,  236,  253,  179,  194,  150,  163],
+    ["3/0",  313,  266,  286,  201,  218,  169,  183],
+    ["4/0",  356,  302,  325,  227,  247,  190,  207],
+    ["250",  387,  328,  353,  247,  268,  206,  225],
+    ["300",  427,  361,  389,  271,  294,  226,  247],
+    ["350",  464,  391,  422,  293,  319,  245,  267],
+    ["400",  498,  420,  453,  314,  342,  262,  286],
+    ["500",  561,  472,  509,  352,  383,  293,  320],
+    ["600",  617,  518,  559,  386,  420,  321,  350],
+    ["750",  694,  581,  628,  432,  470,  359,  392],
+    ["900",  764,  638,  691,  473,  515,  393,  429],
+    ["1000", 807,  673,  729,  498,  543,  414,  452],
+    ["1250", 906,  753,  817,  556,  606,  461,  503],
+    ["1500", 992,  822,  893,  605,  661,  502,  548],
+    ["1750", 1068, 884,  960,  649,  709,  538,  588],
+    ["2000", 1134, 937,  1018, 687,  751,  569,  622],
+]
+
+TABLE_D8B = {
+    "title": "Table D8B — Insulated aluminum conductor ampacities for cables rated not more than 5000 V and unshielded for the installation configurations of Diagram D8",
+    "units": "A",
+    "columns": _D8B_COLUMNS,
+    "rows": _rows_from_columns(_D8B_COLUMNS, _D8B_DATA),
+    "notes": [
+        "Ampacities are for 90 °C rated single aluminum conductor cables with spacings directly buried in earth.",
+        "For a conductor or cable temperature of 75 °C, multiply the 90 °C ampacity by the derating factor 0.886.",
+    ],
+}
+
+# ----------------------------
+# Table D9A — Insulated copper conductor ampacities (≤5000 V, unshielded, non-metallic underground raceway, Diagram D9)
+# ----------------------------
+
+_D9A_COLUMNS = [
+    "Size (AWG or kcmil)",
+    "1/Phase Detail 1",
+    "2/Phase Detail 2",
+    "4/Phase Detail 3",
+    "6/Phase Detail 4",
+]
+
+_D9A_DATA = [
+    ["1/0",  258,  221,  181,  165],
+    ["2/0",  293,  250,  205,  186],
+    ["3/0",  333,  283,  231,  210],
+    ["4/0",  378,  321,  261,  237],
+    ["250",  414,  351,  285,  258],
+    ["300",  458,  387,  313,  284],
+    ["350",  499,  420,  339,  307],
+    ["400",  537,  451,  364,  329],
+    ["500",  607,  507,  408,  369],
+    ["600",  669,  558,  447,  404],
+    ["750",  754,  626,  500,  451],
+    ["900",  832,  687,  547,  492],
+    ["1000", 875,  722,  574,  517],
+    ["1250", 978,  803,  635,  572],
+    ["1500", 1065, 870,  687,  617],
+    ["1750", 1140, 928,  731,  656],
+    ["2000", 1203, 976,  767,  689],
+]
+
+TABLE_D9A = {
+    "title": "Table D9A — Insulated copper conductor ampacities for cables rated not more than 5000 V and unshielded for the installation configurations of Diagram D9",
+    "units": "A",
+    "columns": _D9A_COLUMNS,
+    "rows": _rows_from_columns(_D9A_COLUMNS, _D9A_DATA),
+    "notes": [
+        "Ampacities are for 90 °C rated single copper conductor cables with spacings installed in non-metallic underground raceways.",
+        "For a conductor or cable temperature of 75 °C, multiply the 90 °C ampacity by the derating factor 0.886.",
+    ],
+}
+
+# ----------------------------
+# Table D9B — Insulated aluminum conductor ampacities (≤5000 V, unshielded, non-metallic underground raceway, Diagram D9)
+# ----------------------------
+
+_D9B_COLUMNS = _D9A_COLUMNS  # identical column headers
+
+_D9B_DATA = [
+    ["1/0",  199,  171,  141,  128],
+    ["2/0",  226,  194,  159,  145],
+    ["3/0",  257,  219,  179,  163],
+    ["4/0",  293,  249,  203,  184],
+    ["250",  321,  272,  221,  201],
+    ["300",  355,  300,  243,  221],
+    ["350",  386,  326,  264,  239],
+    ["400",  416,  351,  283,  256],
+    ["500",  471,  395,  318,  288],
+    ["600",  521,  435,  350,  316],
+    ["750",  590,  491,  392,  354],
+    ["900",  652,  540,  431,  388],
+    ["1000", 690,  570,  454,  409],
+    ["1250", 783,  643,  509,  458],
+    ["1500", 861,  703,  555,  499],
+    ["1750", 930,  757,  596,  536],
+    ["2000", 991,  804,  632,  567],
+]
+
+TABLE_D9B = {
+    "title": "Table D9B — Insulated aluminum conductor ampacities for cables rated not more than 5000 V and unshielded for the installation configurations of Diagram D9",
+    "units": "A",
+    "columns": _D9B_COLUMNS,
+    "rows": _rows_from_columns(_D9B_COLUMNS, _D9B_DATA),
+    "notes": [
+        "Ampacities are for 90 °C rated single aluminum conductor cables with spacings installed in non-metallic underground raceways.",
+        "For a conductor or cable temperature of 75 °C, multiply the 90 °C ampacity by the derating factor 0.886.",
+    ],
+}
+
+# ----------------------------
+# Table D10A — Insulated copper conductor ampacities (≤5000 V, unshielded, directly buried, ≤3 conductors, Diagram D10)
+# ----------------------------
+
+_D10A_COLUMNS = [
+    "Size (AWG or kcmil)",
+    "1/Phase Detail 1",
+    "2/Phase Detail 2",
+    "3/Phase Detail 3",
+    "4/Phase Detail 4",
+    "5/Phase Detail 5",
+    "6/Phase Detail 6",
+]
+
+_D10A_DATA = [
+    ["1/0",  262,  221,  195,  181,  170,  163],
+    ["2/0",  298,  250,  220,  205,  192,  184],
+    ["3/0",  337,  282,  248,  230,  216,  207],
+    ["4/0",  382,  319,  280,  260,  244,  233],
+    ["250",  418,  348,  306,  283,  265,  253],
+    ["300",  462,  382,  336,  310,  291,  278],
+    ["350",  500,  413,  362,  335,  314,  300],
+    ["400",  538,  443,  388,  358,  336,  320],
+    ["500",  602,  494,  432,  398,  373,  356],
+    ["600",  658,  538,  470,  433,  405,  387],
+    ["750",  731,  595,  518,  478,  447,  426],
+    ["900",  795,  643,  560,  515,  481,  458],
+    ["1000", 827,  669,  582,  535,  500,  476],
+    ["1250", 907,  728,  632,  581,  542,  516],
+    ["1500", 966,  772,  670,  615,  574,  546],
+    ["1750", 1017, 809,  702,  643,  600,  571],
+    ["2000", 1060, 840,  728,  667,  622,  591],
+]
+
+TABLE_D10A = {
+    "title": "Table D10A — Insulated copper conductor ampacities for cables rated not more than 5000 V and unshielded for the installation configurations of Diagram D10",
+    "units": "A",
+    "columns": _D10A_COLUMNS,
+    "rows": _rows_from_columns(_D10A_COLUMNS, _D10A_DATA),
+    "notes": [
+        "Ampacities are for 90 °C rated copper conductor cables containing not more than three current-carrying conductors or three single copper current-carrying conductors in contact, directly buried in earth.",
+    ],
+}
+
+# ----------------------------
+# Table D10B — Insulated aluminum conductor ampacities (≤5000 V, unshielded, directly buried, ≤3 conductors, Diagram D10)
+# ----------------------------
+
+_D10B_COLUMNS = _D10A_COLUMNS  # identical column headers
+
+_D10B_DATA = [
+    ["1/0",  203,  172,  152,  141,  132,  127],
+    ["2/0",  230,  193,  171,  159,  149,  143],
+    ["3/0",  261,  219,  193,  179,  168,  161],
+    ["4/0",  298,  249,  219,  203,  190,  182],
+    ["250",  324,  270,  238,  220,  207,  197],
+    ["300",  359,  298,  262,  242,  227,  217],
+    ["350",  390,  323,  284,  262,  246,  235],
+    ["400",  419,  347,  304,  281,  263,  251],
+    ["500",  473,  389,  340,  314,  294,  281],
+    ["600",  522,  428,  374,  345,  323,  308],
+    ["750",  586,  478,  417,  384,  359,  342],
+    ["900",  643,  522,  455,  418,  391,  373],
+    ["1000", 677,  548,  477,  439,  410,  391],
+    ["1250", 757,  608,  528,  485,  453,  431],
+    ["1500", 819,  655,  568,  521,  487,  463],
+    ["1750", 873,  695,  602,  552,  515,  490],
+    ["2000", 917,  727,  630,  577,  538,  512],
+]
+
+TABLE_D10B = {
+    "title": "Table D10B — Insulated aluminum conductor ampacities for cables rated not more than 5000 V and unshielded for the installation configurations of Diagram D10",
+    "units": "A",
+    "columns": _D10B_COLUMNS,
+    "rows": _rows_from_columns(_D10B_COLUMNS, _D10B_DATA),
+    "notes": [
+        "Ampacities are for 90 °C rated aluminum conductor cables containing not more than three current-carrying conductors or three single aluminum current-carrying conductors in contact, directly buried in earth.",
+    ],
+}
+
+# ----------------------------
+# Table D11A — Insulated copper conductor ampacities (≤5000 V, unshielded, underground raceway, ≤3 conductors, Diagram D11)
+# ----------------------------
+
+_D11A_COLUMNS = [
+    "Size (AWG or kcmil)",
+    "1/Phase Detail 1",
+    "2/Phase Detail 2",
+    "3/Phase Detail 3",
+    "4/Phase Detail 4",
+    "5/Phase Detail 5",
+    "6/Phase Detail 6",
+    "8/Phase Detail 8",
+]
+
+_D11A_DATA = [
+    ["1/0",  205,  185,  169,  158,  147,  139,  130],
+    ["2/0",  233,  210,  192,  179,  166,  157,  147],
+    ["3/0",  266,  239,  218,  202,  188,  178,  166],
+    ["4/0",  303,  271,  247,  229,  212,  201,  187],
+    ["250",  335,  298,  271,  251,  232,  219,  204],
+    ["300",  370,  329,  298,  276,  255,  241,  224],
+    ["350",  403,  357,  323,  299,  276,  261,  242],
+    ["400",  434,  384,  347,  320,  295,  279,  259],
+    ["500",  489,  430,  388,  357,  329,  310,  288],
+    ["600",  539,  472,  424,  390,  359,  339,  314],
+    ["750",  601,  524,  470,  431,  397,  374,  346],
+    ["900",  655,  569,  509,  466,  428,  403,  373],
+    ["1000", 683,  593,  530,  485,  445,  419,  388],
+    ["1250", 752,  649,  578,  528,  484,  455,  421],
+    ["1500", 804,  691,  614,  561,  513,  482,  445],
+    ["1750", 847,  726,  644,  587,  537,  504,  466],
+    ["2000", 901,  744,  659,  601,  549,  515,  476],
+]
+
+TABLE_D11A = {
+    "title": "Table D11A — Insulated copper conductor ampacities for cables rated not more than 5000 V and unshielded for the installation configurations of Diagram D11",
+    "units": "A",
+    "columns": _D11A_COLUMNS,
+    "rows": _rows_from_columns(_D11A_COLUMNS, _D11A_DATA),
+    "notes": [
+        "Ampacities are for 90 °C rated copper conductor cables containing not more than three current-carrying conductors or three single copper current-carrying conductors in contact, installed in underground raceway.",
+    ],
+}
+
+# ----------------------------
+# Table D11B — Insulated aluminum conductor ampacities (≤5000 V, unshielded, underground raceway, ≤3 conductors, Diagram D11)
+# ----------------------------
+
+_D11B_COLUMNS = _D11A_COLUMNS  # identical column headers
+
+_D11B_DATA = [
+    ["1/0",  157,  143,  131,  122,  114,  108,  101],
+    ["2/0",  179,  162,  148,  138,  129,  122,  114],
+    ["3/0",  205,  184,  168,  157,  146,  138,  129],
+    ["4/0",  235,  210,  192,  178,  165,  156,  146],
+    ["250",  258,  231,  210,  195,  180,  171,  159],
+    ["300",  286,  255,  232,  215,  199,  188,  175],
+    ["350",  312,  278,  252,  233,  215,  204,  189],
+    ["400",  337,  299,  271,  250,  231,  218,  203],
+    ["500",  382,  337,  305,  281,  259,  245,  227],
+    ["600",  424,  373,  336,  309,  285,  269,  249],
+    ["750",  478,  419,  376,  346,  318,  300,  278],
+    ["900",  527,  459,  412,  378,  347,  327,  303],
+    ["1000", 555,  483,  433,  397,  364,  343,  318],
+    ["1250", 626,  541,  482,  441,  404,  380,  351],
+    ["1500", 679,  585,  520,  475,  435,  409,  377],
+    ["1750", 724,  621,  552,  503,  461,  432,  399],
+    ["2000", 777,  646,  573,  522,  477,  448,  413],
+]
+
+TABLE_D11B = {
+    "title": "Table D11B — Insulated aluminum conductor ampacities for cables rated not more than 5000 V and unshielded for the installation configurations of Diagram D11",
+    "units": "A",
+    "columns": _D11B_COLUMNS,
+    "rows": _rows_from_columns(_D11B_COLUMNS, _D11B_DATA),
+    "notes": [
+        "Ampacities are for 90 °C rated aluminum conductor cables containing not more than three current-carrying conductors or three single aluminum current-carrying conductors in contact, installed in underground raceway.",
+    ],
+}
+
+
 # ----------------------------
 # Registry + public API
 # ----------------------------
