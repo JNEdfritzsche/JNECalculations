@@ -1109,9 +1109,14 @@ d19 -> d20 [style=invis];
                         show_oesc_result("Max Primary Fuse (200% × Ip)", 2.00 * Ip)
                         show_oesc_result("Max Primary Breaker (400% × Ip)", 4.00 * Ip)
                         st.markdown("**Secondary OCPD:**")
-                        st.caption(f"Vsec = {vsec:.0f} V {'> 750 V' if vsec > 750 else '≤ 750 V'}:")
-                        show_oesc_result("Max Secondary Fuse (125% × Is)", 1.25 * Is)
-                        show_oesc_result("Max Secondary Breaker (250% × Is)", 2.50 * Is)
+                        if vsec > 750:
+                            st.caption(f"Vsec = {vsec:.0f} V > 750 V:")
+                            show_oesc_result("Max Secondary Fuse (125% × Is)", 1.25 * Is)
+                            show_oesc_result("Max Secondary Breaker (250% × Is)", 2.50 * Is)
+                        else:
+                            st.caption(f"Vsec = {vsec:.0f} V ≤ 750 V:")
+                            show_oesc_result("Max Secondary Fuse (250% × Is)", 2.50 * Is)
+                            show_oesc_result("Max Secondary Breaker (250% × Is)", 2.50 * Is)
 
             else:  # ≤ 750V
                 is_dry = xfmr_type == "Dry-type"
