@@ -2999,13 +2999,14 @@ _TABLE_REGISTRY: Dict[str, Dict[str, Any]] = _build_registry()
 def list_table_ids() -> List[str]:
     """Return sorted table IDs available in the library (e.g., ['1','2','5A','6A',...])."""
     def _sort_key(tid: str):
-        # Numeric prefix first, then alpha suffix (e.g., 5A, 5B)
-        m = __import__("re").match(r"^(\d+)([A-Z]*)$", str(tid))
+        # Numeric-only IDs first (1, 2, 5A, 6A …), then letter-prefixed (D8A, D9A …)
+        m = __import__("re").match(r"^([A-Z]?)(\d+)([A-Z]*)$", str(tid))
         if not m:
-            return (10**9, str(tid))
-        n = int(m.group(1))
-        suf = m.group(2) or ""
-        return (n, suf)
+            return (2, 0, 10**9, str(tid))
+        prefix = m.group(1) or ""
+        n = int(m.group(2))
+        suf = m.group(3) or ""
+        return (0 if not prefix else 1, 0, n, suf)
     return sorted(_TABLE_REGISTRY.keys(), key=_sort_key)
 
 def get_table_meta(table_id: str) -> Optional[Dict[str, Any]]:

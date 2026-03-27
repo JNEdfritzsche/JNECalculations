@@ -5155,6 +5155,28 @@ elif page == "Table Library":
                 if meta.get("units"):
                     st.caption(f"Units: **{meta['units']}**")
 
+                _DIAG_IMAGES = {
+                    "D8":  ([CONTENT_DIR / "images" / "diagram_d8.png"], 560),
+                    "D9":  ([CONTENT_DIR / "images" / "diagram_d9.png"], 800),
+                    "D10": ([CONTENT_DIR / "images" / "diagram_d10a.png",
+                             CONTENT_DIR / "images" / "diagram_d10b.png"], 560),
+                    "D11": ([CONTENT_DIR / "images" / "diagram_d11a.png",
+                             CONTENT_DIR / "images" / "diagram_d11b.png"], 560),
+                }
+                _sel_upper = str(selected).upper()
+                for _diag_key, (_diag_imgs, _diag_w) in _DIAG_IMAGES.items():
+                    if _sel_upper.startswith(_diag_key):
+                        with st.expander(f"Diagram {_diag_key} — installation configurations", expanded=True):
+                            if len(_diag_imgs) == 1:
+                                if _diag_imgs[0].exists():
+                                    st.image(str(_diag_imgs[0]), width=_diag_w)
+                            else:
+                                _cols = st.columns(len(_diag_imgs))
+                                for _col, _img in zip(_cols, _diag_imgs):
+                                    if _img.exists():
+                                        _col.image(str(_img), width=560)
+                        break
+
                 df = oesc_tables.get_table_dataframe(selected)
 
                 if df is None:
