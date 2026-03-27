@@ -649,6 +649,10 @@ def render_md_safe(rel_path: str):
     render_md(str(md_path))
 
 
+def render_md_for_code(topic: str, code_mode: str):
+    render_md_safe(f"markdown/{topic}_{'oesc' if code_mode == 'OESC' else 'nec'}.md")
+
+
 # ----------------------------
 # Panel schedule helpers
 # ----------------------------
@@ -915,18 +919,12 @@ if page == "Transformer Protection":
         header("Transformer Protection")
         show_code_note(code_mode)
 
-        if code_mode == "OESC":
-            render_md_safe("markdown/transformer_protection_oesc.md")
-        else:
-            render_md_safe("markdown/transformer_protection_nec.md")
+        render_md_for_code("transformer_protection", code_mode)
 
     with examples_tab:
         header("Transformer Protection — Examples")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/transformer_protection_examples_oesc.md")
-        else:
-            render_md_safe("markdown/transformer_protection_examples_nec.md")
+        render_md_for_code("transformer_protection_examples", code_mode)
 
     # ----------------------------
     # Calculator tab for Transformer Protection
@@ -1534,18 +1532,12 @@ elif page == "Transformer Feeders":
     with theory_tab:
         header("Transformer Feeders — Theory")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/transformer_feeders_oesc.md")
-        else:
-            render_md_safe("markdown/transformer_feeders_nec.md")
+        render_md_for_code("transformer_feeders", code_mode)
 
     with examples_tab:
         header("Transformer Feeders — Examples")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/transformer_feeders_examples_oesc.md")
-        else:
-            render_md_safe("markdown/transformer_feeders_examples_nec.md")
+        render_md_for_code("transformer_feeders_examples", code_mode)
 
     with calc_tab:
         header("Transformer Feeder Calculator", "Compute primary/secondary FLA, turns ratio, and transformer type.")
@@ -1836,18 +1828,12 @@ elif page == "Grounding/Bonding Conductor Sizing":
     with theory_tab:
         header("Grounding & Bonding — Theory")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/grounding_bonding_oesc.md")
-        else:
-            render_md_safe("markdown/grounding_bonding_nec.md")
+        render_md_for_code("grounding_bonding", code_mode)
 
     with examples_tab:
         header("Grounding & Bonding — Examples")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/grounding_bonding_examples_oesc.md")
-        else:
-            render_md_safe("markdown/grounding_bonding_examples_nec.md")
+        render_md_for_code("grounding_bonding_examples", code_mode)
 
     with calc_tab:
         header("Grounding/Bonding Helper", "Simple placeholder — replace with real NEC/OESC table logic.")
@@ -1878,18 +1864,12 @@ elif page == "Motor Protection":
     with theory_tab:
         header("Motor Protection — Theory")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/motor_protection_oesc.md")
-        else:
-            render_md_safe("markdown/motor_protection_nec.md")
+        render_md_for_code("motor_protection", code_mode)
 
     with examples_tab:
         header("Motor Protection — Examples")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/motor_protection_examples_oesc.md")
-        else:
-            render_md_safe("markdown/motor_protection_examples_nec.md")
+        render_md_for_code("motor_protection_examples", code_mode)
 
     with calc_tab:
         header("Motor Protection Calculator", "Calculate motor overcurrent device using Table 29 flowchart.")
@@ -2152,18 +2132,12 @@ elif page == "Motor Feeder":
     with theory_tab:
         header("Motor Feeder — Theory")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/motor_feeder_oesc.md")
-        else:
-            render_md_safe("markdown/motor_feeder_nec.md")
+        render_md_for_code("motor_feeder", code_mode)
 
     with examples_tab:
         header("Motor Feeder — Examples")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/motor_feeder_examples_oesc.md")
-        else:
-            render_md_safe("markdown/motor_feeder_examples_nec.md")
+        render_md_for_code("motor_feeder_examples", code_mode)
 
     with calc_tab:
         header("Motor Feeder Calculator", "Estimate motor I_FLA from nameplate data, then apply feeder factor.")
@@ -2614,18 +2588,12 @@ elif page == "Cable Tray Size & Fill & Bend Radius":
     with theory_tab:
         header("Cable Tray Size, Fill & Bend Radius — Theory")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/cable_tray_fill_oesc.md")
-        else:
-            render_md_safe("markdown/cable_tray_fill_nec.md")
+        render_md_for_code("cable_tray_fill", code_mode)
 
     with examples_tab:
         header("Cable Tray Size, Fill & Bend Radius — Examples")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/cable_tray_fill_examples_oesc.md")
-        else:
-            render_md_safe("markdown/cable_tray_fill_examples_nec.md")
+        render_md_for_code("cable_tray_fill_examples", code_mode)
 
     with calc_tab:
         header("Cable Tray Fill Calculator", "Enter tray dimensions and cable groups to calculate fill percentage.")
@@ -3167,18 +3135,12 @@ elif page == "Conduit Size & Fill & Bend Radius":
     with theory_tab:
         header("Conduit Size, Fill & Bend Radius — Theory")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/conduit_fill_oesc.md")
-        else:
-            render_md_safe("markdown/conduit_fill_nec.md")
+        render_md_for_code("conduit_fill", code_mode)
 
     with examples_tab:
         header("Conduit Size, Fill & Bend Radius — Examples")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/conduit_fill_examples_oesc.md")
-        else:
-            render_md_safe("markdown/conduit_fill_examples_nec.md")
+        render_md_for_code("conduit_fill_examples", code_mode)
 
     with calc_tab:
         header("Conduit Fill Calculator — OESC Table 6 + Table 9 (dynamic cables)", "Select a conduit, add any number of cable groups, and the app computes conduit fill.")
@@ -5026,18 +4988,12 @@ elif page == "Heat Trace":
     with theory_tab:
         header("Heat Trace — Theory")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/heat_trace_oesc.md")
-        else:
-            render_md_safe("markdown/heat_trace_nec.md")
+        render_md_for_code("heat_trace", code_mode)
 
     with examples_tab:
         header("Heat Trace — Examples")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/heat_trace_examples_oesc.md")
-        else:
-            render_md_safe("markdown/heat_trace_examples_nec.md")
+        render_md_for_code("heat_trace_examples", code_mode)
 
     with calc_tab:
         header("Heat Trace Load Calculator", "Estimate circuit load from length and heat trace rating.")
@@ -5063,18 +5019,12 @@ elif page == "Demand Load":
     with theory_tab:
         header("Demand Load — Theory")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/demand_load_oesc.md")
-        else:
-            render_md_safe("markdown/demand_load_nec.md")
+        render_md_for_code("demand_load", code_mode)
 
     with examples_tab:
         header("Demand Load — Examples")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/demand_load_examples_oesc.md")
-        else:
-            render_md_safe("markdown/demand_load_examples_nec.md")
+        render_md_for_code("demand_load_examples", code_mode)
 
     with calc_tab:
         header("Demand Load Calculator", "Compute demand load from connected load and factor.")
@@ -5096,18 +5046,12 @@ elif page == "Power Factor Correction":
     with theory_tab:
         header("Power Factor Correction — Theory")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/power_factor_correction_oesc.md")
-        else:
-            render_md_safe("markdown/power_factor_correction_nec.md")
+        render_md_for_code("power_factor_correction", code_mode)
 
     with examples_tab:
         header("Power Factor Correction — Examples")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/power_factor_correction_examples_oesc.md")
-        else:
-            render_md_safe("markdown/power_factor_correction_examples_nec.md")
+        render_md_for_code("power_factor_correction_examples", code_mode)
 
     with calc_tab:
         header("Power Factor Correction — Calculator")
@@ -5236,10 +5180,7 @@ elif page == "Voltage Drop":
     with theory_tab:
         header("Voltage Drop — Theory")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/voltage_drop_oesc.md")
-        else:
-            render_md_safe("markdown/voltage_drop_nec.md")
+        render_md_for_code("voltage_drop", code_mode)
 
         # -------------------------------------------------
         # Display Table D3 reference tables
@@ -5361,10 +5302,7 @@ elif page == "Voltage Drop":
     with examples_tab:
         header("Voltage Drop — Examples")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/voltage_drop_examples_oesc.md")
-        else:
-            render_md_safe("markdown/voltage_drop_examples_nec.md")
+        render_md_for_code("voltage_drop_examples", code_mode)
 
     with calc_tab:
         header("Voltage Drop Calculator — Table D3 (OESC) + k-value helper")
@@ -6394,18 +6332,12 @@ elif page == "Conductors":
     with theory_tab:
         header("Conductors — Theory")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/conductors_oesc.md")
-        else:
-            render_md_safe("markdown/conductors_nec.md")
+        render_md_for_code("conductors", code_mode)
 
     with examples_tab:
         header("Conductors — Examples")
         show_code_note(code_mode)
-        if code_mode == "OESC":
-            render_md_safe("markdown/conductors_examples_oesc.md")
-        else:
-            render_md_safe("markdown/conductors_examples_nec.md")
+        render_md_for_code("conductors_examples", code_mode)
 
     with calc_tab:
         header("Conductors — Calculator", "Workflow helper: design current, table selection, correction-factor math, and k-value voltage drop check.")

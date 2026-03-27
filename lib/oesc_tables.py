@@ -1749,95 +1749,6 @@ TABLE_9H = {
 
 
 
-# Backwards-compatible helpers (Table 6A)
-def get_table_6a_entry(construction: str, size: str) -> Optional[Dict[str, Any]]:
-    return get_table_entry(TABLE_6A, construction, size)
-
-
-def get_table_6a_area_mm2(construction: str, size: str, n_conductors: int) -> Optional[float]:
-    return get_table_area_mm2(TABLE_6A, construction, size, n_conductors)
-
-
-# Helpers (Table 6B)
-def get_table_6b_entry(construction: str, size: str) -> Optional[Dict[str, Any]]:
-    return get_table_entry(TABLE_6B, construction, size)
-
-
-def get_table_6b_area_mm2(construction: str, size: str, n_conductors: int) -> Optional[float]:
-    return get_table_area_mm2(TABLE_6B, construction, size, n_conductors)
-
-
-# Helpers (Table 6C)
-def get_table_6c_entry(construction: str, size: str) -> Optional[Dict[str, Any]]:
-    return get_table_entry(TABLE_6C, construction, size)
-
-
-def get_table_6c_area_mm2(construction: str, size: str, n_conductors: int) -> Optional[float]:
-    return get_table_area_mm2(TABLE_6C, construction, size, n_conductors)
-
-
-# Helpers (Table 6D)
-def get_table_6d_entry(construction: str, size: str) -> Optional[Dict[str, Any]]:
-    return get_table_entry(TABLE_6D, construction, size)
-
-def get_table_6d_area_mm2(construction: str, size: str, n_conductors: int) -> Optional[float]:
-    return get_table_area_mm2(TABLE_6D, construction, size, n_conductors)
-
-
-# Helpers (Table 6E)
-def get_table_6e_entry(construction: str, size: str) -> Optional[Dict[str, Any]]:
-    return get_table_entry(TABLE_6E, construction, size)
-
-def get_table_6e_area_mm2(construction: str, size: str, n_conductors: int) -> Optional[float]:
-    return get_table_area_mm2(TABLE_6E, construction, size, n_conductors)
-
-
-# Helpers (Table 6F)
-def get_table_6f_entry(construction: str, size: str) -> Optional[Dict[str, Any]]:
-    return get_table_entry(TABLE_6F, construction, size)
-
-def get_table_6f_area_mm2(construction: str, size: str, n_conductors: int) -> Optional[float]:
-    return get_table_area_mm2(TABLE_6F, construction, size, n_conductors)
-
-
-# Helpers (Table 6G)
-def get_table_6g_entry(construction: str, size: str) -> Optional[Dict[str, Any]]:
-    return get_table_entry(TABLE_6G, construction, size)
-
-def get_table_6g_area_mm2(construction: str, size: str, n_conductors: int) -> Optional[float]:
-    return get_table_area_mm2(TABLE_6G, construction, size, n_conductors)
-
-
-# Helpers (Table 6H)
-def get_table_6h_entry(construction: str, size: str) -> Optional[Dict[str, Any]]:
-    return get_table_entry(TABLE_6H, construction, size)
-
-def get_table_6h_area_mm2(construction: str, size: str, n_conductors: int) -> Optional[float]:
-    return get_table_area_mm2(TABLE_6H, construction, size, n_conductors)
-
-
-# Helpers (Table 6I)
-def get_table_6i_entry(construction: str, size: str) -> Optional[Dict[str, Any]]:
-    return get_table_entry(TABLE_6I, construction, size)
-
-def get_table_6i_area_mm2(construction: str, size: str, n_conductors: int) -> Optional[float]:
-    return get_table_area_mm2(TABLE_6I, construction, size, n_conductors)
-
-
-# Helpers (Table 6J)
-def get_table_6j_entry(construction: str, size: str) -> Optional[Dict[str, Any]]:
-    return get_table_entry(TABLE_6J, construction, size)
-
-def get_table_6j_area_mm2(construction: str, size: str, n_conductors: int) -> Optional[float]:
-    return get_table_area_mm2(TABLE_6J, construction, size, n_conductors)
-
-
-# Helpers (Table 6K)
-def get_table_6k_entry(construction: str, size: str) -> Optional[Dict[str, Any]]:
-    return get_table_entry(TABLE_6K, construction, size)
-
-def get_table_6k_area_mm2(construction: str, size: str, n_conductors: int) -> Optional[float]:
-    return get_table_area_mm2(TABLE_6K, construction, size, n_conductors)
 
 
 # --------------------------------------------------------------------------------------
@@ -1935,59 +1846,6 @@ def get_conduit_id_mm(conduit_type: str, trade_size_mm: int):
 
 
 # Helper for Table 9C (53% fill, single conductor or multiconductor cable)
-def get_table_9c(conduit_type: str, trade_size_mm: int):
-    """
-    Returns dict with keys: 'id_mm', 'area_mm2' at 53% fill.
-    conduit_type keys match those used in Tables 9A / 9B helpers.
-    """
-    return TABLE_9C.get(trade_size_mm, {}).get(conduit_type)
-
-# Helper for Table 9D (53% fill, HDPE / RTRC)
-def get_table_9d(conduit_type: str, trade_size_mm: int):
-    """
-    Returns dict with keys: 'id_mm', 'area_mm2' at 53% fill.
-    conduit_type keys match those used in Table 9B.
-    """
-    return TABLE_9D.get(trade_size_mm, {}).get(conduit_type)
-
-
-# Helper for Table 9E (31% fill)
-def get_table_9e(conduit_type: str, trade_size_mm: int):
-    """
-    Returns dict with keys: 'id_mm', 'area_mm2' at 31% fill.
-    conduit_type keys match those used in Tables 9A / 9C helpers.
-    """
-    return TABLE_9E.get(trade_size_mm, {}).get(conduit_type)
-
-
-# Helper for Table 9F (31% fill, HDPE / RTRC)
-def get_table_9f(conduit_type: str, trade_size_mm: int):
-    """
-    Returns dict with keys: 'id_mm', 'area_mm2' at 31% fill.
-    conduit_type keys match those used in Table 9B.
-    """
-    return TABLE_9F.get(trade_size_mm, {}).get(conduit_type)
-
-
-# Helper for Table 9G (40% fill)
-def get_table_9g(conduit_type: str, trade_size_mm: int):
-    """
-    Returns dict with keys: 'id_mm', 'area_mm2' at 40% fill.
-    conduit_type keys match those used in Tables 9A / 9C / 9E helpers.
-    """
-    return TABLE_9G.get(trade_size_mm, {}).get(conduit_type)
-
-
-# Helper for Table 9H (40% fill, HDPE / RTRC)
-def get_table_9h(conduit_type: str, trade_size_mm: int):
-    """
-    Returns dict with keys: 'id_mm', 'area_mm2' at 40% fill.
-    conduit_type keys match those used in Table 9B.
-    """
-    return TABLE_9H.get(trade_size_mm, {}).get(conduit_type)
-
-
-
 def get_allowable_conduit_area_mm2(conduit_type: str, trade_size_mm: int, n_conductors: int):
     """
     Returns the maximum allowable conductor area (mm²) for a conduit,
@@ -2001,31 +1859,17 @@ def get_allowable_conduit_area_mm2(conduit_type: str, trade_size_mm: int, n_cond
     conduit_type must match the unified conduit keys used throughout
     (rigid_metal, emt, hdpe_dr11, rtrc_ips, etc.)
     """
-
-    # One conductor → 53%
+    is_9a = conduit_type in TABLE_9A_TYPES
     if n_conductors == 1:
-        if conduit_type in TABLE_9A_TYPES:
-            entry = get_table_9c(conduit_type, trade_size_mm)
-        else:
-            entry = get_table_9d(conduit_type, trade_size_mm)
-
-    # Two conductors → 31%
+        tbl = TABLE_9C if is_9a else TABLE_9D
     elif n_conductors == 2:
-        if conduit_type in TABLE_9A_TYPES:
-            entry = get_table_9e(conduit_type, trade_size_mm)
-        else:
-            entry = get_table_9f(conduit_type, trade_size_mm)
-
-    # Three or more conductors → 40%
+        tbl = TABLE_9E if is_9a else TABLE_9F
     else:
-        if conduit_type in TABLE_9A_TYPES:
-            entry = get_table_9g(conduit_type, trade_size_mm)
-        else:
-            entry = get_table_9h(conduit_type, trade_size_mm)
+        tbl = TABLE_9G if is_9a else TABLE_9H
 
+    entry = tbl.get(trade_size_mm, {}).get(conduit_type)
     if not entry:
         return None
-
     return entry["area_mm2"]
 
 
