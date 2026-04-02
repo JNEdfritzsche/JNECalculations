@@ -2260,6 +2260,45 @@ TABLE_50: Dict[str, Any] = {
     ],
 }
 
+# ----------------------------
+# Table 16 — Minimum size of field-installed system bonding jumpers and bonding conductors
+# ----------------------------
+TABLE_16: Dict[str, Any] = {
+    "title": "Table 16 — Minimum size of field-installed system bonding jumpers and bonding conductors",
+    "units": None,
+    "columns": [
+        "OCPD rating or ampacity not exceeding (A)",
+        "Wire — Copper, AWG or kcmil",
+        "Wire — Aluminum, AWG or kcmil",
+        "Bus — Copper, mm²",
+        "Bus — Aluminum, mm²",
+    ],
+    "rows": [
+        {"OCPD rating or ampacity not exceeding (A)": 20,   "Wire — Copper, AWG or kcmil": "14",   "Wire — Aluminum, AWG or kcmil": "12",   "Bus — Copper, mm²": 2.0,  "Bus — Aluminum, mm²": 3.5},
+        {"OCPD rating or ampacity not exceeding (A)": 30,   "Wire — Copper, AWG or kcmil": "12",   "Wire — Aluminum, AWG or kcmil": "10",   "Bus — Copper, mm²": 3.5,  "Bus — Aluminum, mm²": 5.5},
+        {"OCPD rating or ampacity not exceeding (A)": 60,   "Wire — Copper, AWG or kcmil": "10",   "Wire — Aluminum, AWG or kcmil": "8",    "Bus — Copper, mm²": 5.5,  "Bus — Aluminum, mm²": 8.5},
+        {"OCPD rating or ampacity not exceeding (A)": 100,  "Wire — Copper, AWG or kcmil": "8",    "Wire — Aluminum, AWG or kcmil": "6",    "Bus — Copper, mm²": 8.5,  "Bus — Aluminum, mm²": 10.5},
+        {"OCPD rating or ampacity not exceeding (A)": 200,  "Wire — Copper, AWG or kcmil": "6",    "Wire — Aluminum, AWG or kcmil": "4",    "Bus — Copper, mm²": 10.5, "Bus — Aluminum, mm²": 21.0},
+        {"OCPD rating or ampacity not exceeding (A)": 300,  "Wire — Copper, AWG or kcmil": "4",    "Wire — Aluminum, AWG or kcmil": "2",    "Bus — Copper, mm²": 21.0, "Bus — Aluminum, mm²": 26.5},
+        {"OCPD rating or ampacity not exceeding (A)": 400,  "Wire — Copper, AWG or kcmil": "3",    "Wire — Aluminum, AWG or kcmil": "1",    "Bus — Copper, mm²": 26.5, "Bus — Aluminum, mm²": 33.5},
+        {"OCPD rating or ampacity not exceeding (A)": 500,  "Wire — Copper, AWG or kcmil": "2",    "Wire — Aluminum, AWG or kcmil": "0",    "Bus — Copper, mm²": 33.5, "Bus — Aluminum, mm²": 42.5},
+        {"OCPD rating or ampacity not exceeding (A)": 600,  "Wire — Copper, AWG or kcmil": "1",    "Wire — Aluminum, AWG or kcmil": "00",   "Bus — Copper, mm²": 42.5, "Bus — Aluminum, mm²": 53.5},
+        {"OCPD rating or ampacity not exceeding (A)": 800,  "Wire — Copper, AWG or kcmil": "0",    "Wire — Aluminum, AWG or kcmil": "000",  "Bus — Copper, mm²": 53.5, "Bus — Aluminum, mm²": 67.5},
+        {"OCPD rating or ampacity not exceeding (A)": 1000, "Wire — Copper, AWG or kcmil": "00",   "Wire — Aluminum, AWG or kcmil": "0000", "Bus — Copper, mm²": 67.5, "Bus — Aluminum, mm²": 84.0},
+        {"OCPD rating or ampacity not exceeding (A)": 1200, "Wire — Copper, AWG or kcmil": "000",  "Wire — Aluminum, AWG or kcmil": "250",  "Bus — Copper, mm²": 84.0, "Bus — Aluminum, mm²": 127.0},
+        {"OCPD rating or ampacity not exceeding (A)": 1600, "Wire — Copper, AWG or kcmil": "0000", "Wire — Aluminum, AWG or kcmil": "350",  "Bus — Copper, mm²": 107.0,"Bus — Aluminum, mm²": 177.5},
+        {"OCPD rating or ampacity not exceeding (A)": 2000, "Wire — Copper, AWG or kcmil": "250",  "Wire — Aluminum, AWG or kcmil": "400",  "Bus — Copper, mm²": 127.5,"Bus — Aluminum, mm²": 203.0},
+        {"OCPD rating or ampacity not exceeding (A)": 2500, "Wire — Copper, AWG or kcmil": "350",  "Wire — Aluminum, AWG or kcmil": "500",  "Bus — Copper, mm²": 177.5,"Bus — Aluminum, mm²": 253.5},
+        {"OCPD rating or ampacity not exceeding (A)": 3000, "Wire — Copper, AWG or kcmil": "400",  "Wire — Aluminum, AWG or kcmil": "600",  "Bus — Copper, mm²": 203.0,"Bus — Aluminum, mm²": 355.0},
+        {"OCPD rating or ampacity not exceeding (A)": 4000, "Wire — Copper, AWG or kcmil": "500",  "Wire — Aluminum, AWG or kcmil": "800",  "Bus — Copper, mm²": 253.5,"Bus — Aluminum, mm²": 405.5},
+        {"OCPD rating or ampacity not exceeding (A)": 5000, "Wire — Copper, AWG or kcmil": "700",  "Wire — Aluminum, AWG or kcmil": "1000", "Bus — Copper, mm²": 355.0,"Bus — Aluminum, mm²": 507.0},
+        {"OCPD rating or ampacity not exceeding (A)": 6000, "Wire — Copper, AWG or kcmil": "800",  "Wire — Aluminum, AWG or kcmil": "1250", "Bus — Copper, mm²": 405.5,"Bus — Aluminum, mm²": 633.5},
+    ],
+    "notes": [
+        "See Rule 10-616.",
+    ],
+}
+
 
 # --------------------------------------------------------------------------------------
 # Table D2 — DC motors

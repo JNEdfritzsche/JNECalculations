@@ -1849,25 +1849,42 @@ elif page == "Grounding/Bonding Conductor Sizing":
         render_md_for_code("grounding_bonding_examples", code_mode)
 
     with calc_tab:
-        header("Grounding/Bonding Helper", "Simple placeholder — replace with real NEC/OESC table logic.")
+        header("Grounding/Bonding Conductor Sizing", "Minimum bonding conductor size per OESC Table 16 (Rule 10-616).")
         show_code_note(code_mode)
+
+        # Table 16 — (OCPD not exceeding, Cu AWG, Al AWG, Cu mm², Al mm²)
+        _T16 = [
+            (20,   "14",   "12",   2.0,   3.5),
+            (30,   "12",   "10",   3.5,   5.5),
+            (60,   "10",   "8",    5.5,   8.5),
+            (100,  "8",    "6",    8.5,   10.5),
+            (200,  "6",    "4",    10.5,  21.0),
+            (300,  "4",    "2",    21.0,  26.5),
+            (400,  "3",    "1",    26.5,  33.5),
+            (500,  "2",    "0",    33.5,  42.5),
+            (600,  "1",    "00",   42.5,  53.5),
+            (800,  "0",    "000",  53.5,  67.5),
+            (1000, "00",   "0000", 67.5,  84.0),
+            (1200, "000",  "250",  84.0,  127.0),
+            (1600, "0000", "350",  107.0, 177.5),
+            (2000, "250",  "400",  127.5, 203.0),
+            (2500, "350",  "500",  177.5, 253.5),
+            (3000, "400",  "600",  203.0, 355.0),
+            (4000, "500",  "800",  253.5, 405.5),
+            (5000, "700",  "1000", 355.0, 507.0),
+            (6000, "800",  "1250", 405.5, 633.5),
+        ]
 
         ocpd = st.number_input("Upstream OCPD rating (A)", min_value=1.0, value=200.0, step=1.0)
 
-        if ocpd <= 60:
-            egc = "10 AWG Cu (placeholder)"
-        elif ocpd <= 100:
-            egc = "8 AWG Cu (placeholder)"
-        elif ocpd <= 200:
-            egc = "6 AWG Cu (placeholder)"
-        elif ocpd <= 400:
-            egc = "3 AWG Cu (placeholder)"
+        row = next((r for r in _T16 if ocpd <= r[0]), None)
+        if row:
+            _, cu_awg, al_awg, cu_mm2, al_mm2 = row
+            st.success(f"Min. bonding conductor (wire) — Copper: **{cu_awg} AWG** | Aluminum: **{al_awg} AWG**")
+            st.info(f"Min. bonding conductor (bus) — Copper: **{cu_mm2} mm²** | Aluminum: **{al_mm2} mm²**")
+            st.caption("Per OESC Table 16 (Rule 10-616). Based on OCPD rating or setting not exceeding the entered value.")
         else:
-            egc = "See table / engineer (placeholder)"
-
-        st.success(f"Equipment grounding conductor (example placeholder): **{egc}**")
-        st.markdown("### Equation used")
-        eq(r"\text{EGC size} = f(\text{OCPD rating})")
+            st.error(f"OCPD rating of {ocpd:.0f} A exceeds the maximum covered by Table 16 (6000 A). Consult Rule 10-616 directly.")
 
 
 # ============================
