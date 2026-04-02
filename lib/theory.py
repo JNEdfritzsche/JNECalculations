@@ -27,6 +27,32 @@ _LATEX_INLINE_PATTERNS = [
     (re.compile(r"<span class=.*?>\s*\$\$(.*?)\$\$\s*</span>", flags=re.DOTALL), r"$\1$"),
 ]
 
+_VALID_TABLE_IDS: set | None = None
+_TABLE_LINK_RE = re.compile(r"\bTables?\s+([A-Za-z]?\d+[A-Za-z]*)\b")
+_MARKER_RE = re.compile(r"<!-- (IMAGE_MARKER_\d+|FLOWCHART_[A-Z0-9_]+) -->")
+
+
+def _inject_table_links(md: str) -> str:
+    """Replace 'Table X' references with ?table=X deep-links for registered OESC tables."""
+    global _VALID_TABLE_IDS
+    if _VALID_TABLE_IDS is None:
+        try:
+            from lib import oesc_tables  # lazy import — avoids circular deps at module load
+            _VALID_TABLE_IDS = {tid.upper() for tid in oesc_tables.list_table_ids()}
+        except Exception:
+            _VALID_TABLE_IDS = set()
+
+    if not _VALID_TABLE_IDS:
+        return md
+
+    def _replace(m: re.Match) -> str:
+        raw_id = m.group(1)
+        if raw_id.upper() in _VALID_TABLE_IDS:
+            return f"[{m.group(0)}](?table={raw_id.upper()})"
+        return m.group(0)
+
+    return _TABLE_LINK_RE.sub(_replace, md)
+
 
 def _normalize_latex(md: str) -> str:
     # Convert \[...\] to $$...$$
@@ -65,12 +91,12 @@ def _inject_css():
     )
 
 
-def _extract_images(md: str, md_dir: Path) -> tuple[str, list[tuple[str, str, str]]]:
+def _extract_images(md: str, md_dir: Path) -> tuple[str, list[tuple[str, str, int]]]:
     """
     Extract image markdown syntax and return markdown without images + image list.
     Images will be rendered separately using st.image().
-    
-    Returns: (markdown_without_images, [(image_path, alt_text, is_local), ...])
+
+    Returns: (markdown_without_images, [(image_path, alt_text, image_id), ...])
     """
     images = []
     
@@ -115,14 +141,12 @@ def _render_markdown_with_images(md: str, md_dir: Path, wrap: bool = True):
     # Build lookup for faster access
     image_lookup = {image_id: (image_path, alt_text) for image_path, alt_text, image_id in images}
     
-    # Marker pattern for images and flowcharts
-    marker_rx = re.compile(r"<!-- (IMAGE_MARKER_\d+|FLOWCHART_[A-Z0-9_]+) -->")
 
     if wrap:
         st.markdown("<div class='jne-theory-wrap'>", unsafe_allow_html=True)
 
     cursor = 0
-    for match in marker_rx.finditer(md):
+    for match in _MARKER_RE.finditer(md):
         marker_text = match.group(1)
         
         # Render markdown chunk before marker
@@ -138,7 +162,7 @@ def _render_markdown_with_images(md: str, md_dir: Path, wrap: bool = True):
                 try:
                     # Check if file exists before trying to display
                     if Path(image_path).exists():
-                        left, center, right = st.columns([1, 2, 1], gap="small")
+                        _, center, _ = st.columns([1, 2, 1], gap="small")
                         with center:
                             st.image(
                                 image_path,
@@ -227,7 +251,7 @@ digraph G {
         return
 
     # Keep flowcharts a bit smaller and centered for readability.
-    left, center, right = st.columns([1, 2, 1], gap="small")
+    _, center, _ = st.columns([1, 2, 1], gap="small")
     with center:
         st.graphviz_chart(dot, width=600)
 
@@ -249,4 +273,5 @@ def render_md(md_path: str | Path, *, wrap: bool = True):
 
     md = p.read_text(encoding="utf-8")
     md = _normalize_latex(md)
+    md = _inject_table_links(md)
     _render_markdown_with_images(md, p.parent, wrap=wrap)

@@ -138,4 +138,4 @@ Rule 12-2208 — Cable tray Bonding
 
 ### Related OESC Tables
 
-Tables 15 — Bending Radii: High-Voltage Cables
+Table 15 — Bending Radii: High-Voltage Cables

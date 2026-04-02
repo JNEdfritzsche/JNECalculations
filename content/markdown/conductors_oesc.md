@@ -6,7 +6,7 @@ The main area of concern for conductors is sizing. When properly sizing conducto
 
 ## Base Ampacity
 
-At the elementary level, running conductors/cables through free air at 30°C, we use **Tables 1/3** for single conductors and **Tables 2/4** for 1-3 multi-conductor cables (or 1-3 single conductors in a raceway). Since many rules consider upsizing the cable according to a service factor, it is generally recommended to upsize 125% for most loads.
+At the elementary level, running conductors/cables through free air at 30°C, we use **Table 1** (copper) or **Table 3** (aluminum) for single conductors and **Table 2** (copper) or **Table 4** (aluminum) for 1-3 multi-conductor cables (or 1-3 single conductors in a raceway). Since many rules consider upsizing the cable according to a service factor, it is generally recommended to upsize 125% for most loads.
 
 ---
 

@@ -98,8 +98,8 @@ Rule 28-400 — Motor Undervoltage
 
 ### Related OESC Tables
 
-Tables 27 — Motor Service Duties<br/>
-Tables 37 — Motor Insulation Class Rating<br/>
+Table 27 — Motor Service Duties<br/>
+Table 37 — Motor Insulation Class Rating<br/>
 Table D2 — DC motor Full Load Ampacity<br/>
 Table 44 — 3Φ Motor FLA at 100% PF<br/>
 Table 45 — 1Φ Motor FLA at 100% PF

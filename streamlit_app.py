@@ -2,6 +2,7 @@
 import io
 import math
 import re
+import urllib.parse
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -831,9 +832,16 @@ if access_role == "user":
 else:
     PAGES = ALL_PAGES
 
+# Handle ?table=X deep-links — must run before sidebar widgets are created
+_qp_table = st.query_params.get("table")
+if _qp_table:
+    st.session_state["_goto_table"] = str(_qp_table).upper()
+    st.session_state["_nav_page"] = "Table Library"
+    st.query_params.clear()
+
 with st.sidebar:
     st.header("Navigate")
-    page = st.radio("Go to", PAGES, index=0)
+    page = st.radio("Go to", PAGES, key="_nav_page")
 
     st.divider()
     st.header("Jurisdiction")
@@ -842,7 +850,7 @@ with st.sidebar:
     st.divider()
     st.header("Report Information")
     PROJECT_NUMBER = st.text_input("Project number", value=PROJECT_NUMBER, key="project_number")
-    DESIGNER_NAME = st.text_input("Designer name", value=DESIGNER_NAME, key="designer_name")    
+    DESIGNER_NAME = st.text_input("Designer name", value=DESIGNER_NAME, key="designer_name")
 
     st.divider()
     with st.expander("🐛 Report an Issue / Request a Feature"):
@@ -859,7 +867,6 @@ with st.sidebar:
         )
         if st.button("Send Report", key="submit_issue"):
             if issue_text.strip():
-                import urllib.parse
                 recipients = "kmurphy@jnegroup.com,DFritzsche@jnegroup.com,NZuvela@jnegroup.com"
                 subject = urllib.parse.quote(f"[{issue_type}] JNE Calculations Portal")
                 body = urllib.parse.quote(issue_text)
@@ -1036,7 +1043,7 @@ d19 -> d20 [style=invis];
         if code_mode == "OESC":
             st.subheader("OESC — Rule-based sizing (implemented per the attached OESC calculation)")
 
-            cc1, cc2, cc3 = st.columns([1.2, 1.2, 1.2], gap="large")
+            cc1, cc2, cc3 = st.columns(3, gap="large")
             with cc1:
                 xfmr_type = st.selectbox("Transformer type", ["Oil-cooled (non-dry)", "Dry-type"], index=0, key="tp_oesc_type")
             with cc2:
@@ -1048,6 +1055,11 @@ d19 -> d20 [style=invis];
 
             def show_oesc_result(label, raw):
                 _show_result(label, raw, std_list, round_to_std)
+
+            def show_inrush_checks(fla):
+                st.markdown("**Inrush withstand checks (Appendix guidance in calc):**")
+                st.write(f"12× FLA for 0.1 s: **{fmt(fla * 12, 'A')}**")
+                st.write(f"25× FLA for 0.01 s: **{fmt(fla * 25, 'A')}**")
 
             prot_config = st.radio(
                 "Protection configuration",
@@ -1130,9 +1142,7 @@ d19 -> d20 [style=invis];
                     else:
                         if is_dry:
                             show_oesc_result("Max Primary OCPD (125%)", 1.25 * Ip)
-                            st.markdown("**Inrush withstand checks (Appendix guidance in calc):**")
-                            st.write(f"12× FLA for 0.1 s: **{fmt(Ip * 12, 'A')}**")
-                            st.write(f"25× FLA for 0.01 s: **{fmt(Ip * 25, 'A')}**")
+                            show_inrush_checks(Ip)
                             st.caption("Verify manufacturer curves to confirm withstand/ride-through capability.")
                             with st.expander("Optional: show secondary reference value from worksheet style", expanded=False):
                                 if Is is None:
@@ -1163,9 +1173,7 @@ d19 -> d20 [style=invis];
                         show_oesc_result("Max Secondary OCPD (125% of secondary FLA)", 1.25 * Is)
                         show_oesc_result("Max Primary Feeder OCPD (300% of primary FLA)", 3.00 * Ip)
                         if is_dry:
-                            st.markdown("**Inrush withstand checks (Appendix guidance in calc):**")
-                            st.write(f"12× FLA for 0.1 s: **{fmt(Ip * 12, 'A')}**")
-                            st.write(f"25× FLA for 0.01 s: **{fmt(Ip * 25, 'A')}**")
+                            show_inrush_checks(Ip)
                         st.caption(
                             "This path reflects the allowance summarized in the attached OESC calculation: "
                             "secondary-side device ≤125% and upstream primary feeder device ≤300% (verify rule conditions for your installation)."
@@ -5096,7 +5104,11 @@ elif page == "Table Library":
                         return title
                     return f"Table {tid} — {title}" if title else f"Table {tid}"
 
-                selected = st.selectbox("Select a table", table_ids, format_func=_label)
+                _goto_table = st.session_state.pop("_goto_table", None)
+                if _goto_table and _goto_table in table_ids:
+                    st.session_state["_table_lib_select"] = _goto_table
+
+                selected = st.selectbox("Select a table", table_ids, key="_table_lib_select", format_func=_label)
 
                 meta = oesc_tables.get_table_meta(selected) or {}
                 st.markdown(f"### {_label(selected)}")

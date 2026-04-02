@@ -79,180 +79,220 @@ TITLE_OVERRIDES: Dict[str, str] = {
 }
 
 # ----------------------------
-# Table 13 — Rating or setting of overcurrent devices protecting conductors
+# New tables (embedded)
 # ----------------------------
-TABLE_13: Dict[str, Any] = {
-    "title": "Table 13 — Rating or setting of overcurrent devices protecting conductors",
+
+TABLE_1 = {
+    "title": "Table 1 — Ampacities for single copper conductors in free air (30°C)",
     "units": "A",
-    "columns": [
-        "Ampacity of conductor, A",
-        "Rating or setting permitted, A",
-    ],
+    "columns": ["60°C", "75°C", "90°C", "110°C", "125°C", "200°C"],
     "rows": [
-        {"Ampacity of conductor, A": "0–15", "Rating or setting permitted, A": 15},
-        {"Ampacity of conductor, A": "16–20", "Rating or setting permitted, A": 20},
-        {"Ampacity of conductor, A": "21–25", "Rating or setting permitted, A": 25},
-        {"Ampacity of conductor, A": "26–30", "Rating or setting permitted, A": 30},
-        {"Ampacity of conductor, A": "31–35", "Rating or setting permitted, A": 35},
-        {"Ampacity of conductor, A": "36–40", "Rating or setting permitted, A": 40},
-        {"Ampacity of conductor, A": "41–45", "Rating or setting permitted, A": 45},
-        {"Ampacity of conductor, A": "46–50", "Rating or setting permitted, A": 50},
-        {"Ampacity of conductor, A": "51–60", "Rating or setting permitted, A": 60},
-        {"Ampacity of conductor, A": "61–70", "Rating or setting permitted, A": 70},
-        {"Ampacity of conductor, A": "71–80", "Rating or setting permitted, A": 80},
-        {"Ampacity of conductor, A": "81–90", "Rating or setting permitted, A": 90},
-        {"Ampacity of conductor, A": "91–100", "Rating or setting permitted, A": 100},
-        {"Ampacity of conductor, A": "101–110", "Rating or setting permitted, A": 110},
-        {"Ampacity of conductor, A": "111–125", "Rating or setting permitted, A": 125},
-        {"Ampacity of conductor, A": "126–150", "Rating or setting permitted, A": 150},
-        {"Ampacity of conductor, A": "151–175", "Rating or setting permitted, A": 175},
-        {"Ampacity of conductor, A": "176–200", "Rating or setting permitted, A": 200},
-        {"Ampacity of conductor, A": "201–225", "Rating or setting permitted, A": 225},
-        {"Ampacity of conductor, A": "226–250", "Rating or setting permitted, A": 250},
-        {"Ampacity of conductor, A": "251–300", "Rating or setting permitted, A": 300},
-        {"Ampacity of conductor, A": "301–350", "Rating or setting permitted, A": 350},
-        {"Ampacity of conductor, A": "351–400", "Rating or setting permitted, A": 400},
-        {"Ampacity of conductor, A": "401–450", "Rating or setting permitted, A": 450},
-        {"Ampacity of conductor, A": "451–500", "Rating or setting permitted, A": 500},
-        {"Ampacity of conductor, A": "501–600", "Rating or setting permitted, A": 600},
-        {"Ampacity of conductor, A": "601–700", "Rating or setting permitted, A": 700},
-        {"Ampacity of conductor, A": "701–800", "Rating or setting permitted, A": 800},
+        {"Size (AWG/kcmil)": "14**", "60°C": 25, "75°C": 30, "90°C": 35, "110°C": 40, "125°C": 40, "200°C": 50},
+        {"Size (AWG/kcmil)": "12**", "60°C": 30, "75°C": 35, "90°C": 40, "110°C": 45, "125°C": 45, "200°C": 55},
+        {"Size (AWG/kcmil)": "10**", "60°C": 40, "75°C": 50, "90°C": 55, "110°C": 65, "125°C": 65, "200°C": 80},
+        {"Size (AWG/kcmil)": "8", "60°C": 60, "75°C": 70, "90°C": 80, "110°C": 90, "125°C": 95, "200°C": 115},
+        {"Size (AWG/kcmil)": "6", "60°C": 80, "75°C": 95, "90°C": 105, "110°C": 120, "125°C": 130, "200°C": 155},
+        {"Size (AWG/kcmil)": "4", "60°C": 105, "75°C": 125, "90°C": 140, "110°C": 160, "125°C": 170, "200°C": 205},
+        {"Size (AWG/kcmil)": "3", "60°C": 120, "75°C": 145, "90°C": 165, "110°C": 185, "125°C": 195, "200°C": 240},
+        {"Size (AWG/kcmil)": "2", "60°C": 140, "75°C": 170, "90°C": 190, "110°C": 215, "125°C": 230, "200°C": 280},
+        {"Size (AWG/kcmil)": "1", "60°C": 165, "75°C": 195, "90°C": 220, "110°C": 245, "125°C": 265, "200°C": 320},
+        {"Size (AWG/kcmil)": "0", "60°C": 195, "75°C": 230, "90°C": 260, "110°C": 290, "125°C": 310, "200°C": 375},
+        {"Size (AWG/kcmil)": "00", "60°C": 220, "75°C": 265, "90°C": 300, "110°C": 335, "125°C": 355, "200°C": 435},
+        {"Size (AWG/kcmil)": "000", "60°C": 260, "75°C": 310, "90°C": 350, "110°C": 390, "125°C": 420, "200°C": 510},
+        {"Size (AWG/kcmil)": "0000", "60°C": 300, "75°C": 360, "90°C": 405, "110°C": 455, "125°C": 485, "200°C": 590},
+        {"Size (AWG/kcmil)": "250", "60°C": 340, "75°C": 405, "90°C": 455, "110°C": 510, "125°C": 545, "200°C": None},
+        {"Size (AWG/kcmil)": "300", "60°C": 370, "75°C": 445, "90°C": 500, "110°C": 560, "125°C": 600, "200°C": None},
+        {"Size (AWG/kcmil)": "350", "60°C": 425, "75°C": 505, "90°C": 570, "110°C": 640, "125°C": 680, "200°C": None},
+        {"Size (AWG/kcmil)": "400", "60°C": 455, "75°C": 545, "90°C": 615, "110°C": 690, "125°C": 735, "200°C": None},
+        {"Size (AWG/kcmil)": "500", "60°C": 520, "75°C": 620, "90°C": 700, "110°C": 785, "125°C": 835, "200°C": None},
+        {"Size (AWG/kcmil)": "600", "60°C": 580, "75°C": 690, "90°C": 780, "110°C": 870, "125°C": 930, "200°C": None},
+        {"Size (AWG/kcmil)": "700", "60°C": 630, "75°C": 755, "90°C": 850, "110°C": 955, "125°C": 1020, "200°C": None},
+        {"Size (AWG/kcmil)": "750", "60°C": 655, "75°C": 785, "90°C": 885, "110°C": 990, "125°C": 1060, "200°C": None},
+        {"Size (AWG/kcmil)": "800", "60°C": 680, "75°C": 815, "90°C": 920, "110°C": 1030, "125°C": 1100, "200°C": None},
+        {"Size (AWG/kcmil)": "900", "60°C": 730, "75°C": 870, "90°C": 980, "110°C": 1100, "125°C": 1175, "200°C": None},
+        {"Size (AWG/kcmil)": "1000", "60°C": 785, "75°C": 935, "90°C": 1055, "110°C": 1180, "125°C": 1260, "200°C": None},
+        {"Size (AWG/kcmil)": "1250", "60°C": 890, "75°C": 1065, "90°C": 1200, "110°C": 1345, "125°C": None, "200°C": None},
+        {"Size (AWG/kcmil)": "1500", "60°C": 985, "75°C": 1175, "90°C": 1325, "110°C": 1485, "125°C": None, "200°C": None},
+        {"Size (AWG/kcmil)": "1750", "60°C": 1070, "75°C": 1280, "90°C": 1445, "110°C": 1620, "125°C": None, "200°C": None},
+        {"Size (AWG/kcmil)": "2000", "60°C": 1160, "75°C": 1385, "90°C": 1560, "110°C": 1750, "125°C": None, "200°C": None},
     ],
 }
 
-# ----------------------------
-# Table 25 — Overcurrent trip coils for circuit breakers and overload devices for protecting motors
-# ----------------------------
-TABLE_25: Dict[str, Any] = {
-    "title": "Table 25 — Overcurrent trip coils for circuit breakers and overload devices for protecting motors",
-    "units": None,
-    "columns": [
-        "For circuit protection — Number and location of overcurrent devices (trip coils)",
-        "System",
-        "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs",
-        "Kind of motor",
-    ],
+TABLE_2 = {
+    "title": "Table 2 — Ampacities (≤3 insulated copper conductors) in raceway/cable (30°C)",
+    "units": "A",
+    "columns": ["60°C", "75°C", "90°C", "110°C", "125°C", "200°C"],
     "rows": [
-        {
-            "For circuit protection — Number and location of overcurrent devices (trip coils)": "3-trip coils, one in each conductor",
-            "System": "3-wire, 3-phase ac, ungrounded or with grounded neutral",
-            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "3 — one in each phase, not to be connected in any neutral conductor",
-            "Kind of motor": "3-phase ac",
-        },
-        {
-            "For circuit protection — Number and location of overcurrent devices (trip coils)": "3-trip coils, one in each phase",
-            "System": "4-wire, 3-phase ac",
-            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "3 — one in each phase, not to be connected in any neutral conductor",
-            "Kind of motor": "3-phase ac",
-        },
-        {
-            "For circuit protection — Number and location of overcurrent devices (trip coils)": "2-trip coils, one in each phase†",
-            "System": "4-wire, 2-phase ac, ungrounded",
-            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "2 — one in each phase, not to be connected in any neutral or grounded conductor",
-            "Kind of motor": "2-phase ac",
-        },
-        {
-            "For circuit protection — Number and location of overcurrent devices (trip coils)": "2-trip coils, one in each outside conductor",
-            "System": "3-wire, 2-phase ac",
-            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "2 — one in each phase, not to be connected in any neutral or grounded conductor",
-            "Kind of motor": "2-phase ac",
-        },
-        {
-            "For circuit protection — Number and location of overcurrent devices (trip coils)": "4-trip coils, one in each ungrounded conductor",
-            "System": "4-wire, 2-phase ac, with neutral",
-            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "2 — one in each phase, not to be connected in any neutral or grounded conductor",
-            "Kind of motor": "2-phase ac",
-        },
-        {
-            "For circuit protection — Number and location of overcurrent devices (trip coils)": "4-trip coils, one in each ungrounded conductor",
-            "System": "5-wire, 2-phase ac",
-            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "2 — one in each phase, not to be connected in any neutral or grounded conductor",
-            "Kind of motor": "2-phase ac",
-        },
-        {
-            "For circuit protection — Number and location of overcurrent devices (trip coils)": "2-trip coils, one in each outside conductor",
-            "System": "3-wire, 1-phase ac or dc",
-            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "1 — in any conductor except a neutral or grounded conductor",
-            "Kind of motor": "1-phase ac or dc",
-        },
-        {
-            "For circuit protection — Number and location of overcurrent devices (trip coils)": "1-trip coil in each ungrounded conductor",
-            "System": "2-wire ac or dc, ungrounded or with one conductor grounded‡",
-            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "1 — in any conductor except a neutral or grounded conductor",
-            "Kind of motor": "1-phase ac or dc",
-        },
-        {
-            "For circuit protection — Number and location of overcurrent devices (trip coils)": "2-trip coils, one in each ungrounded conductor",
-            "System": "3-wire, 1-phase ac or dc, with grounded neutral",
-            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "1 — in any conductor except a neutral or grounded conductor",
-            "Kind of motor": "1-phase ac or dc",
-        },
-    ],
-    "notes": [
-        "* This does not preclude the use of other arrangements that will provide equivalent protection.",
-        "† For services, see Section 6.",
-        "‡ This does not preclude the use of one single-pole circuit breaker in each insulated conductor for the protection of an ungrounded 2-wire circuit.",
-    ],
-}
-
-# ----------------------------
-# Table 29 — Rating or setting of overcurrent devices for the protection of motor branch circuits
-# ----------------------------
-TABLE_29: Dict[str, Any] = {
-    "title": "Table 29 — Rating or setting of overcurrent devices for the protection of motor branch circuits",
-    "units": "Full load current, %",
-    "columns": [
-        "Type of motor",
-        "Maximum fuse rating — Time-delay* fuses",
-        "Maximum fuse rating — Non-time-delay",
-        "Maximum setting — Inverse-time circuit breaker",
-    ],
-    "rows": [
-        {
-            "Type of motor": "Alternating current — Single-phase all types",
-            "Maximum fuse rating — Time-delay* fuses": 175,
-            "Maximum fuse rating — Non-time-delay": 300,
-            "Maximum setting — Inverse-time circuit breaker": 250,
-        },
-        {
-            "Type of motor": "Alternating current — Squirrel-cage and synchronous: Full-voltage, resistor and reactor starting",
-            "Maximum fuse rating — Time-delay* fuses": 175,
-            "Maximum fuse rating — Non-time-delay": 300,
-            "Maximum setting — Inverse-time circuit breaker": 250,
-        },
-        {
-            "Type of motor": "Alternating current — Squirrel-cage and synchronous: Auto-transformer and star delta starting, Not more than 30 A",
-            "Maximum fuse rating — Time-delay* fuses": 175,
-            "Maximum fuse rating — Non-time-delay": 250,
-            "Maximum setting — Inverse-time circuit breaker": 200,
-        },
-        {
-            "Type of motor": "Alternating current — Squirrel-cage and synchronous: Auto-transformer and star delta starting, More than 30 A",
-            "Maximum fuse rating — Time-delay* fuses": 175,
-            "Maximum fuse rating — Non-time-delay": 200,
-            "Maximum setting — Inverse-time circuit breaker": 200,
-        },
-        {
-            "Type of motor": "Alternating current — Wound rotor",
-            "Maximum fuse rating — Time-delay* fuses": 150,
-            "Maximum fuse rating — Non-time-delay": 150,
-            "Maximum setting — Inverse-time circuit breaker": 150,
-        },
-        {
-            "Type of motor": "Direct current",
-            "Maximum fuse rating — Time-delay* fuses": 150,
-            "Maximum fuse rating — Non-time-delay": 150,
-            "Maximum setting — Inverse-time circuit breaker": 150,
-        },
-    ],
-    "notes": [
-        "* Includes time-delay “D” fuses referred to in Rule 14-200.",
-        "1) Synchronous motors of the low-torque, low-speed type (usually 450 rpm or lower), such as those used to drive reciprocating compressors, pumps, etc., and that start up unloaded, do not require a fuse rating or circuit breaker setting in excess of 200% of full load current.",
-        "2) For the use of instantaneous-trip (magnetic only) circuit breakers in motor branch circuits, see Rule 28-210.",
+        {"Size (AWG/kcmil)": "14s", "60°C": 15, "75°C": 20, "90°C": 25, "110°C": 25, "125°C": 30, "200°C": 35},
+        {"Size (AWG/kcmil)": "12s", "60°C": 20, "75°C": 25, "90°C": 30, "110°C": 30, "125°C": 35, "200°C": 40},
+        {"Size (AWG/kcmil)": "10s", "60°C": 30, "75°C": 35, "90°C": 40, "110°C": 45, "125°C": 45, "200°C": 60},
+        {"Size (AWG/kcmil)": "8", "60°C": 40, "75°C": 50, "90°C": 55, "110°C": 65, "125°C": 65, "200°C": 80},
+        {"Size (AWG/kcmil)": "6", "60°C": 55, "75°C": 65, "90°C": 75, "110°C": 80, "125°C": 90, "200°C": 110},
+        {"Size (AWG/kcmil)": "4", "60°C": 70, "75°C": 85, "90°C": 95, "110°C": 105, "125°C": 115, "200°C": 140},
+        {"Size (AWG/kcmil)": "3", "60°C": 85, "75°C": 100, "90°C": 115, "110°C": 125, "125°C": 135, "200°C": 165},
+        {"Size (AWG/kcmil)": "2", "60°C": 95, "75°C": 115, "90°C": 130, "110°C": 145, "125°C": 155, "200°C": 190},
+        {"Size (AWG/kcmil)": "1", "60°C": 110, "75°C": 130, "90°C": 145, "110°C": 165, "125°C": 175, "200°C": 215},
+        {"Size (AWG/kcmil)": "0", "60°C": 125, "75°C": 150, "90°C": 170, "110°C": 190, "125°C": 200, "200°C": 245},
+        {"Size (AWG/kcmil)": "00", "60°C": 145, "75°C": 175, "90°C": 195, "110°C": 220, "125°C": 235, "200°C": 290},
+        {"Size (AWG/kcmil)": "000", "60°C": 165, "75°C": 200, "90°C": 225, "110°C": 255, "125°C": 270, "200°C": 330},
+        {"Size (AWG/kcmil)": "0000", "60°C": 195, "75°C": 230, "90°C": 260, "110°C": 290, "125°C": 310, "200°C": 380},
+        {"Size (AWG/kcmil)": "250", "60°C": 215, "75°C": 255, "90°C": 290, "110°C": 320, "125°C": 345, "200°C": None},
+        {"Size (AWG/kcmil)": "300", "60°C": 240, "75°C": 285, "90°C": 320, "110°C": 360, "125°C": 385, "200°C": None},
+        {"Size (AWG/kcmil)": "350", "60°C": 260, "75°C": 310, "90°C": 350, "110°C": 390, "125°C": 420, "200°C": None},
+        {"Size (AWG/kcmil)": "400", "60°C": 280, "75°C": 335, "90°C": 380, "110°C": 425, "125°C": 450, "200°C": None},
+        {"Size (AWG/kcmil)": "500", "60°C": 320, "75°C": 380, "90°C": 430, "110°C": 480, "125°C": 510, "200°C": None},
+        {"Size (AWG/kcmil)": "600", "60°C": 350, "75°C": 420, "90°C": 475, "110°C": 530, "125°C": 565, "200°C": None},
+        {"Size (AWG/kcmil)": "700", "60°C": 385, "75°C": 460, "90°C": 520, "110°C": 580, "125°C": 620, "200°C": None},
+        {"Size (AWG/kcmil)": "750", "60°C": 400, "75°C": 475, "90°C": 535, "110°C": 600, "125°C": 640, "200°C": None},
+        {"Size (AWG/kcmil)": "800", "60°C": 410, "75°C": 490, "90°C": 555, "110°C": 620, "125°C": 660, "200°C": None},
+        {"Size (AWG/kcmil)": "900", "60°C": 435, "75°C": 520, "90°C": 585, "110°C": 655, "125°C": 700, "200°C": None},
+        {"Size (AWG/kcmil)": "1000", "60°C": 455, "75°C": 545, "90°C": 615, "110°C": 690, "125°C": 735, "200°C": None},
+        {"Size (AWG/kcmil)": "1250", "60°C": 495, "75°C": 590, "90°C": 665, "110°C": 745, "125°C": None, "200°C": None},
+        {"Size (AWG/kcmil)": "1500", "60°C": 525, "75°C": 625, "90°C": 705, "110°C": 790, "125°C": None, "200°C": None},
+        {"Size (AWG/kcmil)": "1750", "60°C": 545, "75°C": 650, "90°C": 735, "110°C": 820, "125°C": None, "200°C": None},
+        {"Size (AWG/kcmil)": "2000", "60°C": 555, "75°C": 665, "90°C": 750, "110°C": 840, "125°C": None, "200°C": None},
     ],
 }
 
 
+TABLE_3 = {
+    "title": "Table 3 — Ampacities for single aluminum conductors in free air (30°C)",
+    "units": "A",
+    "columns": ["60°C", "75°C", "90°C", "110°C", "125°C", "200°C"],
+    "rows": [
+        {"Size (AWG/kcmil)": "12s", "60°C": 25, "75°C": 30, "90°C": 35, "110°C": 40, "125°C": 40, "200°C": 50},
+        {"Size (AWG/kcmil)": "10s", "60°C": 35, "75°C": 40, "90°C": 45, "110°C": 50, "125°C": 55, "200°C": 65},
+        {"Size (AWG/kcmil)": "8", "60°C": 45, "75°C": 55, "90°C": 60, "110°C": 70, "125°C": 75, "200°C": 90},
+        {"Size (AWG/kcmil)": "6", "60°C": 65, "75°C": 75, "90°C": 85, "110°C": 95, "125°C": 100, "200°C": 125},
+        {"Size (AWG/kcmil)": "4", "60°C": 85, "75°C": 100, "90°C": 115, "110°C": 125, "125°C": 135, "200°C": 165},
+        {"Size (AWG/kcmil)": "3", "60°C": 95, "75°C": 115, "90°C": 130, "110°C": 145, "125°C": 155, "200°C": 190},
+        {"Size (AWG/kcmil)": "2", "60°C": 115, "75°C": 135, "90°C": 150, "110°C": 170, "125°C": 180, "200°C": 220},
+        {"Size (AWG/kcmil)": "1", "60°C": 130, "75°C": 155, "90°C": 175, "110°C": 195, "125°C": 210, "200°C": 255},
+        {"Size (AWG/kcmil)": "0", "60°C": 150, "75°C": 180, "90°C": 205, "110°C": 225, "125°C": 245, "200°C": 295},
+        {"Size (AWG/kcmil)": "00", "60°C": 175, "75°C": 210, "90°C": 235, "110°C": 265, "125°C": 285, "200°C": 345},
+        {"Size (AWG/kcmil)": "000", "60°C": 200, "75°C": 240, "90°C": 270, "110°C": 305, "125°C": 325, "200°C": 395},
+        {"Size (AWG/kcmil)": "0000", "60°C": 235, "75°C": 280, "90°C": 315, "110°C": 355, "125°C": 375, "200°C": 460},
+        {"Size (AWG/kcmil)": "250", "60°C": 265, "75°C": 315, "90°C": 355, "110°C": 400, "125°C": 425, "200°C": None},
+        {"Size (AWG/kcmil)": "300", "60°C": 295, "75°C": 350, "90°C": 395, "110°C": 440, "125°C": 470, "200°C": None},
+        {"Size (AWG/kcmil)": "350", "60°C": 330, "75°C": 395, "90°C": 445, "110°C": 500, "125°C": 535, "200°C": None},
+        {"Size (AWG/kcmil)": "400", "60°C": 355, "75°C": 425, "90°C": 480, "110°C": 535, "125°C": 575, "200°C": None},
+        {"Size (AWG/kcmil)": "500", "60°C": 405, "75°C": 485, "90°C": 545, "110°C": 615, "125°C": 655, "200°C": None},
+        {"Size (AWG/kcmil)": "600", "60°C": 455, "75°C": 545, "90°C": 615, "110°C": 690, "125°C": 735, "200°C": None},
+        {"Size (AWG/kcmil)": "700", "60°C": 500, "75°C": 595, "90°C": 670, "110°C": 750, "125°C": 800, "200°C": None},
+        {"Size (AWG/kcmil)": "750", "60°C": 520, "75°C": 620, "90°C": 700, "110°C": 785, "125°C": 835, "200°C": None},
+        {"Size (AWG/kcmil)": "800", "60°C": 540, "75°C": 645, "90°C": 725, "110°C": 815, "125°C": 870, "200°C": None},
+        {"Size (AWG/kcmil)": "900", "60°C": 585, "75°C": 700, "90°C": 790, "110°C": 885, "125°C": 945, "200°C": None},
+        {"Size (AWG/kcmil)": "1000", "60°C": 630, "75°C": 750, "90°C": 845, "110°C": 950, "125°C": 1010, "200°C": None},
+        {"Size (AWG/kcmil)": "1250", "60°C": 715, "75°C": 855, "90°C": 965, "110°C": 1080, "125°C": None, "200°C": None},
+        {"Size (AWG/kcmil)": "1500", "60°C": 795, "75°C": 950, "90°C": 1070, "110°C": 1200, "125°C": None, "200°C": None},
+        {"Size (AWG/kcmil)": "1750", "60°C": 880, "75°C": 1050, "90°C": 1185, "110°C": 1325, "125°C": None, "200°C": None},
+        {"Size (AWG/kcmil)": "2000", "60°C": 965, "75°C": 1150, "90°C": 1295, "110°C": 1455, "125°C": None, "200°C": None},
+    ],
+}
+
+
+TABLE_4 = {
+    "title": "Table 4 — Ampacities for not more than three insulated aluminum conductors in raceway/cable (30°C)",
+    "units": "A",
+    "columns": ["60°C", "75°C", "90°C", "110°C", "125°C", "200°C"],
+    "rows": [
+        {"Size (AWG/kcmil)": "12s", "60°C": 15, "75°C": 20, "90°C": 25, "110°C": 25, "125°C": 25, "200°C": 35},
+        {"Size (AWG/kcmil)": "10s", "60°C": 25, "75°C": 30, "90°C": 35, "110°C": 40, "125°C": 40, "200°C": 50},
+        {"Size (AWG/kcmil)": "8", "60°C": 35, "75°C": 40, "90°C": 45, "110°C": 50, "125°C": 55, "200°C": 65},
+        {"Size (AWG/kcmil)": "6", "60°C": 40, "75°C": 50, "90°C": 55, "110°C": 65, "125°C": 70, "200°C": 80},
+        {"Size (AWG/kcmil)": "4", "60°C": 55, "75°C": 65, "90°C": 75, "110°C": 80, "125°C": 90, "200°C": 105},
+        {"Size (AWG/kcmil)": "3", "60°C": 65, "75°C": 75, "90°C": 85, "110°C": 95, "125°C": 100, "200°C": 125},
+        {"Size (AWG/kcmil)": "2", "60°C": 75, "75°C": 90, "90°C": 100, "110°C": 115, "125°C": 120, "200°C": 150},
+        {"Size (AWG/kcmil)": "1", "60°C": 85, "75°C": 100, "90°C": 115, "110°C": 125, "125°C": 135, "200°C": 165},
+        {"Size (AWG/kcmil)": "0", "60°C": 100, "75°C": 120, "90°C": 135, "110°C": 150, "125°C": 160, "200°C": 195},
+        {"Size (AWG/kcmil)": "00", "60°C": 115, "75°C": 135, "90°C": 150, "110°C": 170, "125°C": 180, "200°C": 220},
+        {"Size (AWG/kcmil)": "000", "60°C": 130, "75°C": 155, "90°C": 175, "110°C": 195, "125°C": 210, "200°C": 255},
+        {"Size (AWG/kcmil)": "0000", "60°C": 150, "75°C": 180, "90°C": 205, "110°C": 225, "125°C": 245, "200°C": 295},
+        {"Size (AWG/kcmil)": "250", "60°C": 170, "75°C": 205, "90°C": 230, "110°C": 260, "125°C": 275, "200°C": None},
+        {"Size (AWG/kcmil)": "300", "60°C": 195, "75°C": 230, "90°C": 260, "110°C": 290, "125°C": 310, "200°C": None},
+        {"Size (AWG/kcmil)": "350", "60°C": 210, "75°C": 250, "90°C": 280, "110°C": 315, "125°C": 335, "200°C": None},
+        {"Size (AWG/kcmil)": "400", "60°C": 225, "75°C": 270, "90°C": 305, "110°C": 340, "125°C": 365, "200°C": None},
+        {"Size (AWG/kcmil)": "500", "60°C": 260, "75°C": 310, "90°C": 350, "110°C": 390, "125°C": 420, "200°C": None},
+        {"Size (AWG/kcmil)": "600", "60°C": 285, "75°C": 340, "90°C": 385, "110°C": 430, "125°C": 460, "200°C": None},
+        {"Size (AWG/kcmil)": "700", "60°C": 315, "75°C": 375, "90°C": 425, "110°C": 475, "125°C": 505, "200°C": None},
+        {"Size (AWG/kcmil)": "750", "60°C": 320, "75°C": 385, "90°C": 435, "110°C": 485, "125°C": 520, "200°C": None},
+        {"Size (AWG/kcmil)": "800", "60°C": 330, "75°C": 395, "90°C": 445, "110°C": 500, "125°C": 535, "200°C": None},
+        {"Size (AWG/kcmil)": "900", "60°C": 355, "75°C": 425, "90°C": 480, "110°C": 535, "125°C": 575, "200°C": None},
+        {"Size (AWG/kcmil)": "1000", "60°C": 375, "75°C": 445, "90°C": 500, "110°C": 560, "125°C": 600, "200°C": None},
+        {"Size (AWG/kcmil)": "1250", "60°C": 405, "75°C": 485, "90°C": 545, "110°C": 615, "125°C": None, "200°C": None},
+        {"Size (AWG/kcmil)": "1500", "60°C": 435, "75°C": 520, "90°C": 585, "110°C": 655, "125°C": None, "200°C": None},
+        {"Size (AWG/kcmil)": "1750", "60°C": 455, "75°C": 545, "90°C": 615, "110°C": 690, "125°C": None, "200°C": None},
+        {"Size (AWG/kcmil)": "2000", "60°C": 470, "75°C": 560, "90°C": 630, "110°C": 710, "125°C": None, "200°C": None},
+    ],
+}
+
+TABLE_5A = {
+    "title": "Table 5A — Ampacity correction factors for ambient temperatures above 30°C",
+    "units": "factor",
+    "columns": ["60°C", "75°C", "90°C", "105°C", "110°C", "125°C", "150°C", "200°C", "250°C"],
+    "rows": [
+        {"Ambient (°C)": 35, "60°C": 0.91, "75°C": 0.94, "90°C": 0.96, "105°C": 0.97, "110°C": 0.97, "125°C": 0.97, "150°C": 0.98, "200°C": 0.99, "250°C": 0.99},
+        {"Ambient (°C)": 40, "60°C": 0.82, "75°C": 0.88, "90°C": 0.91, "105°C": 0.93, "110°C": 0.94, "125°C": 0.95, "150°C": 0.96, "200°C": 0.97, "250°C": 0.98},
+        {"Ambient (°C)": 45, "60°C": 0.71, "75°C": 0.82, "90°C": 0.87, "105°C": 0.89, "110°C": 0.90, "125°C": 0.92, "150°C": 0.93, "200°C": 0.95, "250°C": 0.97},
+        {"Ambient (°C)": 50, "60°C": 0.58, "75°C": 0.75, "90°C": 0.82, "105°C": 0.86, "110°C": 0.87, "125°C": 0.89, "150°C": 0.91, "200°C": 0.94, "250°C": 0.95},
+        {"Ambient (°C)": 55, "60°C": 0.41, "75°C": 0.67, "90°C": 0.76, "105°C": 0.82, "110°C": 0.83, "125°C": 0.86, "150°C": 0.89, "200°C": 0.92, "250°C": 0.94},
+        {"Ambient (°C)": 60, "60°C": None, "75°C": 0.58, "90°C": 0.71, "105°C": 0.77, "110°C": 0.79, "125°C": 0.83, "150°C": 0.87, "200°C": 0.91, "250°C": 0.93},
+        {"Ambient (°C)": 65, "60°C": None, "75°C": 0.47, "90°C": 0.65, "105°C": 0.73, "110°C": 0.75, "125°C": 0.79, "150°C": 0.84, "200°C": 0.89, "250°C": 0.92},
+        {"Ambient (°C)": 70, "60°C": None, "75°C": 0.33, "90°C": 0.58, "105°C": 0.68, "110°C": 0.71, "125°C": 0.76, "150°C": 0.82, "200°C": 0.87, "250°C": 0.90},
+        {"Ambient (°C)": 75, "60°C": None, "75°C": None, "90°C": 0.50, "105°C": 0.63, "110°C": 0.66, "125°C": 0.73, "150°C": 0.79, "200°C": 0.86, "250°C": 0.89},
+        {"Ambient (°C)": 80, "60°C": None, "75°C": None, "90°C": 0.41, "105°C": 0.58, "110°C": 0.61, "125°C": 0.69, "150°C": 0.76, "200°C": 0.84, "250°C": 0.88},
+        {"Ambient (°C)": 90, "60°C": None, "75°C": None, "90°C": None, "105°C": 0.45, "110°C": 0.50, "125°C": 0.61, "150°C": 0.71, "200°C": 0.80, "250°C": 0.85},
+        {"Ambient (°C)": 100, "60°C": None, "75°C": None, "90°C": None, "105°C": 0.26, "110°C": 0.35, "125°C": 0.51, "150°C": 0.65, "200°C": 0.77, "250°C": 0.83},
+        {"Ambient (°C)": 110, "60°C": None, "75°C": None, "90°C": None, "105°C": None, "110°C": None, "125°C": 0.40, "150°C": 0.58, "200°C": 0.73, "250°C": 0.80},
+        {"Ambient (°C)": 120, "60°C": None, "75°C": None, "90°C": None, "105°C": None, "110°C": None, "125°C": 0.23, "150°C": 0.50, "200°C": 0.69, "250°C": 0.77},
+        {"Ambient (°C)": 130, "60°C": None, "75°C": None, "90°C": None, "105°C": None, "110°C": None, "125°C": None, "150°C": 0.41, "200°C": 0.64, "250°C": 0.74},
+        {"Ambient (°C)": 140, "60°C": None, "75°C": None, "90°C": None, "105°C": None, "110°C": None, "125°C": None, "150°C": 0.29, "200°C": 0.59, "250°C": 0.71},
+    ],
+}
+
+TABLE_5B = {
+    "title": "Table 5B — Correction factors (Tables 1 & 3) for 2–4 single insulated conductors (spaced <25%)",
+    "units": "factor",
+    "columns": ["Number of conductors", "Correction factor"],
+    "rows": [
+        {"Number of conductors": 2, "Correction factor": 0.90},
+        {"Number of conductors": 3, "Correction factor": 0.85},
+        {"Number of conductors": 4, "Correction factor": 0.80},
+    ],
+}
+
+TABLE_5C = {
+    "title": "Table 5C — Ampacity correction factors for Tables 2 & 4 (number of insulated conductors)",
+    "units": "factor",
+    "columns": ["Number of insulated conductors", "Ampacity correction factor"],
+    "rows": [
+        {"Number of insulated conductors": "1–3", "Ampacity correction factor": 1.00},
+        {"Number of insulated conductors": "4–6", "Ampacity correction factor": 0.80},
+        {"Number of insulated conductors": "7–24", "Ampacity correction factor": 0.70},
+        {"Number of insulated conductors": "25–42", "Ampacity correction factor": 0.60},
+        {"Number of insulated conductors": "43 and up", "Ampacity correction factor": 0.50},
+    ],
+}
+
+TABLE_5D = {
+    "title": "Table 5D — Current rating correction factors where spacings are maintained (ventilated/ladder trays)",
+    "units": "factor",
+    "columns": ["Vertical layers", "Horizontal count", "Correction factor"],
+    "rows": [
+        {"Vertical layers": 1, "Horizontal count": 1, "Correction factor": 1.00},
+        {"Vertical layers": 1, "Horizontal count": 2, "Correction factor": 0.93},
+        {"Vertical layers": 1, "Horizontal count": 3, "Correction factor": 0.87},
+        {"Vertical layers": 1, "Horizontal count": 4, "Correction factor": 0.84},
+        {"Vertical layers": 1, "Horizontal count": 5, "Correction factor": 0.83},
+        {"Vertical layers": 1, "Horizontal count": 6, "Correction factor": 0.82},
+        {"Vertical layers": 2, "Horizontal count": 1, "Correction factor": 0.89},
+        {"Vertical layers": 2, "Horizontal count": 2, "Correction factor": 0.83},
+        {"Vertical layers": 2, "Horizontal count": 3, "Correction factor": 0.79},
+        {"Vertical layers": 2, "Horizontal count": 4, "Correction factor": 0.76},
+        {"Vertical layers": 2, "Horizontal count": 5, "Correction factor": 0.75},
+        {"Vertical layers": 2, "Horizontal count": 6, "Correction factor": 0.74},
+    ],
+}
 
 # --------------------------------------------------------------------------------------
 # Table 6A (600 V, unjacketed) — extracted from provided images
@@ -752,6 +792,36 @@ def get_table_diameter_mm(
     except Exception:
         return None
 
+
+TABLE_7 = {
+    "title": "Table 7 — Radius of conduit or tubing bends",
+    "units": "mm",
+    "columns": ["Size (mm)", "Minimum radius to centre (mm)"],
+    "rows": [
+        {"Size (mm)": 16, "Minimum radius to centre (mm)": 102},
+        {"Size (mm)": 21, "Minimum radius to centre (mm)": 114},
+        {"Size (mm)": 27, "Minimum radius to centre (mm)": 146},
+        {"Size (mm)": 35, "Minimum radius to centre (mm)": 184},
+        {"Size (mm)": 41, "Minimum radius to centre (mm)": 210},
+        {"Size (mm)": 53, "Minimum radius to centre (mm)": 241},
+        {"Size (mm)": 63, "Minimum radius to centre (mm)": 267},
+        {"Size (mm)": 78, "Minimum radius to centre (mm)": 330},
+        {"Size (mm)": 91, "Minimum radius to centre (mm)": 381},
+        {"Size (mm)": 103, "Minimum radius to centre (mm)": 406},
+        {"Size (mm)": 129, "Minimum radius to centre (mm)": 610},
+        {"Size (mm)": 155, "Minimum radius to centre (mm)": 762},
+    ],
+}
+
+TABLE_8 = {
+    "title": "Table 8 — Maximum allowable conduit/tubing fill (%)",
+    "units": "%",
+    "columns": ["Cable type", "1", "2", "3", "4", "Over 4"],
+    "rows": [
+        {"Cable type": "Insulated conductors or multi-conductor cables (not lead-sheathed)", "1": 53, "2": 31, "3": 40, "4": 40, "Over 4": 40},
+        {"Cable type": "Lead-sheathed single conductor cables or multi-conductor cables", "1": 55, "2": 30, "3": 40, "4": 38, "Over 4": 35},
+    ],
+}
 
 # --------------------------------------------------------------------------------------
 # Table 9A — Internal diameter and cross-sectional areas of trade conduit and tubing
@@ -1900,248 +1970,191 @@ def _df(rows: List[Dict[str, Any]]):
     return pd.DataFrame(rows)
 
 # ----------------------------
-# New tables (embedded)
+# Table 13 — Rating or setting of overcurrent devices protecting conductors
 # ----------------------------
-
-TABLE_1 = {
-    "title": "Table 1 — Ampacities for single copper conductors in free air (30°C)",
+TABLE_13: Dict[str, Any] = {
+    "title": "Table 13 — Rating or setting of overcurrent devices protecting conductors",
     "units": "A",
-    "columns": ["60°C", "75°C", "90°C", "110°C", "125°C", "200°C"],
+    "columns": [
+        "Ampacity of conductor, A",
+        "Rating or setting permitted, A",
+    ],
     "rows": [
-        {"Size (AWG/kcmil)": "14**", "60°C": 25, "75°C": 30, "90°C": 35, "110°C": 40, "125°C": 40, "200°C": 50},
-        {"Size (AWG/kcmil)": "12**", "60°C": 30, "75°C": 35, "90°C": 40, "110°C": 45, "125°C": 45, "200°C": 55},
-        {"Size (AWG/kcmil)": "10**", "60°C": 40, "75°C": 50, "90°C": 55, "110°C": 65, "125°C": 65, "200°C": 80},
-        {"Size (AWG/kcmil)": "8", "60°C": 60, "75°C": 70, "90°C": 80, "110°C": 90, "125°C": 95, "200°C": 115},
-        {"Size (AWG/kcmil)": "6", "60°C": 80, "75°C": 95, "90°C": 105, "110°C": 120, "125°C": 130, "200°C": 155},
-        {"Size (AWG/kcmil)": "4", "60°C": 105, "75°C": 125, "90°C": 140, "110°C": 160, "125°C": 170, "200°C": 205},
-        {"Size (AWG/kcmil)": "3", "60°C": 120, "75°C": 145, "90°C": 165, "110°C": 185, "125°C": 195, "200°C": 240},
-        {"Size (AWG/kcmil)": "2", "60°C": 140, "75°C": 170, "90°C": 190, "110°C": 215, "125°C": 230, "200°C": 280},
-        {"Size (AWG/kcmil)": "1", "60°C": 165, "75°C": 195, "90°C": 220, "110°C": 245, "125°C": 265, "200°C": 320},
-        {"Size (AWG/kcmil)": "0", "60°C": 195, "75°C": 230, "90°C": 260, "110°C": 290, "125°C": 310, "200°C": 375},
-        {"Size (AWG/kcmil)": "00", "60°C": 220, "75°C": 265, "90°C": 300, "110°C": 335, "125°C": 355, "200°C": 435},
-        {"Size (AWG/kcmil)": "000", "60°C": 260, "75°C": 310, "90°C": 350, "110°C": 390, "125°C": 420, "200°C": 510},
-        {"Size (AWG/kcmil)": "0000", "60°C": 300, "75°C": 360, "90°C": 405, "110°C": 455, "125°C": 485, "200°C": 590},
-        {"Size (AWG/kcmil)": "250", "60°C": 340, "75°C": 405, "90°C": 455, "110°C": 510, "125°C": 545, "200°C": None},
-        {"Size (AWG/kcmil)": "300", "60°C": 370, "75°C": 445, "90°C": 500, "110°C": 560, "125°C": 600, "200°C": None},
-        {"Size (AWG/kcmil)": "350", "60°C": 425, "75°C": 505, "90°C": 570, "110°C": 640, "125°C": 680, "200°C": None},
-        {"Size (AWG/kcmil)": "400", "60°C": 455, "75°C": 545, "90°C": 615, "110°C": 690, "125°C": 735, "200°C": None},
-        {"Size (AWG/kcmil)": "500", "60°C": 520, "75°C": 620, "90°C": 700, "110°C": 785, "125°C": 835, "200°C": None},
-        {"Size (AWG/kcmil)": "600", "60°C": 580, "75°C": 690, "90°C": 780, "110°C": 870, "125°C": 930, "200°C": None},
-        {"Size (AWG/kcmil)": "700", "60°C": 630, "75°C": 755, "90°C": 850, "110°C": 955, "125°C": 1020, "200°C": None},
-        {"Size (AWG/kcmil)": "750", "60°C": 655, "75°C": 785, "90°C": 885, "110°C": 990, "125°C": 1060, "200°C": None},
-        {"Size (AWG/kcmil)": "800", "60°C": 680, "75°C": 815, "90°C": 920, "110°C": 1030, "125°C": 1100, "200°C": None},
-        {"Size (AWG/kcmil)": "900", "60°C": 730, "75°C": 870, "90°C": 980, "110°C": 1100, "125°C": 1175, "200°C": None},
-        {"Size (AWG/kcmil)": "1000", "60°C": 785, "75°C": 935, "90°C": 1055, "110°C": 1180, "125°C": 1260, "200°C": None},
-        {"Size (AWG/kcmil)": "1250", "60°C": 890, "75°C": 1065, "90°C": 1200, "110°C": 1345, "125°C": None, "200°C": None},
-        {"Size (AWG/kcmil)": "1500", "60°C": 985, "75°C": 1175, "90°C": 1325, "110°C": 1485, "125°C": None, "200°C": None},
-        {"Size (AWG/kcmil)": "1750", "60°C": 1070, "75°C": 1280, "90°C": 1445, "110°C": 1620, "125°C": None, "200°C": None},
-        {"Size (AWG/kcmil)": "2000", "60°C": 1160, "75°C": 1385, "90°C": 1560, "110°C": 1750, "125°C": None, "200°C": None},
+        {"Ampacity of conductor, A": "0–15", "Rating or setting permitted, A": 15},
+        {"Ampacity of conductor, A": "16–20", "Rating or setting permitted, A": 20},
+        {"Ampacity of conductor, A": "21–25", "Rating or setting permitted, A": 25},
+        {"Ampacity of conductor, A": "26–30", "Rating or setting permitted, A": 30},
+        {"Ampacity of conductor, A": "31–35", "Rating or setting permitted, A": 35},
+        {"Ampacity of conductor, A": "36–40", "Rating or setting permitted, A": 40},
+        {"Ampacity of conductor, A": "41–45", "Rating or setting permitted, A": 45},
+        {"Ampacity of conductor, A": "46–50", "Rating or setting permitted, A": 50},
+        {"Ampacity of conductor, A": "51–60", "Rating or setting permitted, A": 60},
+        {"Ampacity of conductor, A": "61–70", "Rating or setting permitted, A": 70},
+        {"Ampacity of conductor, A": "71–80", "Rating or setting permitted, A": 80},
+        {"Ampacity of conductor, A": "81–90", "Rating or setting permitted, A": 90},
+        {"Ampacity of conductor, A": "91–100", "Rating or setting permitted, A": 100},
+        {"Ampacity of conductor, A": "101–110", "Rating or setting permitted, A": 110},
+        {"Ampacity of conductor, A": "111–125", "Rating or setting permitted, A": 125},
+        {"Ampacity of conductor, A": "126–150", "Rating or setting permitted, A": 150},
+        {"Ampacity of conductor, A": "151–175", "Rating or setting permitted, A": 175},
+        {"Ampacity of conductor, A": "176–200", "Rating or setting permitted, A": 200},
+        {"Ampacity of conductor, A": "201–225", "Rating or setting permitted, A": 225},
+        {"Ampacity of conductor, A": "226–250", "Rating or setting permitted, A": 250},
+        {"Ampacity of conductor, A": "251–300", "Rating or setting permitted, A": 300},
+        {"Ampacity of conductor, A": "301–350", "Rating or setting permitted, A": 350},
+        {"Ampacity of conductor, A": "351–400", "Rating or setting permitted, A": 400},
+        {"Ampacity of conductor, A": "401–450", "Rating or setting permitted, A": 450},
+        {"Ampacity of conductor, A": "451–500", "Rating or setting permitted, A": 500},
+        {"Ampacity of conductor, A": "501–600", "Rating or setting permitted, A": 600},
+        {"Ampacity of conductor, A": "601–700", "Rating or setting permitted, A": 700},
+        {"Ampacity of conductor, A": "701–800", "Rating or setting permitted, A": 800},
     ],
 }
 
-TABLE_2 = {
-    "title": "Table 2 — Ampacities (≤3 insulated copper conductors) in raceway/cable (30°C)",
-    "units": "A",
-    "columns": ["60°C", "75°C", "90°C", "110°C", "125°C", "200°C"],
+# ----------------------------
+# Table 25 — Overcurrent trip coils for circuit breakers and overload devices for protecting motors
+# ----------------------------
+TABLE_25: Dict[str, Any] = {
+    "title": "Table 25 — Overcurrent trip coils for circuit breakers and overload devices for protecting motors",
+    "units": None,
+    "columns": [
+        "For circuit protection — Number and location of overcurrent devices (trip coils)",
+        "System",
+        "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs",
+        "Kind of motor",
+    ],
     "rows": [
-        {"Size (AWG/kcmil)": "14s", "60°C": 15, "75°C": 20, "90°C": 25, "110°C": 25, "125°C": 30, "200°C": 35},
-        {"Size (AWG/kcmil)": "12s", "60°C": 20, "75°C": 25, "90°C": 30, "110°C": 30, "125°C": 35, "200°C": 40},
-        {"Size (AWG/kcmil)": "10s", "60°C": 30, "75°C": 35, "90°C": 40, "110°C": 45, "125°C": 45, "200°C": 60},
-        {"Size (AWG/kcmil)": "8", "60°C": 40, "75°C": 50, "90°C": 55, "110°C": 65, "125°C": 65, "200°C": 80},
-        {"Size (AWG/kcmil)": "6", "60°C": 55, "75°C": 65, "90°C": 75, "110°C": 80, "125°C": 90, "200°C": 110},
-        {"Size (AWG/kcmil)": "4", "60°C": 70, "75°C": 85, "90°C": 95, "110°C": 105, "125°C": 115, "200°C": 140},
-        {"Size (AWG/kcmil)": "3", "60°C": 85, "75°C": 100, "90°C": 115, "110°C": 125, "125°C": 135, "200°C": 165},
-        {"Size (AWG/kcmil)": "2", "60°C": 95, "75°C": 115, "90°C": 130, "110°C": 145, "125°C": 155, "200°C": 190},
-        {"Size (AWG/kcmil)": "1", "60°C": 110, "75°C": 130, "90°C": 145, "110°C": 165, "125°C": 175, "200°C": 215},
-        {"Size (AWG/kcmil)": "0", "60°C": 125, "75°C": 150, "90°C": 170, "110°C": 190, "125°C": 200, "200°C": 245},
-        {"Size (AWG/kcmil)": "00", "60°C": 145, "75°C": 175, "90°C": 195, "110°C": 220, "125°C": 235, "200°C": 290},
-        {"Size (AWG/kcmil)": "000", "60°C": 165, "75°C": 200, "90°C": 225, "110°C": 255, "125°C": 270, "200°C": 330},
-        {"Size (AWG/kcmil)": "0000", "60°C": 195, "75°C": 230, "90°C": 260, "110°C": 290, "125°C": 310, "200°C": 380},
-        {"Size (AWG/kcmil)": "250", "60°C": 215, "75°C": 255, "90°C": 290, "110°C": 320, "125°C": 345, "200°C": None},
-        {"Size (AWG/kcmil)": "300", "60°C": 240, "75°C": 285, "90°C": 320, "110°C": 360, "125°C": 385, "200°C": None},
-        {"Size (AWG/kcmil)": "350", "60°C": 260, "75°C": 310, "90°C": 350, "110°C": 390, "125°C": 420, "200°C": None},
-        {"Size (AWG/kcmil)": "400", "60°C": 280, "75°C": 335, "90°C": 380, "110°C": 425, "125°C": 450, "200°C": None},
-        {"Size (AWG/kcmil)": "500", "60°C": 320, "75°C": 380, "90°C": 430, "110°C": 480, "125°C": 510, "200°C": None},
-        {"Size (AWG/kcmil)": "600", "60°C": 350, "75°C": 420, "90°C": 475, "110°C": 530, "125°C": 565, "200°C": None},
-        {"Size (AWG/kcmil)": "700", "60°C": 385, "75°C": 460, "90°C": 520, "110°C": 580, "125°C": 620, "200°C": None},
-        {"Size (AWG/kcmil)": "750", "60°C": 400, "75°C": 475, "90°C": 535, "110°C": 600, "125°C": 640, "200°C": None},
-        {"Size (AWG/kcmil)": "800", "60°C": 410, "75°C": 490, "90°C": 555, "110°C": 620, "125°C": 660, "200°C": None},
-        {"Size (AWG/kcmil)": "900", "60°C": 435, "75°C": 520, "90°C": 585, "110°C": 655, "125°C": 700, "200°C": None},
-        {"Size (AWG/kcmil)": "1000", "60°C": 455, "75°C": 545, "90°C": 615, "110°C": 690, "125°C": 735, "200°C": None},
-        {"Size (AWG/kcmil)": "1250", "60°C": 495, "75°C": 590, "90°C": 665, "110°C": 745, "125°C": None, "200°C": None},
-        {"Size (AWG/kcmil)": "1500", "60°C": 525, "75°C": 625, "90°C": 705, "110°C": 790, "125°C": None, "200°C": None},
-        {"Size (AWG/kcmil)": "1750", "60°C": 545, "75°C": 650, "90°C": 735, "110°C": 820, "125°C": None, "200°C": None},
-        {"Size (AWG/kcmil)": "2000", "60°C": 555, "75°C": 665, "90°C": 750, "110°C": 840, "125°C": None, "200°C": None},
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "3-trip coils, one in each conductor",
+            "System": "3-wire, 3-phase ac, ungrounded or with grounded neutral",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "3 — one in each phase, not to be connected in any neutral conductor",
+            "Kind of motor": "3-phase ac",
+        },
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "3-trip coils, one in each phase",
+            "System": "4-wire, 3-phase ac",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "3 — one in each phase, not to be connected in any neutral conductor",
+            "Kind of motor": "3-phase ac",
+        },
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "2-trip coils, one in each phase†",
+            "System": "4-wire, 2-phase ac, ungrounded",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "2 — one in each phase, not to be connected in any neutral or grounded conductor",
+            "Kind of motor": "2-phase ac",
+        },
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "2-trip coils, one in each outside conductor",
+            "System": "3-wire, 2-phase ac",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "2 — one in each phase, not to be connected in any neutral or grounded conductor",
+            "Kind of motor": "2-phase ac",
+        },
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "4-trip coils, one in each ungrounded conductor",
+            "System": "4-wire, 2-phase ac, with neutral",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "2 — one in each phase, not to be connected in any neutral or grounded conductor",
+            "Kind of motor": "2-phase ac",
+        },
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "4-trip coils, one in each ungrounded conductor",
+            "System": "5-wire, 2-phase ac",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "2 — one in each phase, not to be connected in any neutral or grounded conductor",
+            "Kind of motor": "2-phase ac",
+        },
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "2-trip coils, one in each outside conductor",
+            "System": "3-wire, 1-phase ac or dc",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "1 — in any conductor except a neutral or grounded conductor",
+            "Kind of motor": "1-phase ac or dc",
+        },
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "1-trip coil in each ungrounded conductor",
+            "System": "2-wire ac or dc, ungrounded or with one conductor grounded‡",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "1 — in any conductor except a neutral or grounded conductor",
+            "Kind of motor": "1-phase ac or dc",
+        },
+        {
+            "For circuit protection — Number and location of overcurrent devices (trip coils)": "2-trip coils, one in each ungrounded conductor",
+            "System": "3-wire, 1-phase ac or dc, with grounded neutral",
+            "For motor overload protection — Number and location of overload devices such as trip coils, relays, or thermal cut-outs": "1 — in any conductor except a neutral or grounded conductor",
+            "Kind of motor": "1-phase ac or dc",
+        },
+    ],
+    "notes": [
+        "* This does not preclude the use of other arrangements that will provide equivalent protection.",
+        "† For services, see Section 6.",
+        "‡ This does not preclude the use of one single-pole circuit breaker in each insulated conductor for the protection of an ungrounded 2-wire circuit.",
     ],
 }
 
-
-TABLE_3 = {
-    "title": "Table 3 — Ampacities for single aluminum conductors in free air (30°C)",
-    "units": "A",
-    "columns": ["60°C", "75°C", "90°C", "110°C", "125°C", "200°C"],
-    "rows": [
-        {"Size (AWG/kcmil)": "12s", "60°C": 25, "75°C": 30, "90°C": 35, "110°C": 40, "125°C": 40, "200°C": 50},
-        {"Size (AWG/kcmil)": "10s", "60°C": 35, "75°C": 40, "90°C": 45, "110°C": 50, "125°C": 55, "200°C": 65},
-        {"Size (AWG/kcmil)": "8", "60°C": 45, "75°C": 55, "90°C": 60, "110°C": 70, "125°C": 75, "200°C": 90},
-        {"Size (AWG/kcmil)": "6", "60°C": 65, "75°C": 75, "90°C": 85, "110°C": 95, "125°C": 100, "200°C": 125},
-        {"Size (AWG/kcmil)": "4", "60°C": 85, "75°C": 100, "90°C": 115, "110°C": 125, "125°C": 135, "200°C": 165},
-        {"Size (AWG/kcmil)": "3", "60°C": 95, "75°C": 115, "90°C": 130, "110°C": 145, "125°C": 155, "200°C": 190},
-        {"Size (AWG/kcmil)": "2", "60°C": 115, "75°C": 135, "90°C": 150, "110°C": 170, "125°C": 180, "200°C": 220},
-        {"Size (AWG/kcmil)": "1", "60°C": 130, "75°C": 155, "90°C": 175, "110°C": 195, "125°C": 210, "200°C": 255},
-        {"Size (AWG/kcmil)": "0", "60°C": 150, "75°C": 180, "90°C": 205, "110°C": 225, "125°C": 245, "200°C": 295},
-        {"Size (AWG/kcmil)": "00", "60°C": 175, "75°C": 210, "90°C": 235, "110°C": 265, "125°C": 285, "200°C": 345},
-        {"Size (AWG/kcmil)": "000", "60°C": 200, "75°C": 240, "90°C": 270, "110°C": 305, "125°C": 325, "200°C": 395},
-        {"Size (AWG/kcmil)": "0000", "60°C": 235, "75°C": 280, "90°C": 315, "110°C": 355, "125°C": 375, "200°C": 460},
-        {"Size (AWG/kcmil)": "250", "60°C": 265, "75°C": 315, "90°C": 355, "110°C": 400, "125°C": 425, "200°C": None},
-        {"Size (AWG/kcmil)": "300", "60°C": 295, "75°C": 350, "90°C": 395, "110°C": 440, "125°C": 470, "200°C": None},
-        {"Size (AWG/kcmil)": "350", "60°C": 330, "75°C": 395, "90°C": 445, "110°C": 500, "125°C": 535, "200°C": None},
-        {"Size (AWG/kcmil)": "400", "60°C": 355, "75°C": 425, "90°C": 480, "110°C": 535, "125°C": 575, "200°C": None},
-        {"Size (AWG/kcmil)": "500", "60°C": 405, "75°C": 485, "90°C": 545, "110°C": 615, "125°C": 655, "200°C": None},
-        {"Size (AWG/kcmil)": "600", "60°C": 455, "75°C": 545, "90°C": 615, "110°C": 690, "125°C": 735, "200°C": None},
-        {"Size (AWG/kcmil)": "700", "60°C": 500, "75°C": 595, "90°C": 670, "110°C": 750, "125°C": 800, "200°C": None},
-        {"Size (AWG/kcmil)": "750", "60°C": 520, "75°C": 620, "90°C": 700, "110°C": 785, "125°C": 835, "200°C": None},
-        {"Size (AWG/kcmil)": "800", "60°C": 540, "75°C": 645, "90°C": 725, "110°C": 815, "125°C": 870, "200°C": None},
-        {"Size (AWG/kcmil)": "900", "60°C": 585, "75°C": 700, "90°C": 790, "110°C": 885, "125°C": 945, "200°C": None},
-        {"Size (AWG/kcmil)": "1000", "60°C": 630, "75°C": 750, "90°C": 845, "110°C": 950, "125°C": 1010, "200°C": None},
-        {"Size (AWG/kcmil)": "1250", "60°C": 715, "75°C": 855, "90°C": 965, "110°C": 1080, "125°C": None, "200°C": None},
-        {"Size (AWG/kcmil)": "1500", "60°C": 795, "75°C": 950, "90°C": 1070, "110°C": 1200, "125°C": None, "200°C": None},
-        {"Size (AWG/kcmil)": "1750", "60°C": 880, "75°C": 1050, "90°C": 1185, "110°C": 1325, "125°C": None, "200°C": None},
-        {"Size (AWG/kcmil)": "2000", "60°C": 965, "75°C": 1150, "90°C": 1295, "110°C": 1455, "125°C": None, "200°C": None},
-    ],
-}
-
-
-TABLE_4 = {
-    "title": "Table 4 — Ampacities for not more than three insulated aluminum conductors in raceway/cable (30°C)",
-    "units": "A",
-    "columns": ["60°C", "75°C", "90°C", "110°C", "125°C", "200°C"],
-    "rows": [
-        {"Size (AWG/kcmil)": "12s", "60°C": 15, "75°C": 20, "90°C": 25, "110°C": 25, "125°C": 25, "200°C": 35},
-        {"Size (AWG/kcmil)": "10s", "60°C": 25, "75°C": 30, "90°C": 35, "110°C": 40, "125°C": 40, "200°C": 50},
-        {"Size (AWG/kcmil)": "8", "60°C": 35, "75°C": 40, "90°C": 45, "110°C": 50, "125°C": 55, "200°C": 65},
-        {"Size (AWG/kcmil)": "6", "60°C": 40, "75°C": 50, "90°C": 55, "110°C": 65, "125°C": 70, "200°C": 80},
-        {"Size (AWG/kcmil)": "4", "60°C": 55, "75°C": 65, "90°C": 75, "110°C": 80, "125°C": 90, "200°C": 105},
-        {"Size (AWG/kcmil)": "3", "60°C": 65, "75°C": 75, "90°C": 85, "110°C": 95, "125°C": 100, "200°C": 125},
-        {"Size (AWG/kcmil)": "2", "60°C": 75, "75°C": 90, "90°C": 100, "110°C": 115, "125°C": 120, "200°C": 150},
-        {"Size (AWG/kcmil)": "1", "60°C": 85, "75°C": 100, "90°C": 115, "110°C": 125, "125°C": 135, "200°C": 165},
-        {"Size (AWG/kcmil)": "0", "60°C": 100, "75°C": 120, "90°C": 135, "110°C": 150, "125°C": 160, "200°C": 195},
-        {"Size (AWG/kcmil)": "00", "60°C": 115, "75°C": 135, "90°C": 150, "110°C": 170, "125°C": 180, "200°C": 220},
-        {"Size (AWG/kcmil)": "000", "60°C": 130, "75°C": 155, "90°C": 175, "110°C": 195, "125°C": 210, "200°C": 255},
-        {"Size (AWG/kcmil)": "0000", "60°C": 150, "75°C": 180, "90°C": 205, "110°C": 225, "125°C": 245, "200°C": 295},
-        {"Size (AWG/kcmil)": "250", "60°C": 170, "75°C": 205, "90°C": 230, "110°C": 260, "125°C": 275, "200°C": None},
-        {"Size (AWG/kcmil)": "300", "60°C": 195, "75°C": 230, "90°C": 260, "110°C": 290, "125°C": 310, "200°C": None},
-        {"Size (AWG/kcmil)": "350", "60°C": 210, "75°C": 250, "90°C": 280, "110°C": 315, "125°C": 335, "200°C": None},
-        {"Size (AWG/kcmil)": "400", "60°C": 225, "75°C": 270, "90°C": 305, "110°C": 340, "125°C": 365, "200°C": None},
-        {"Size (AWG/kcmil)": "500", "60°C": 260, "75°C": 310, "90°C": 350, "110°C": 390, "125°C": 420, "200°C": None},
-        {"Size (AWG/kcmil)": "600", "60°C": 285, "75°C": 340, "90°C": 385, "110°C": 430, "125°C": 460, "200°C": None},
-        {"Size (AWG/kcmil)": "700", "60°C": 315, "75°C": 375, "90°C": 425, "110°C": 475, "125°C": 505, "200°C": None},
-        {"Size (AWG/kcmil)": "750", "60°C": 320, "75°C": 385, "90°C": 435, "110°C": 485, "125°C": 520, "200°C": None},
-        {"Size (AWG/kcmil)": "800", "60°C": 330, "75°C": 395, "90°C": 445, "110°C": 500, "125°C": 535, "200°C": None},
-        {"Size (AWG/kcmil)": "900", "60°C": 355, "75°C": 425, "90°C": 480, "110°C": 535, "125°C": 575, "200°C": None},
-        {"Size (AWG/kcmil)": "1000", "60°C": 375, "75°C": 445, "90°C": 500, "110°C": 560, "125°C": 600, "200°C": None},
-        {"Size (AWG/kcmil)": "1250", "60°C": 405, "75°C": 485, "90°C": 545, "110°C": 615, "125°C": None, "200°C": None},
-        {"Size (AWG/kcmil)": "1500", "60°C": 435, "75°C": 520, "90°C": 585, "110°C": 655, "125°C": None, "200°C": None},
-        {"Size (AWG/kcmil)": "1750", "60°C": 455, "75°C": 545, "90°C": 615, "110°C": 690, "125°C": None, "200°C": None},
-        {"Size (AWG/kcmil)": "2000", "60°C": 470, "75°C": 560, "90°C": 630, "110°C": 710, "125°C": None, "200°C": None},
-    ],
-}
-
-TABLE_5A = {
-    "title": "Table 5A — Ampacity correction factors for ambient temperatures above 30°C",
-    "units": "factor",
-    "columns": ["60°C", "75°C", "90°C", "105°C", "110°C", "125°C", "150°C", "200°C", "250°C"],
-    "rows": [
-        {"Ambient (°C)": 35, "60°C": 0.91, "75°C": 0.94, "90°C": 0.96, "105°C": 0.97, "110°C": 0.97, "125°C": 0.97, "150°C": 0.98, "200°C": 0.99, "250°C": 0.99},
-        {"Ambient (°C)": 40, "60°C": 0.82, "75°C": 0.88, "90°C": 0.91, "105°C": 0.93, "110°C": 0.94, "125°C": 0.95, "150°C": 0.96, "200°C": 0.97, "250°C": 0.98},
-        {"Ambient (°C)": 45, "60°C": 0.71, "75°C": 0.82, "90°C": 0.87, "105°C": 0.89, "110°C": 0.90, "125°C": 0.92, "150°C": 0.93, "200°C": 0.95, "250°C": 0.97},
-        {"Ambient (°C)": 50, "60°C": 0.58, "75°C": 0.75, "90°C": 0.82, "105°C": 0.86, "110°C": 0.87, "125°C": 0.89, "150°C": 0.91, "200°C": 0.94, "250°C": 0.95},
-        {"Ambient (°C)": 55, "60°C": 0.41, "75°C": 0.67, "90°C": 0.76, "105°C": 0.82, "110°C": 0.83, "125°C": 0.86, "150°C": 0.89, "200°C": 0.92, "250°C": 0.94},
-        {"Ambient (°C)": 60, "60°C": None, "75°C": 0.58, "90°C": 0.71, "105°C": 0.77, "110°C": 0.79, "125°C": 0.83, "150°C": 0.87, "200°C": 0.91, "250°C": 0.93},
-        {"Ambient (°C)": 65, "60°C": None, "75°C": 0.47, "90°C": 0.65, "105°C": 0.73, "110°C": 0.75, "125°C": 0.79, "150°C": 0.84, "200°C": 0.89, "250°C": 0.92},
-        {"Ambient (°C)": 70, "60°C": None, "75°C": 0.33, "90°C": 0.58, "105°C": 0.68, "110°C": 0.71, "125°C": 0.76, "150°C": 0.82, "200°C": 0.87, "250°C": 0.90},
-        {"Ambient (°C)": 75, "60°C": None, "75°C": None, "90°C": 0.50, "105°C": 0.63, "110°C": 0.66, "125°C": 0.73, "150°C": 0.79, "200°C": 0.86, "250°C": 0.89},
-        {"Ambient (°C)": 80, "60°C": None, "75°C": None, "90°C": 0.41, "105°C": 0.58, "110°C": 0.61, "125°C": 0.69, "150°C": 0.76, "200°C": 0.84, "250°C": 0.88},
-        {"Ambient (°C)": 90, "60°C": None, "75°C": None, "90°C": None, "105°C": 0.45, "110°C": 0.50, "125°C": 0.61, "150°C": 0.71, "200°C": 0.80, "250°C": 0.85},
-        {"Ambient (°C)": 100, "60°C": None, "75°C": None, "90°C": None, "105°C": 0.26, "110°C": 0.35, "125°C": 0.51, "150°C": 0.65, "200°C": 0.77, "250°C": 0.83},
-        {"Ambient (°C)": 110, "60°C": None, "75°C": None, "90°C": None, "105°C": None, "110°C": None, "125°C": 0.40, "150°C": 0.58, "200°C": 0.73, "250°C": 0.80},
-        {"Ambient (°C)": 120, "60°C": None, "75°C": None, "90°C": None, "105°C": None, "110°C": None, "125°C": 0.23, "150°C": 0.50, "200°C": 0.69, "250°C": 0.77},
-        {"Ambient (°C)": 130, "60°C": None, "75°C": None, "90°C": None, "105°C": None, "110°C": None, "125°C": None, "150°C": 0.41, "200°C": 0.64, "250°C": 0.74},
-        {"Ambient (°C)": 140, "60°C": None, "75°C": None, "90°C": None, "105°C": None, "110°C": None, "125°C": None, "150°C": 0.29, "200°C": 0.59, "250°C": 0.71},
-    ],
-}
-
-TABLE_5B = {
-    "title": "Table 5B — Correction factors (Tables 1 & 3) for 2–4 single insulated conductors (spaced <25%)",
-    "units": "factor",
-    "columns": ["Number of conductors", "Correction factor"],
-    "rows": [
-        {"Number of conductors": 2, "Correction factor": 0.90},
-        {"Number of conductors": 3, "Correction factor": 0.85},
-        {"Number of conductors": 4, "Correction factor": 0.80},
-    ],
-}
-
-TABLE_5C = {
-    "title": "Table 5C — Ampacity correction factors for Tables 2 & 4 (number of insulated conductors)",
-    "units": "factor",
-    "columns": ["Number of insulated conductors", "Ampacity correction factor"],
-    "rows": [
-        {"Number of insulated conductors": "1–3", "Ampacity correction factor": 1.00},
-        {"Number of insulated conductors": "4–6", "Ampacity correction factor": 0.80},
-        {"Number of insulated conductors": "7–24", "Ampacity correction factor": 0.70},
-        {"Number of insulated conductors": "25–42", "Ampacity correction factor": 0.60},
-        {"Number of insulated conductors": "43 and up", "Ampacity correction factor": 0.50},
-    ],
-}
-
-TABLE_5D = {
-    "title": "Table 5D — Current rating correction factors where spacings are maintained (ventilated/ladder trays)",
-    "units": "factor",
-    "columns": ["Vertical layers", "Horizontal count", "Correction factor"],
-    "rows": [
-        {"Vertical layers": 1, "Horizontal count": 1, "Correction factor": 1.00},
-        {"Vertical layers": 1, "Horizontal count": 2, "Correction factor": 0.93},
-        {"Vertical layers": 1, "Horizontal count": 3, "Correction factor": 0.87},
-        {"Vertical layers": 1, "Horizontal count": 4, "Correction factor": 0.84},
-        {"Vertical layers": 1, "Horizontal count": 5, "Correction factor": 0.83},
-        {"Vertical layers": 1, "Horizontal count": 6, "Correction factor": 0.82},
-        {"Vertical layers": 2, "Horizontal count": 1, "Correction factor": 0.89},
-        {"Vertical layers": 2, "Horizontal count": 2, "Correction factor": 0.83},
-        {"Vertical layers": 2, "Horizontal count": 3, "Correction factor": 0.79},
-        {"Vertical layers": 2, "Horizontal count": 4, "Correction factor": 0.76},
-        {"Vertical layers": 2, "Horizontal count": 5, "Correction factor": 0.75},
-        {"Vertical layers": 2, "Horizontal count": 6, "Correction factor": 0.74},
-    ],
-}
-
-TABLE_7 = {
-    "title": "Table 7 — Radius of conduit or tubing bends",
-    "units": "mm",
-    "columns": ["Size (mm)", "Minimum radius to centre (mm)"],
-    "rows": [
-        {"Size (mm)": 16, "Minimum radius to centre (mm)": 102},
-        {"Size (mm)": 21, "Minimum radius to centre (mm)": 114},
-        {"Size (mm)": 27, "Minimum radius to centre (mm)": 146},
-        {"Size (mm)": 35, "Minimum radius to centre (mm)": 184},
-        {"Size (mm)": 41, "Minimum radius to centre (mm)": 210},
-        {"Size (mm)": 53, "Minimum radius to centre (mm)": 241},
-        {"Size (mm)": 63, "Minimum radius to centre (mm)": 267},
-        {"Size (mm)": 78, "Minimum radius to centre (mm)": 330},
-        {"Size (mm)": 91, "Minimum radius to centre (mm)": 381},
-        {"Size (mm)": 103, "Minimum radius to centre (mm)": 406},
-        {"Size (mm)": 129, "Minimum radius to centre (mm)": 610},
-        {"Size (mm)": 155, "Minimum radius to centre (mm)": 762},
-    ],
-}
-
-TABLE_8 = {
-    "title": "Table 8 — Maximum allowable conduit/tubing fill (%)",
+# --------------------------------------------------------------------------------------
+# Table 27 — Determining conductor sizes for motors for different requirements of service
+# --------------------------------------------------------------------------------------
+TABLE_27 = {
+    "title": "Table 27 — Determining conductor sizes for motors for different requirements of service (Percentage of nameplate current rating of motor)",
     "units": "%",
-    "columns": ["Cable type", "1", "2", "3", "4", "Over 4"],
+    "columns": ["Classification of service", "5-min rating", "15-min rating", "30- and 60-min rating", "Continuous rating"],
     "rows": [
-        {"Cable type": "Insulated conductors or multi-conductor cables (not lead-sheathed)", "1": 53, "2": 31, "3": 40, "4": 40, "Over 4": 40},
-        {"Cable type": "Lead-sheathed single conductor cables or multi-conductor cables", "1": 55, "2": 30, "3": 40, "4": 38, "Over 4": 35},
+        {"Classification of service": "Short-time duty (Operating valves, raising or lowering rolls, etc.)", "5-min rating": 110, "15-min rating": 120, "30- and 60-min rating": 150, "Continuous rating": None},
+        {"Classification of service": "Intermittent duty (Freight and passenger elevators, tool heads, pumps, drawbridges, turntables, etc.)", "5-min rating": 85, "15-min rating": 85, "30- and 60-min rating": 90, "Continuous rating": 140},
+        {"Classification of service": "Periodic duty (Rolls, ore- and coal-handling machines, etc.)", "5-min rating": 85, "15-min rating": 90, "30- and 60-min rating": 95, "Continuous rating": 140},
+        {"Classification of service": "Varying duty", "5-min rating": 110, "15-min rating": 120, "30- and 60-min rating": 150, "Continuous rating": 200},
+    ],
+}
+
+# ----------------------------
+# Table 29 — Rating or setting of overcurrent devices for the protection of motor branch circuits
+# ----------------------------
+TABLE_29: Dict[str, Any] = {
+    "title": "Table 29 — Rating or setting of overcurrent devices for the protection of motor branch circuits",
+    "units": "Full load current, %",
+    "columns": [
+        "Type of motor",
+        "Maximum fuse rating — Time-delay* fuses",
+        "Maximum fuse rating — Non-time-delay",
+        "Maximum setting — Inverse-time circuit breaker",
+    ],
+    "rows": [
+        {
+            "Type of motor": "Alternating current — Single-phase all types",
+            "Maximum fuse rating — Time-delay* fuses": 175,
+            "Maximum fuse rating — Non-time-delay": 300,
+            "Maximum setting — Inverse-time circuit breaker": 250,
+        },
+        {
+            "Type of motor": "Alternating current — Squirrel-cage and synchronous: Full-voltage, resistor and reactor starting",
+            "Maximum fuse rating — Time-delay* fuses": 175,
+            "Maximum fuse rating — Non-time-delay": 300,
+            "Maximum setting — Inverse-time circuit breaker": 250,
+        },
+        {
+            "Type of motor": "Alternating current — Squirrel-cage and synchronous: Auto-transformer and star delta starting, Not more than 30 A",
+            "Maximum fuse rating — Time-delay* fuses": 175,
+            "Maximum fuse rating — Non-time-delay": 250,
+            "Maximum setting — Inverse-time circuit breaker": 200,
+        },
+        {
+            "Type of motor": "Alternating current — Squirrel-cage and synchronous: Auto-transformer and star delta starting, More than 30 A",
+            "Maximum fuse rating — Time-delay* fuses": 175,
+            "Maximum fuse rating — Non-time-delay": 200,
+            "Maximum setting — Inverse-time circuit breaker": 200,
+        },
+        {
+            "Type of motor": "Alternating current — Wound rotor",
+            "Maximum fuse rating — Time-delay* fuses": 150,
+            "Maximum fuse rating — Non-time-delay": 150,
+            "Maximum setting — Inverse-time circuit breaker": 150,
+        },
+        {
+            "Type of motor": "Direct current",
+            "Maximum fuse rating — Time-delay* fuses": 150,
+            "Maximum fuse rating — Non-time-delay": 150,
+            "Maximum setting — Inverse-time circuit breaker": 150,
+        },
+    ],
+    "notes": [
+        "* Includes time-delay “D” fuses referred to in Rule 14-200.",
+        "1) Synchronous motors of the low-torque, low-speed type (usually 450 rpm or lower), such as those used to drive reciprocating compressors, pumps, etc., and that start up unloaded, do not require a fuse rating or circuit breaker setting in excess of 200% of full load current.",
+        "2) For the use of instantaneous-trip (magnetic only) circuit breakers in motor branch circuits, see Rule 28-210.",
     ],
 }
 
@@ -2210,20 +2223,43 @@ TABLE_45 = {
     ],
 }
 
-# --------------------------------------------------------------------------------------
-# Table 27 — Determining conductor sizes for motors for different requirements of service
-# --------------------------------------------------------------------------------------
-TABLE_27 = {
-    "title": "Table 27 — Determining conductor sizes for motors for different requirements of service (Percentage of nameplate current rating of motor)",
-    "units": "%",
-    "columns": ["Classification of service", "5-min rating", "15-min rating", "30- and 60-min rating", "Continuous rating"],
+# ----------------------------
+# Table 50 — Transformers rated over 750 V having primary and secondary overcurrent protection
+# ----------------------------
+TABLE_50: Dict[str, Any] = {
+    "title": "Table 50 — Transformers rated over 750 V having primary and secondary overcurrent protection",
+    "units": "Maximum setting or rating of overcurrent device as a percentage of rated current of transformer",
+    "columns": [
+        "Transformer rated impedance",
+        "Primary (>750 V) — CB setting, %",
+        "Primary (>750 V) — Fuse rating, %",
+        "Secondary (>750 V) — CB setting, %",
+        "Secondary (>750 V) — Fuse rating, %",
+        "Secondary (≤750 V) — CB or fuse rating, %",
+    ],
     "rows": [
-        {"Classification of service": "Short-time duty (Operating valves, raising or lowering rolls, etc.)", "5-min rating": 110, "15-min rating": 120, "30- and 60-min rating": 150, "Continuous rating": None},
-        {"Classification of service": "Intermittent duty (Freight and passenger elevators, tool heads, pumps, drawbridges, turntables, etc.)", "5-min rating": 85, "15-min rating": 85, "30- and 60-min rating": 90, "Continuous rating": 140},
-        {"Classification of service": "Periodic duty (Rolls, ore- and coal-handling machines, etc.)", "5-min rating": 85, "15-min rating": 90, "30- and 60-min rating": 95, "Continuous rating": 140},
-        {"Classification of service": "Varying duty", "5-min rating": 110, "15-min rating": 120, "30- and 60-min rating": 150, "Continuous rating": 200},
+        {
+            "Transformer rated impedance": "Not more than 7.5%",
+            "Primary (>750 V) — CB setting, %": 600,
+            "Primary (>750 V) — Fuse rating, %": 300,
+            "Secondary (>750 V) — CB setting, %": 300,
+            "Secondary (>750 V) — Fuse rating, %": 150,
+            "Secondary (≤750 V) — CB or fuse rating, %": 250,
+        },
+        {
+            "Transformer rated impedance": "More than 7.5% and not more than 10%",
+            "Primary (>750 V) — CB setting, %": 400,
+            "Primary (>750 V) — Fuse rating, %": 200,
+            "Secondary (>750 V) — CB setting, %": 250,
+            "Secondary (>750 V) — Fuse rating, %": 125,
+            "Secondary (≤750 V) — CB or fuse rating, %": 250,
+        },
+    ],
+    "notes": [
+        "See Rule 26-250.",
     ],
 }
+
 
 # --------------------------------------------------------------------------------------
 # Table D2 — DC motors
@@ -2260,32 +2296,6 @@ TABLE_D2 = {
 }
 
 # --------------------------------------------------------------------------------------
-# Table D — System Factor (f) for voltage drop calculations
-# --------------------------------------------------------------------------------------
-# Based on various AC and DC electrical systems and connection types
-# Used in formula: VD(%) = (k × f × I × L) / 1000
-TABLE_D_SYSTEM_FACTOR = {
-    "title": "Table D — System factor (f) for voltage drop calculations in various AC and DC electrical systems and connection types",
-    "units": "dimensionless",
-    "columns": ["system_connection", "f_value", "voltage_reference"],
-    "rows": [
-        {"system_connection": "DC — 2-wire (positive-to-negative)", "f_value": 2.0, "voltage_reference": "Positive-to-negative"},
-        {"system_connection": "DC — 2-wire (positive-to-ground)", "f_value": 2.0, "voltage_reference": "Positive-to-ground"},
-        {"system_connection": "DC — 2-wire (negative-to-ground)", "f_value": 2.0, "voltage_reference": "Negative-to-ground"},
-        {"system_connection": "DC — 3-wire, line-to-line with grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-line"},
-        {"system_connection": "1-φ AC — 2-wire, line-to-grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-ground"},
-        {"system_connection": "1-φ AC — 2-wire, line-to-line", "f_value": 2.0, "voltage_reference": "Line-to-line"},
-        {"system_connection": "1-φ AC — 3-wire, line-to-line, with grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-line"},
-        {"system_connection": "3-φ AC — 2-wire, line-to-grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-ground"},
-        {"system_connection": "3-φ AC — 2-wire, line-to-line, no grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-line"},
-        {"system_connection": "3-φ AC — 3-wire, line-to-line with grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-line"},
-        {"system_connection": "3-φ AC — 3-wire, line-to-grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-ground"},
-        {"system_connection": "3-φ AC — 3-wire, line-to-line, no grounded conductor", "f_value": 1.732, "voltage_reference": "Line-to-line"},
-        {"system_connection": "3-φ AC — 4-wire, line-to-line, with grounded conductor", "f_value": 1.732, "voltage_reference": "Line-to-line"},
-    ],
-}
-
-# --------------------------------------------------------------------------------------
 # Table D3 (Voltage Drop) — K values for calculating voltage drop (Ω/km)
 # --------------------------------------------------------------------------------------
 # Based on conductor operating temperature of 75 °C
@@ -2317,122 +2327,6 @@ TABLE_D3 = {
         {"size_awg_kcmil": "750", "copper_dc": 0.0558, "copper_cable_100pf": 0.0668, "copper_cable_90pf": 0.085, "copper_cable_80pf": 0.0915, "copper_raceway_100pf": 0.0668, "copper_raceway_90pf": 0.0889, "copper_raceway_80pf": 0.097, "aluminum_dc": 0.0916, "aluminum_cable_100pf": 0.0968, "aluminum_cable_90pf": 0.115, "aluminum_cable_80pf": 0.121, "aluminum_raceway_100pf": 0.0968, "aluminum_raceway_90pf": 0.119, "aluminum_raceway_80pf": 0.126},
         {"size_awg_kcmil": "1000", "copper_dc": 0.0417, "copper_cable_100pf": 0.0558, "copper_cable_90pf": 0.0739, "copper_cable_80pf": 0.0805, "copper_raceway_100pf": 0.0558, "copper_raceway_90pf": 0.0778, "copper_raceway_80pf": 0.086, "aluminum_dc": 0.0686, "aluminum_cable_100pf": 0.0758, "aluminum_cable_90pf": 0.0933, "aluminum_cable_80pf": 0.0994, "aluminum_raceway_100pf": 0.0758, "aluminum_raceway_90pf": 0.0973, "aluminum_raceway_80pf": 0.105},
     ],
-}
-# --------------------------------------------------------------------------------------
-# Table D16 — Sizes of conductors, fuse ratings, and circuit breaker settings
-# --------------------------------------------------------------------------------------
-
-_D16_COLUMNS = ['Full load current rating of motor, A', 'Minimum ampacity of insulated conductor, A', 'Single-phase (all types; squirrel-cage & synchronous full-voltage/resistor/reactor) — Non-time-delay fuses, A', 'Single-phase (all types; squirrel-cage & synchronous full-voltage/resistor/reactor) — Time-delay* fuses, A', 'Single-phase (all types; squirrel-cage & synchronous full-voltage/resistor/reactor) — Circuit breaker, A', 'Squirrel-cage & synchronous (auto-transformer & star delta) — Non-time-delay fuses, A', 'Squirrel-cage & synchronous (auto-transformer & star delta) — Time-delay* fuses, A', 'Squirrel-cage & synchronous (auto-transformer & star delta) — Circuit breaker, A', 'DC or wound rotor AC — Non-time-delay fuses, A', 'DC or wound rotor AC — Time-delay* fuses, A', 'DC or wound rotor AC — Circuit breaker, A']
-
-_D16_DATA = [
-    [1, 1.25, 15, 15, 15, 15, 15, 15, 15, 15, 15],
-    [2, 2.5, 15, 15, 15, 15, 15, 15, 15, 15, 15],
-    [3, 3.8, 15, 15, 15, 15, 15, 15, 15, 15, 15],
-    [4, 5.0, 15, 15, 15, 15, 15, 15, 15, 15, 15],
-    [5, 6.25, 15, 15, 15, 15, 15, 15, 15, 15, 15],
-    [6, 7.5, 15, 15, 15, 15, 15, 15, 15, 15, 15],
-    [7, 8.75, 20, 15, 15, 15, 15, 15, 15, 15, 15],
-    [8, 10.0, 20, 15, 20, 20, 15, 15, 15, 15, 15],
-    [9, 11.25, 25, 15, 20, 20, 15, 15, 15, 15, 15],
-    [10, 12.5, 30, 15, 25, 25, 15, 20, 15, 15, 15],
-    [11, 13.75, 30, 15, 25, 25, 15, 20, 15, 15, 15],
-    [12, 15.0, 35, 20, 30, 30, 20, 20, 15, 15, 15],
-    [13, 16.25, 35, 20, 30, 30, 25, 20, 15, 15, 15],
-    [14, 17.5, 40, 20, 35, 35, 25, 20, 20, 20, 20],
-    [15, 18.75, 45, 25, 35, 35, 25, 30, 20, 20, 20],
-    [16, 20.0, 45, 25, 40, 40, 25, 30, 20, 20, 20],
-    [17, 21.3, 50, 25, 40, 40, 25, 30, 25, 25, 25],
-    [18, 22.5, 50, 30, 45, 45, 35, 30, 25, 25, 25],
-    [19, 23.8, 50, 30, 45, 45, 35, 30, 25, 25, 25],
-    [20, 25.0, 60, 35, 50, 50, 35, 40, 30, 30, 30],
-    [22, 27.5, 60, 35, 50, 50, 35, 40, 30, 30, 30],
-    [24, 30.0, 70, 40, 60, 60, 45, 40, 35, 35, 35],
-    [26, 32.5, 70, 45, 60, 60, 45, 50, 35, 35, 35],
-    [28, 35.0, 80, 45, 70, 70, 45, 50, 40, 40, 40],
-    [30, 37.5, 90, 50, 70, 70, 50, 60, 45, 45, 45],
-    [32, 40.0, 90, 50, 80, 60, 50, 60, 45, 45, 45],
-    [34, 42.5, 100, 50, 80, 60, 50, 60, 50, 50, 50],
-    [36, 45.0, 100, 60, 90, 70, 60, 70, 50, 50, 50],
-    [38, 47.5, 110, 60, 90, 70, 60, 70, 50, 50, 50],
-    [40, 50.0, 110, 70, 100, 80, 80, 70, 60, 60, 60],
-    [42, 52.5, 125, 70, 100, 80, 80, 70, 60, 60, 60],
-    [44, 55.0, 125, 70, 110, 80, 80, 70, 60, 60, 60],
-    [46, 57.5, 125, 80, 110, 90, 90, 70, 60, 60, 60],
-    [48, 60.0, 125, 80, 110, 90, 90, 70, 70, 70, 70],
-    [50, 62.5, 150, 80, 125, 100, 90, 100, 70, 70, 70],
-    [52, 65.0, 150, 90, 125, 100, 90, 100, 70, 70, 70],
-    [54, 67.5, 150, 90, 125, 100, 90, 100, 80, 80, 80],
-    [56, 70.0, 150, 90, 125, 110, 110, 100, 80, 80, 80],
-    [58, 72.5, 150, 100, 125, 110, 110, 100, 80, 80, 80],
-    [60, 75.0, 175, 100, 150, 110, 110, 100, 90, 90, 90],
-    [62, 77.5, 175, 100, 150, 110, 110, 100, 90, 90, 90],
-    [64, 80.0, 175, 110, 150, 125, 110, 125, 90, 90, 90],
-    [66, 82.5, 175, 110, 150, 125, 110, 125, 90, 90, 90],
-    [68, 85.0, 200, 110, 150, 125, 110, 125, 100, 100, 100],
-    [70, 87.5, 200, 110, 175, 125, 110, 125, 100, 100, 100],
-    [72, 90.0, 200, 125, 175, 125, 125, 125, 100, 100, 100],
-    [74, 92.5, 200, 125, 175, 125, 125, 125, 110, 110, 110],
-    [76, 95.0, 225, 125, 175, 150, 125, 150, 110, 110, 110],
-    [78, 97.5, 225, 125, 175, 150, 125, 150, 110, 110, 110],
-    [80, 100.0, 225, 125, 200, 150, 125, 150, 110, 110, 110],
-    [82, 102.5, 225, 125, 200, 150, 125, 150, 110, 110, 110],
-    [84, 105.0, 250, 125, 200, 150, 125, 150, 125, 125, 125],
-    [86, 107.5, 250, 150, 200, 150, 150, 150, 125, 125, 125],
-    [88, 110.0, 250, 150, 200, 175, 150, 175, 125, 125, 125],
-    [90, 112.5, 250, 150, 225, 175, 150, 175, 125, 125, 125],
-    [92, 115.0, 250, 150, 225, 175, 150, 175, 125, 125, 125],
-    [94, 117.5, 250, 150, 225, 175, 150, 175, 125, 125, 125],
-    [96, 120.0, 250, 150, 225, 175, 150, 175, 125, 125, 125],
-    [98, 122.5, 250, 150, 225, 175, 150, 175, 125, 125, 125],
-    [100, 125.0, 300, 175, 250, 200, 175, 200, 150, 150, 150],
-    [105, 131.3, 300, 175, 250, 200, 175, 200, 150, 150, 150],
-    [110, 137.5, 300, 175, 250, 200, 175, 200, 150, 150, 150],
-    [115, 143.8, 300, 200, 250, 225, 200, 225, 150, 150, 150],
-    [120, 150.0, 350, 200, 300, 225, 200, 225, 175, 175, 175],
-    [125, 156.3, 350, 200, 300, 250, 200, 250, 175, 175, 175],
-    [130, 162.5, 350, 225, 300, 250, 225, 250, 175, 175, 175],
-    [135, 168.8, 400, 225, 300, 250, 225, 250, 200, 200, 200],
-    [140, 175.0, 400, 225, 350, 250, 225, 250, 200, 200, 200],
-    [145, 181.3, 400, 250, 350, 250, 250, 250, 200, 200, 200],
-    [150, 187.5, 450, 250, 350, 300, 250, 300, 225, 225, 225],
-    [155, 193.8, 450, 250, 350, 300, 250, 300, 225, 225, 225],
-    [160, 200.0, 450, 250, 400, 300, 250, 300, 225, 225, 225],
-    [165, 206.3, 450, 250, 400, 300, 250, 300, 225, 225, 225],
-    [170, 212.5, 500, 250, 400, 300, 250, 300, 250, 250, 250],
-    [175, 218.8, 500, 300, 400, 350, 300, 350, 250, 250, 250],
-    [180, 225.0, 500, 300, 450, 350, 300, 350, 250, 250, 250],
-    [185, 231.3, 500, 300, 450, 350, 300, 350, 250, 250, 250],
-    [190, 237.5, 500, 300, 450, 350, 300, 350, 250, 250, 250],
-    [195, 243.8, 500, 300, 450, 350, 300, 350, 250, 250, 250],
-    [200, 250.0, 600, 350, 500, 400, 350, 400, 300, 300, 300],
-    [210, 262.5, 600, 350, 500, 400, 350, 400, 300, 300, 300],
-    [220, 275.0, 600, 350, 500, 400, 350, 400, 300, 300, 300],
-    [230, 287.5, 600, 400, 500, 450, 450, 400, 300, 300, 300],
-    [240, 300.0, None, 400, None, 450, 450, 400, 350, 350, 350],
-    [250, 312.5, None, 400, None, 500, 450, 500, 350, 350, 350],
-    [260, 325.0, None, 450, 600, 500, 450, 500, 350, 350, 350],
-    [270, 337.5, None, 450, 600, 500, 450, 500, 400, 400, 400],
-    [280, 350.0, None, 450, None, 500, 450, 500, 400, 400, 400],
-    [290, 362.5, None, 500, None, 500, 500, 500, 400, 400, 400],
-    [300, 375.0, None, 500, None, 600, 500, 600, 450, 450, 450],
-    [320, 400, None, 500, None, 600, 500, 600, 450, 450, 450],
-    [340, 425, None, 500, None, 600, 500, 600, 500, 500, 500],
-    [360, 450, None, 600, None, None, 600, None, 500, 500, 500],
-    [380, 475, None, 600, None, None, 600, None, 500, 500, 500],
-    [400, 500, None, None, None, None, None, None, 600, 600, 600],
-    [420, 525, None, None, None, None, None, None, 600, 600, 600],
-    [440, 550, None, None, None, None, None, None, 600, 600, 600],
-    [460, 575, None, None, None, None, None, None, 600, 600, 600],
-    [480, 600, None, None, None, None, None, None, 600, 600, 600],
-    [500, 625, None, None, None, None, None, None, None, None, None],
-]
-
-
-TABLE_D16 = {
-    "title": "Table D16 — Sizes of conductors, fuse ratings, and circuit breaker settings for motor overload protection and motor circuit overcurrent protection",
-    "units": "A",
-    "columns": _D16_COLUMNS,
-    "rows": _rows_from_columns(_D16_COLUMNS, _D16_DATA),
 }
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -2764,6 +2658,148 @@ TABLE_D11B = {
     ],
 }
 
+
+# --------------------------------------------------------------------------------------
+# Table D16 — Sizes of conductors, fuse ratings, and circuit breaker settings
+# --------------------------------------------------------------------------------------
+
+_D16_COLUMNS = ['Full load current rating of motor, A', 'Minimum ampacity of insulated conductor, A', 'Single-phase (all types; squirrel-cage & synchronous full-voltage/resistor/reactor) — Non-time-delay fuses, A', 'Single-phase (all types; squirrel-cage & synchronous full-voltage/resistor/reactor) — Time-delay* fuses, A', 'Single-phase (all types; squirrel-cage & synchronous full-voltage/resistor/reactor) — Circuit breaker, A', 'Squirrel-cage & synchronous (auto-transformer & star delta) — Non-time-delay fuses, A', 'Squirrel-cage & synchronous (auto-transformer & star delta) — Time-delay* fuses, A', 'Squirrel-cage & synchronous (auto-transformer & star delta) — Circuit breaker, A', 'DC or wound rotor AC — Non-time-delay fuses, A', 'DC or wound rotor AC — Time-delay* fuses, A', 'DC or wound rotor AC — Circuit breaker, A']
+
+_D16_DATA = [
+    [1, 1.25, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    [2, 2.5, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    [3, 3.8, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    [4, 5.0, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    [5, 6.25, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    [6, 7.5, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    [7, 8.75, 20, 15, 15, 15, 15, 15, 15, 15, 15],
+    [8, 10.0, 20, 15, 20, 20, 15, 15, 15, 15, 15],
+    [9, 11.25, 25, 15, 20, 20, 15, 15, 15, 15, 15],
+    [10, 12.5, 30, 15, 25, 25, 15, 20, 15, 15, 15],
+    [11, 13.75, 30, 15, 25, 25, 15, 20, 15, 15, 15],
+    [12, 15.0, 35, 20, 30, 30, 20, 20, 15, 15, 15],
+    [13, 16.25, 35, 20, 30, 30, 25, 20, 15, 15, 15],
+    [14, 17.5, 40, 20, 35, 35, 25, 20, 20, 20, 20],
+    [15, 18.75, 45, 25, 35, 35, 25, 30, 20, 20, 20],
+    [16, 20.0, 45, 25, 40, 40, 25, 30, 20, 20, 20],
+    [17, 21.3, 50, 25, 40, 40, 25, 30, 25, 25, 25],
+    [18, 22.5, 50, 30, 45, 45, 35, 30, 25, 25, 25],
+    [19, 23.8, 50, 30, 45, 45, 35, 30, 25, 25, 25],
+    [20, 25.0, 60, 35, 50, 50, 35, 40, 30, 30, 30],
+    [22, 27.5, 60, 35, 50, 50, 35, 40, 30, 30, 30],
+    [24, 30.0, 70, 40, 60, 60, 45, 40, 35, 35, 35],
+    [26, 32.5, 70, 45, 60, 60, 45, 50, 35, 35, 35],
+    [28, 35.0, 80, 45, 70, 70, 45, 50, 40, 40, 40],
+    [30, 37.5, 90, 50, 70, 70, 50, 60, 45, 45, 45],
+    [32, 40.0, 90, 50, 80, 60, 50, 60, 45, 45, 45],
+    [34, 42.5, 100, 50, 80, 60, 50, 60, 50, 50, 50],
+    [36, 45.0, 100, 60, 90, 70, 60, 70, 50, 50, 50],
+    [38, 47.5, 110, 60, 90, 70, 60, 70, 50, 50, 50],
+    [40, 50.0, 110, 70, 100, 80, 80, 70, 60, 60, 60],
+    [42, 52.5, 125, 70, 100, 80, 80, 70, 60, 60, 60],
+    [44, 55.0, 125, 70, 110, 80, 80, 70, 60, 60, 60],
+    [46, 57.5, 125, 80, 110, 90, 90, 70, 60, 60, 60],
+    [48, 60.0, 125, 80, 110, 90, 90, 70, 70, 70, 70],
+    [50, 62.5, 150, 80, 125, 100, 90, 100, 70, 70, 70],
+    [52, 65.0, 150, 90, 125, 100, 90, 100, 70, 70, 70],
+    [54, 67.5, 150, 90, 125, 100, 90, 100, 80, 80, 80],
+    [56, 70.0, 150, 90, 125, 110, 110, 100, 80, 80, 80],
+    [58, 72.5, 150, 100, 125, 110, 110, 100, 80, 80, 80],
+    [60, 75.0, 175, 100, 150, 110, 110, 100, 90, 90, 90],
+    [62, 77.5, 175, 100, 150, 110, 110, 100, 90, 90, 90],
+    [64, 80.0, 175, 110, 150, 125, 110, 125, 90, 90, 90],
+    [66, 82.5, 175, 110, 150, 125, 110, 125, 90, 90, 90],
+    [68, 85.0, 200, 110, 150, 125, 110, 125, 100, 100, 100],
+    [70, 87.5, 200, 110, 175, 125, 110, 125, 100, 100, 100],
+    [72, 90.0, 200, 125, 175, 125, 125, 125, 100, 100, 100],
+    [74, 92.5, 200, 125, 175, 125, 125, 125, 110, 110, 110],
+    [76, 95.0, 225, 125, 175, 150, 125, 150, 110, 110, 110],
+    [78, 97.5, 225, 125, 175, 150, 125, 150, 110, 110, 110],
+    [80, 100.0, 225, 125, 200, 150, 125, 150, 110, 110, 110],
+    [82, 102.5, 225, 125, 200, 150, 125, 150, 110, 110, 110],
+    [84, 105.0, 250, 125, 200, 150, 125, 150, 125, 125, 125],
+    [86, 107.5, 250, 150, 200, 150, 150, 150, 125, 125, 125],
+    [88, 110.0, 250, 150, 200, 175, 150, 175, 125, 125, 125],
+    [90, 112.5, 250, 150, 225, 175, 150, 175, 125, 125, 125],
+    [92, 115.0, 250, 150, 225, 175, 150, 175, 125, 125, 125],
+    [94, 117.5, 250, 150, 225, 175, 150, 175, 125, 125, 125],
+    [96, 120.0, 250, 150, 225, 175, 150, 175, 125, 125, 125],
+    [98, 122.5, 250, 150, 225, 175, 150, 175, 125, 125, 125],
+    [100, 125.0, 300, 175, 250, 200, 175, 200, 150, 150, 150],
+    [105, 131.3, 300, 175, 250, 200, 175, 200, 150, 150, 150],
+    [110, 137.5, 300, 175, 250, 200, 175, 200, 150, 150, 150],
+    [115, 143.8, 300, 200, 250, 225, 200, 225, 150, 150, 150],
+    [120, 150.0, 350, 200, 300, 225, 200, 225, 175, 175, 175],
+    [125, 156.3, 350, 200, 300, 250, 200, 250, 175, 175, 175],
+    [130, 162.5, 350, 225, 300, 250, 225, 250, 175, 175, 175],
+    [135, 168.8, 400, 225, 300, 250, 225, 250, 200, 200, 200],
+    [140, 175.0, 400, 225, 350, 250, 225, 250, 200, 200, 200],
+    [145, 181.3, 400, 250, 350, 250, 250, 250, 200, 200, 200],
+    [150, 187.5, 450, 250, 350, 300, 250, 300, 225, 225, 225],
+    [155, 193.8, 450, 250, 350, 300, 250, 300, 225, 225, 225],
+    [160, 200.0, 450, 250, 400, 300, 250, 300, 225, 225, 225],
+    [165, 206.3, 450, 250, 400, 300, 250, 300, 225, 225, 225],
+    [170, 212.5, 500, 250, 400, 300, 250, 300, 250, 250, 250],
+    [175, 218.8, 500, 300, 400, 350, 300, 350, 250, 250, 250],
+    [180, 225.0, 500, 300, 450, 350, 300, 350, 250, 250, 250],
+    [185, 231.3, 500, 300, 450, 350, 300, 350, 250, 250, 250],
+    [190, 237.5, 500, 300, 450, 350, 300, 350, 250, 250, 250],
+    [195, 243.8, 500, 300, 450, 350, 300, 350, 250, 250, 250],
+    [200, 250.0, 600, 350, 500, 400, 350, 400, 300, 300, 300],
+    [210, 262.5, 600, 350, 500, 400, 350, 400, 300, 300, 300],
+    [220, 275.0, 600, 350, 500, 400, 350, 400, 300, 300, 300],
+    [230, 287.5, 600, 400, 500, 450, 450, 400, 300, 300, 300],
+    [240, 300.0, None, 400, None, 450, 450, 400, 350, 350, 350],
+    [250, 312.5, None, 400, None, 500, 450, 500, 350, 350, 350],
+    [260, 325.0, None, 450, 600, 500, 450, 500, 350, 350, 350],
+    [270, 337.5, None, 450, 600, 500, 450, 500, 400, 400, 400],
+    [280, 350.0, None, 450, None, 500, 450, 500, 400, 400, 400],
+    [290, 362.5, None, 500, None, 500, 500, 500, 400, 400, 400],
+    [300, 375.0, None, 500, None, 600, 500, 600, 450, 450, 450],
+    [320, 400, None, 500, None, 600, 500, 600, 450, 450, 450],
+    [340, 425, None, 500, None, 600, 500, 600, 500, 500, 500],
+    [360, 450, None, 600, None, None, 600, None, 500, 500, 500],
+    [380, 475, None, 600, None, None, 600, None, 500, 500, 500],
+    [400, 500, None, None, None, None, None, None, 600, 600, 600],
+    [420, 525, None, None, None, None, None, None, 600, 600, 600],
+    [440, 550, None, None, None, None, None, None, 600, 600, 600],
+    [460, 575, None, None, None, None, None, None, 600, 600, 600],
+    [480, 600, None, None, None, None, None, None, 600, 600, 600],
+    [500, 625, None, None, None, None, None, None, None, None, None],
+]
+
+
+TABLE_D16 = {
+    "title": "Table D16 — Sizes of conductors, fuse ratings, and circuit breaker settings for motor overload protection and motor circuit overcurrent protection",
+    "units": "A",
+    "columns": _D16_COLUMNS,
+    "rows": _rows_from_columns(_D16_COLUMNS, _D16_DATA),
+}
+# --------------------------------------------------------------------------------------
+# Table D — System Factor (f) for voltage drop calculations
+# --------------------------------------------------------------------------------------
+# Based on various AC and DC electrical systems and connection types
+# Used in formula: VD(%) = (k × f × I × L) / 1000
+TABLE_D_SYSTEM_FACTOR = {
+    "title": "Table D — System factor (f) for voltage drop calculations in various AC and DC electrical systems and connection types",
+    "units": "dimensionless",
+    "columns": ["system_connection", "f_value", "voltage_reference"],
+    "rows": [
+        {"system_connection": "DC — 2-wire (positive-to-negative)", "f_value": 2.0, "voltage_reference": "Positive-to-negative"},
+        {"system_connection": "DC — 2-wire (positive-to-ground)", "f_value": 2.0, "voltage_reference": "Positive-to-ground"},
+        {"system_connection": "DC — 2-wire (negative-to-ground)", "f_value": 2.0, "voltage_reference": "Negative-to-ground"},
+        {"system_connection": "DC — 3-wire, line-to-line with grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-line"},
+        {"system_connection": "1-φ AC — 2-wire, line-to-grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-ground"},
+        {"system_connection": "1-φ AC — 2-wire, line-to-line", "f_value": 2.0, "voltage_reference": "Line-to-line"},
+        {"system_connection": "1-φ AC — 3-wire, line-to-line, with grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-line"},
+        {"system_connection": "3-φ AC — 2-wire, line-to-grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-ground"},
+        {"system_connection": "3-φ AC — 2-wire, line-to-line, no grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-line"},
+        {"system_connection": "3-φ AC — 3-wire, line-to-line with grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-line"},
+        {"system_connection": "3-φ AC — 3-wire, line-to-grounded conductor", "f_value": 2.0, "voltage_reference": "Line-to-ground"},
+        {"system_connection": "3-φ AC — 3-wire, line-to-line, no grounded conductor", "f_value": 1.732, "voltage_reference": "Line-to-line"},
+        {"system_connection": "3-φ AC — 4-wire, line-to-line, with grounded conductor", "f_value": 1.732, "voltage_reference": "Line-to-line"},
+    ],
+}
 
 # ----------------------------
 # Registry + public API
