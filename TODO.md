@@ -2,18 +2,14 @@
 
 ## Pending
 
-- [ ] Commit and push `.gitignore` update (`.claude/` entry added)
 - [ ] Verify transformer protection calculator fix with @jnenzuvela and close the GitHub issue
   - Fix: `>750V, P&S, 7.5% < Z ≤ 10%` secondary branch now splits on Vsec (≤750V → F:250%/CB:250%, >750V → F:125%/CB:250%)
+- [ ] Commit and push all session changes (`.gitignore`, table hyperlinks, Table 50, source reorder, markdown fixes)
 
 ## App — Incomplete Calculators
 
 - [ ] **Power Factor Correction** — currently a placeholder (`st.info("Placeholder — content coming soon.")` at line 5064); needs full calculator logic (capacitor sizing, reactive power, kVAR correction)
 - [ ] **Grounding/Bonding** — stub logic with hardcoded AWG values (lines 1844–1863, results say "placeholder"); needs real table lookups from OESC Rule 26-200 / NEC Table 250.102(C)
-
-## App — Navigation
-
-- [ ] Fix appendix hyperlinks to navigate directly to the correct table in the table reference section
 
 ## Documentation — NEC Variants (all currently stubs)
 
@@ -38,5 +34,11 @@ All 8 calculators with complete OESC docs are missing equivalent NEC content:
 
 ## Recently Completed
 
-- [x] Updated calculator logic to reflect new flowchart (transformer protection)
-- [x] Refactored transformer protection calculation to follow flowchart
+- [x] Transformer protection flowchart logic fix (>750V P&S, 7.5–10% Z secondary branch)
+- [x] Table hyperlinks in theory/examples tabs — `Table X` references auto-link to Table Library
+- [x] Table 50 added to table registry with full data
+- [x] `oesc_tables.py` table definitions reordered numerically (1→50, then D2→D_SYSTEM_FACTOR)
+- [x] Appendix hyperlinks — navigate to correct table via `?table=X` query param
+- [x] Singular "Tables X" naming fixed across markdown files
+- [x] Transformer protection examples moved to Examples tab
+- [x] `lib/theory.py` and `streamlit_app.py` cleanup/refactor
