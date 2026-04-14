@@ -25,29 +25,6 @@ Below is a general flow to follow for sizing overcurrent devices based on availa
 
 For sizing the overcurrent device for a feeder supplying multiple motors, the methodology is similar to sizing feeders for mutiple motors. You adjust the largest FLC accordingly to Table 29, then add the remaining nominal FLCs to size the main feeder.
 
-For example, say you have three motors, with the following characteristics
-
-| Motor No. | Fuse Type  | FLC |
-|-----------|------------|-----|
-| $${M_1}$$ | Time-delay | 62  |
-| $${M_2}$$ | Time-delay | 27  |
-| $${M_3}$$ | Time-delay | 11  |
-
-To size each motor's overcurrent device, we would apply the factor from Table 29 for each line.
-
-| Motor No. | Ampere Target| Standard Fuse Rating |
-|-----------|--------------|---------------------|
-| $${M_1}$$ | 62 $$\cdot$$ 1.75 = 108.5 A | 100 A |
-| $${M_2}$$ | 27 $$\cdot$$ 1.75 = 47.25 A | 45 A  |
-| $${M_3}$$ | 11 $$\cdot$$ 1.75 = 19.25 A | 15 A  |
-
-To size the feeder supplying all these motors, we adjust the largest FLC in the circuit, and add the remaining FLCs to size our overcurrent device.
-
-| Device Type | Ampere Target| Standard Fuse Rating |
-|-------------|--------------|---------------------|
-| Non-time-delay fuse | (62 $$\cdot$$ 3) + 27 + 11 = 224 A | 200 A |
-| Time-delay fuse | (62 $$\cdot$$ 1.75) + 27 + 11 = 146.5 A | 125 A |
-| Circuit Breaker | (62 $$\cdot$$ 2.5) + 27 + 11 = 193 A | 175 A |
 
 ---
 

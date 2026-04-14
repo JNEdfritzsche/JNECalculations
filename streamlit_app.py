@@ -2002,14 +2002,44 @@ elif page == "Motor Protection":
         # Calculate OCPD
         if multiplier is not None:
             ocpd_raw = fla * multiplier
+
+            # Rule 28-200(4) — motor not starting maximums
+            if device_key == "NTD":
+                if ocpd_raw <= 600:
+                    not_starting_mult = 4.00
+                    not_starting_note = "400% FLC — non-time-delay fuse rated ≤ 600 A (Rule 28-200(4)a)i)"
+                else:
+                    not_starting_mult = 3.00
+                    not_starting_note = "300% FLC — non-time-delay fuse rated 601–6000 A (Rule 28-200(4)a)ii)"
+            elif device_key == "TD":
+                not_starting_mult = 2.25
+                not_starting_note = "225% FLC — time-delay fuse (Rule 28-200(4)b)"
+            else:  # CB
+                if ocpd_raw <= 100:
+                    not_starting_mult = 4.00
+                    not_starting_note = "400% FLC — inverse-time CB rated ≤ 100 A (Rule 28-200(4)c)i)"
+                else:
+                    not_starting_mult = 3.00
+                    not_starting_note = "300% FLC — inverse-time CB rated > 100 A (Rule 28-200(4)c)ii)"
+            not_starting_max = fla * not_starting_mult
+
             st.markdown("### Calculation Result")
             st.info(f"**Table 29 {table_29_row_desc}** → Multiplier: **{multiplier}×** ({device_type})")
             st.metric("Overcurrent Device Setting (raw)", fmt(ocpd_raw, "A"))
-            st.caption("Round to the next standard overcurrent device rating from Table 13.")
+            st.caption("Select the next lower standard size that does not exceed this value (Table 13).")
 
             st.markdown("### Equation used")
             eq(r"I_{OCPD}=k\cdot I_{FLA}")
             st.caption(f"where k = {multiplier} (from Table 29 Row {table_29_row}, {device_type})")
+
+            st.divider()
+            st.markdown("### Rule 28-200(4) — If motor will not start")
+            st.caption(
+                "Where the Table 29 rated device will not permit the motor to start, "
+                "the rating may be increased to the following maximum:"
+            )
+            st.metric("Maximum OCPD if motor will not start", fmt(not_starting_max, "A"))
+            st.caption(f"{not_starting_note}. Select the next lower standard size that does not exceed this value (Table 13).")
 
             # =====================================================================
             # Export Motor Protection Report
@@ -2059,7 +2089,7 @@ elif page == "Motor Protection":
                     "Motor overcurrent device sizing follows OESC Table 29 flowchart methodology.",
                     "Full-load current (FLA) is the motor's nameplate FLA.",
                     "Multiplier k is determined by motor type, starter type, and voltage system per Table 29.",
-                    "Raw OCPD value is rounded to the next standard rating from Table 13 (overcurrent device ratings).",
+                    "Select the next lower standard size from Table 13 that does not exceed the raw OCPD value (Rule 28-200(3)a).",
                     "All motor configurations and selection criteria follow the flowchart depicted in OESC Rule 28-200 & 28-204.",
                 ]:
                     doc.add_paragraph(a, style="CalcBullet")
@@ -2081,12 +2111,17 @@ elif page == "Motor Protection":
                     ("Overcurrent Device Type", device_type),
                     ("Multiplier (k) from Table 29", f"{multiplier}"),
                     ("Raw OCPD Setting (k × I_FLA)", f"{ocpd_raw:.2f} A"),
+                    ("Rule 28-200(4) Max if Motor Will Not Start", f"{not_starting_max:.2f} A"),
                 ])
 
                 doc.add_heading("Notes", level=1)
                 doc.add_paragraph(
-                    f"Round the raw OCPD setting of {ocpd_raw:.2f} A to the next standard overcurrent device rating from Table 13. "
-                    "Consult Table 13 for available standard ratings.",
+                    f"Select the next lower standard size from Table 13 that does not exceed {ocpd_raw:.2f} A (Rule 28-200(3)a).",
+                    style="CalcBullet"
+                )
+                doc.add_paragraph(
+                    f"If the motor will not start on the Table 29 rated device, the maximum may be increased to "
+                    f"{not_starting_max:.2f} A per {not_starting_note}.",
                     style="CalcBullet"
                 )
 
@@ -2135,9 +2170,16 @@ elif page == "Motor Protection":
                 ws[f"A{row}"] = "Raw OCPD Setting (A)"
                 ws[f"B{row}"] = _safe_float(ocpd_raw)
 
+                row += 1
+                ws[f"A{row}"] = "Rule 28-200(4) Max if Motor Will Not Start (A)"
+                ws[f"B{row}"] = _safe_float(not_starting_max)
+
                 row += 2
                 ws[f"A{row}"] = "Notes"
-                ws[f"B{row}"] = f"Round {ocpd_raw:.2f} A to next standard rating from Table 13"
+                ws[f"B{row}"] = (
+                    f"Select the next lower standard size from Table 13 not exceeding {ocpd_raw:.2f} A. "
+                    f"If motor will not start, max permitted is {not_starting_max:.2f} A ({not_starting_note})."
+                )
 
                 _autosize_excel_cols(ws)
                 return _wb_to_bytes(wb)

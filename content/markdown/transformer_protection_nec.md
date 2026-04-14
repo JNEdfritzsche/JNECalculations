@@ -69,40 +69,6 @@ A supervised location is one where maintenance/supervision ensure **only qualifi
 
 ---
 
-## Worked NEC examples
-
-Example 1 — 2 MVA, 27.6 kV / 4.16 kV, Z ≤ 6%, any location:
-
-$$ I_{pri}=\frac{2{,}000{,}000}{\sqrt{3}\cdot 27{,}600}\approx 41.89\ \mathrm{A} $$
-$$ I_{sec}=\frac{2{,}000{,}000}{\sqrt{3}\cdot 4{,}160}\approx 277.90\ \mathrm{A} $$
-
-**Document example multipliers (table-driven, Z ≤ 6%, any location):**
-
-Primary limits:
-
-$$ I_{pri,brk,max}=6.00\cdot I_{pri}\approx 251.34\ \mathrm{A} $$
-$$ I_{pri,fuse,max}=3.00\cdot I_{pri}\approx 125.67\ \mathrm{A} $$
-
-Secondary limits:
-
-$$ I_{sec,brk,max}=3.00\cdot I_{sec}\approx 833.70\ \mathrm{A} $$
-$$ I_{sec,fuse,max}=2.50\cdot I_{sec}\approx 694.75\ \mathrm{A} $$
-
-Example document selections (using commercially available sizes where applicable):
-**Primary 300 A breaker** or **150 A fuse**; **Secondary 1000 A breaker** or **700 A fuse**.
-
-Example 2 — 75 kVA, 600 V / 208 V (currents > 9 A):
-
-$$ I_{pri}=\frac{75{,}000}{\sqrt{3}\cdot 600}\approx 72.25\ \mathrm{A} $$
-$$ I_{sec}=\frac{75{,}000}{\sqrt{3}\cdot 208}\approx 208.43\ \mathrm{A} $$
-
-Two schemes presented in the document (table-driven):
-
-- primary-only → **100 A**
-- primary+secondary → **200 A primary** and **300 A secondary** (example selections)
-
----
-
 ## Practical design notes
 
 NEC transformer OCPD sizing focuses on protecting the transformer. Conductor protection still must be checked under Article 240. Coordination, relay protection for large transformers (e.g., ANSI 50/51 where applicable), and grounding/winding configuration should all be considered.

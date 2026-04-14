@@ -131,6 +131,67 @@ $$\text{Fill\%} = \frac{826 + 1{,}750}{8{,}311} \times 100\% = \frac{2{,}576}{8{
 
 ---
 
+## Example 5 — Voltage Segregation, Two Runs in Separate Conduits
+
+**Mixed 24VDC and 600V | RMC | 53 mm (2")**
+
+Two cable runs must be kept in separate conduits due to voltage segregation. The 24VDC signal run uses 40% fill (3+ cables per conduit). The 600V power run is a single 6/C cable and uses 53% fill (1 cable).
+
+| Cable group | Insulation | Conductors | Area/cable | Qty | Total area |
+|-------------|------------|------------|-----------|-----|------------|
+| 24VDC — #14 AWG – 1/C | TW75 | 98 × 1/C | 8.9 mm² | 98 | 872.2 mm² |
+| 600V — #2/0 AWG – 6/C | RW90XLPE jacketed | 1 × 6/C | 1,165 mm² | 1 | 1,165 mm² |
+
+For 53 mm (2") RMC: internal area = 2,199 mm².
+
+**Conduit 1 — 24VDC signal (98 cables, 40% limit):**
+
+$$\text{Fill\%} = \frac{872.2}{2{,}199} \times 100\% = 39.66\% \leq 40\% \quad \checkmark \text{ PASS}$$
+
+**Conduit 2 — 600V power (1 cable, 53% limit):**
+
+$$\text{Fill\%} = \frac{1{,}165}{2{,}199} \times 100\% = 52.97\% \leq 53\% \quad \checkmark \text{ PASS}$$
+
+**Result: Fill two 53 mm (2") RMC conduits — Conduit 1 (24VDC signal) at 39.7%, Conduit 2 (600V power) at 53.0%**
+
+---
+
+## Example 6 — Gauge Segregation Due to 200-Conductor Limit
+
+**Mixed 24VDC and 480V | RMC | 78 mm (3")**
+
+The 24VDC signal group contains 225 conductors total (75× #14 + 150× #10), exceeding the 200-conductor per conduit limit per Rule 12-910. The two gauges must be split into separate conduits. The 480V power run is kept in a third conduit.
+
+| Cable group | Conductors | Area/cable | Qty | Total area |
+|-------------|------------|-----------|-----|------------|
+| 24VDC — #14 AWG – 1/C | 75 × 1/C | 8.9 mm² | 75 | 667.5 mm² |
+| 24VDC — #10 AWG – 1/C | 150 × 1/C | 15.7 mm² | 150 | 2,355 mm² |
+| 480V — #250 MCM – 1/C | 4 × 1/C | 354 mm² | 4 | 1,416 mm² |
+
+For 78 mm (3") RMC: internal area = 4,839 mm². With 3+ cables, 40% fill limit applies.
+
+**Initial check — Conduit 2 (#10 AWG, 150 cables, 40% limit):**
+
+$$\text{Fill\%} = \frac{150 \times 15.7}{4{,}839} \times 100\% = \frac{2{,}355}{4{,}839} = 48.67\% > 40\% \quad \times \text{ FAIL}$$
+
+150× #10 AWG exceeds 40% fill. Move 27 cables from Conduit 2 into Conduit 1 to bring both within limits.
+
+**Revised — Conduit 1 (75× #14 AWG + 27× #10 AWG, 40% limit):**
+
+$$\text{Fill\%} = \frac{(75 \times 8.9) + (27 \times 15.7)}{4{,}839} \times 100\% = \frac{667.5 + 423.9}{4{,}839} = \frac{1{,}091.4}{4{,}839} = 22.55\% \leq 40\% \quad \checkmark \text{ PASS}$$
+
+**Revised — Conduit 2 (remaining 123× #10 AWG, 40% limit):**
+
+$$\text{Fill\%} = \frac{123 \times 15.7}{4{,}839} \times 100\% = \frac{1{,}931.1}{4{,}839} = 39.91\% \leq 40\% \quad \checkmark \text{ PASS}$$
+
+**Conduit 3 — 480V power (4 cables, 40% limit):**
+
+$$\text{Fill\%} = \frac{4 \times 354}{4{,}839} \times 100\% = \frac{1{,}416}{4{,}839} = 29.26\% \leq 40\% \quad \checkmark \text{ PASS}$$
+
+**Result: Fill three 78 mm (3") RMC conduits — Conduit 1 (#14 + partial #10) at 22.6%, Conduit 2 (remaining #10) at 39.9%, Conduit 3 (480V power) at 29.3%**
+
+---
+
 ## Appendix
 
 ### Related Knowledge Files

@@ -77,6 +77,36 @@ $$I_{\text{target}} = 1.25 \times 162.1 = 202.6 \text{ A}$$
 
 ---
 
+## Example 4 — Multiple Motors, Mixed Duty Ratings
+
+**3φ | Mixed continuous and non-continuous duty | OESC Rule 28-108**
+
+Three motors share a common feeder. Motor M3 is rated for short-time (15-minute) duty rather than continuous, which affects its sizing factor per Table 27. The largest continuous motor (M2) receives the 125% service factor; all others use their respective duty factors.
+
+| Motor | Duty Service | FLA |
+|-------|--------------|-----|
+| $M_1$ | Continuous | 9 A |
+| $M_2$ | Continuous | 12 A |
+| $M_3$ | Non-continuous, 15 min. rating | 5 A |
+
+**Individual conductor sizing (Rule 28-106, factor per Table 27):**
+
+| Motor | Factor | Adjusted FLA | Minimum Conductor Size |
+|-------|--------|-------------|------------------------|
+| $M_1$ | × 1.25 (continuous) | 9 × 1.25 = 11.25 A | No. 14 AWG |
+| $M_2$ | × 1.25 (continuous) | 12 × 1.25 = 15 A | No. 14 AWG |
+| $M_3$ | × 1.20 (15-min. duty, Table 27) | 5 × 1.20 = 6 A | No. 14 AWG |
+
+**Feeder sizing (Rule 28-110) — 125% of the largest motor FLA, plus nominal FLA of the remaining motors (duty factor applied to non-continuous):**
+
+$$I_{\text{feeder}} = (12 \times 1.25) + 9 + (5 \times 1.20) = 15 + 9 + 6 = 30 \text{ A}$$
+
+From Table 2 @60°C: **No. 10 AWG** (rated 30 A ≥ 30 A).
+
+**Result: Individual branch conductors = No. 14 AWG each | Feeder conductor = No. 10 AWG at 30 A**
+
+---
+
 ## Appendix
 
 ### Related Knowledge Files

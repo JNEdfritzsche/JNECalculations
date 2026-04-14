@@ -38,36 +38,6 @@ After applying the above correction, conductor ampacity can be further corrected
 
 ---
 
-## Primary Feeder Sizing Example
-
-Properly size the primary feeder of a transformer with the following information:
-
-### Given Data
-
-- Transformer rating: **75 kVA**
-- Primary voltage: **600 V**
-- Secondary voltage: **208 V**
-- System: **3-phase**
-- Ambient temperature: **40 °C**
-- Maximum conductor temperature: **75 °C**
-- Single Conductors
-
-### Primary Adjusted Full-Load Current
-
-From the information given, only the temperature correction can be applied.
-
-$$  I_{\text{FLC}} = \frac{75{,}000}{\sqrt{3}\cdot 600} \approx 73.169 \text{A}  $$
-
-From Table 5A, for 75°C Insulation @ 40°C Ambient, temperature correction factor is: *0.88*
-
-$$  I_{\text{FLC}}' = \frac{1.25 \cdot I_{\text{prim}}}{0.88} = \frac{1.25 \cdot 73.169}{0.88} \approx 102.5 \text{A}  $$
-
-### Conductor Size Selection
-
-With out amapacity target of 102.5 A, we check Table 1 @ 75°C, and select **#4 AWG** as our feeder size.
-
----
-
 ## Appendix
 
 ### Related Knowledge Files

@@ -23,57 +23,7 @@ There are a few factors to consider, such as pull tension, maximum of two 90° e
 
 ## General Method
 
-Once cables have been adequately sized, we must determine the best order to fill the conduits. We aim to fill conduits in order of; voltage level, and conductor gauge. Below are two examples.
-
-### Separating by Voltage Level
-
-Consider two runs through 53 mm (2") conduit.
-
-|Param.      |Run 1| Run 2|
-|------------|-----|------|
-|Voltage:    | 24VDC | 600V |
-|Insulation: | TW75  | RW90XLPE jacketed |
-|Conductors: | 98 x #14 AWG-1/C | 1 x #2/0 AWG-6/C |
-
-Here we would run the signal through one conduit and the power through the other. The signal conduit having a limit of 40% and the power conduit of 53%.
-
-|     Param.        | Conduit 1                             | Conduit 2                            |
-|-------------------|---------------------------------------|--------------------------------------|
-Cable Area:         | $$ 8.9 \text{mm}^2 $$                 | $$ 1165 \text{mm}^2$$                |
-Total Cable area:   | $$ 98 \cdot 8.9 = 872.2 \text{mm}^2$$ | $$ 1 \cdot 1165 = 1165 \text{mm}^2$$ |
-Conduit Area (100%):| $$ 2199 \text{mm}^2 $$                | $$ 2199 \text{mm}^2 $$               |
-Conduit Fill %:     | $$ \frac{872.2}{2199} = 39.66 \% $$   | $$ \frac{1165}{2199} =  52.97\% $$   |
-
-As we see, both conduit are able to fit their respective runs within regulation.
-
-### Separating by Gauge
-
-Consider two runs through 78 mm (3") conduit.
-
-|Param.      |Conduit 1|Conduit 2|
-|------------|---------|---------|
-|Voltage:    | 24VDC | 480V |
-|Insulation: | TW75  | RW90XLPE jacketed |
-|Conductors: | 75 x #14 AWG-1/C <br/> 150 x #10 AWG-1/C | 4 x 250 MCM-1/C |
-
-However, since we see the signal runs comprise of more than 200 cables, we must use another conduit to run these. In this case, we would segregate by conductor gauge. Following the same methodology as before.
-
-|     Param.        |Conduit 1 | Conduit 2 | Conduit 3  |
-|-------------------|----------|-----------|------------|
-Cable Area:         | $$8.9 \text{mm}^2 $$                 | $$15.7 \text{mm}^2$$                       | $$ 354 \text{mm}^2$$                |
-Total Cable area:   | $$75 \cdot 8.9 = 667.5 \text{mm}^2$$ | $$150 \cdot 15.7 = 2355 \text{mm}^2$$      | $$ 4 \cdot 354 = 1416 \text{mm}^2$$ |
-Conduit Area (100%):| $$ 4839\text{mm}^2 $$                | $$ 4839 \text{mm}^2 $$                     | $$ 4839\text{mm}^2 $$               |
-Conduit Fill %:     | $$ \frac{667.5}{4839} = 13.79 \% $$  | $$ \frac{2355}{4839} = \cancel{48.67\%} $$ | $$ \frac{1416}{4839} = 29.26\% $$   |
-
-Had the conduit been 3½" or bigger, we would have no problem, this forces us fill our remaining cables from conduit 2 into conduit 1.
-
-
-|     Param.        |Conduit 1 | Conduit 2 | Conduit 3  |
-|-------------------|----------|-----------|------------|
-Cable Area          |                                                          $$ 8.9 \text{mm}^2 $$                                                           | $$15.7 \text{mm}^2$$                  | $$ 354 \text{mm}^2$$              |
-Total Cable area    | $$ 75 \cdot 8.9 = 667.5 \text{mm}^2$$ <br/> $$27\cdot 15.7 = \underline{423.9 \text{mm}^2}$$ <br/> $$ \hspace{1.5cm} 1091.4\text{mm}^2$$ | $$123 \cdot 15.7 = 1931.1\text{mm}^2$$| $$4 \cdot 354 = 1416 \text{mm}^2$$|
-Conduit Area (100%) |                                                         $$ 4839\text{mm}^2 $$                                                            | $$ 4839 \text{mm}^2 $$                | $$ 4839\text{mm}^2 $$             |
-Conduit Fill %      |                                                   $$ \frac{1091.4}{4839} = 22.55 \% $$                                                   | $$ \frac{1931.1}{4839} = 39.91\% $$   | $$ \frac{1416}{4839} = 29.26\% $$ |
+Once cables have been adequately sized, we must determine the best order to fill the conduits. We aim to fill conduits in order of; voltage level, and conductor gauge.
 
 ---
 

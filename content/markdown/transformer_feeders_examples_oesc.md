@@ -68,6 +68,39 @@ $$\frac{V_1}{V_2} = \frac{13{,}800}{600} = 23$$
 
 ---
 
+## Example 3 — Primary Feeder Sizing with Temperature Derating
+
+**75 kVA | 3φ | 600 V primary / 208 V secondary | 40°C ambient | 75°C conductors | Single conductors**
+
+This example shows how to size the primary feeder conductor after applying the 125% rule (Rule 26-256) and an ambient temperature correction from Table 5A.
+
+| Parameter | Value |
+|-----------|-------|
+| Transformer rating $S$ | 75 kVA = 75,000 VA |
+| Phases | 3φ |
+| Primary voltage $V_{\text{pri}}$ | 600 V |
+| Ambient temperature | 40°C |
+| Conductor insulation | 75°C |
+| Temperature correction factor (Table 5A, 75°C @ 40°C) | 0.88 |
+
+**Primary full-load current:**
+
+$$I_{\text{FLC}} = \frac{75{,}000}{\sqrt{3} \times 600} = \frac{75{,}000}{1{,}039.2} = 72.17 \text{ A}$$
+
+**Minimum conductor ampacity target (Rule 26-256, 125% of FLC):**
+
+$$I_{\text{target}} = 1.25 \times 72.17 = 90.21 \text{ A}$$
+
+**Required table ampacity after temperature derating:**
+
+$$I_{\text{required}} = \frac{90.21}{0.88} = 102.5 \text{ A}$$
+
+From Table 1 @75°C: select **#4 AWG** (rated ampacity ≥ 102.5 A).
+
+**Result: Primary feeder = #4 AWG copper | Required table ampacity = 102.5 A**
+
+---
+
 ## Appendix
 
 ### Related Knowledge Files

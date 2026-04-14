@@ -70,22 +70,7 @@ Not all motors are rated for continuous operation. Motors can be rated for; shor
 
 </div>
 
-Working with multiple motors is common in industrial installations. While this increases complexity, applying the same methodology to each motor can simplify things. For example, say you have three motors, with the following characteristics.
-
-| Motor No. | Duty Service | FLA |
-|-----------|--------------|-----|
-| $${M_1}$$ | Continuous    | 9   |
-| $${M_2}$$ | Continuous    | 12  |
-| $${M_3}$$ | Non-continuous, 15min. rating    | 5   |
-
-We only upsize the largest continuous FLA motor and apply the applicable factors for the non-continuous motors, resulting in
-
-| Motor No. | Adjusted FLA | Minimum Conductor Size |
-|-----------|--------------|------------------------|
-| $${M_1}$$ | 9 X 1.25 = 11.25    | No. 14 AWG |
-| $${M_2}$$ | 12 x 1.25 = 15   | No. 14 AWG |
-| $${M_3}$$ | 5 x 1.2 =  6 | No. 14 AWG |
-| Feeder Total | 9 + 15 + 6 = 30 | **No. 10 AWG** |
+Working with multiple motors is common in industrial installations. While this increases complexity, applying the same methodology to each motor can simplify things.
 
 ---
 
