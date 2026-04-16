@@ -1936,12 +1936,12 @@ elif page == "Motor Protection":
                 # Step 3: Starter or Controller type
                 starter_type = st.selectbox(
                     "Starter or Controller Type",
-                    ["Auto-TX or Star-Delta", "FV&R (Full Voltage & Running)"],
+                    ["Auto-TX or Star-Delta", "Full-voltage, resistor and reactor starting"],
                     index=0,
                     key="mp_starter_type"
                 )
 
-                if starter_type == "FV&R (Full Voltage & Running)":
+                if starter_type == "Full-voltage, resistor and reactor starting":
                     # Table 29 Row 2: FV&R
                     table_29_row = 2
                     table_29_row_desc = "FV&R (Row 2)"
