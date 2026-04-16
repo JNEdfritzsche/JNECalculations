@@ -42,7 +42,7 @@ except Exception as e:
     _TABLES_IMPORT_ERROR = str(e)
 
 # Set to False during development to disable password protection
-ENABLE_PASSWORD_PROTECTION = False
+ENABLE_PASSWORD_PROTECTION = True
 
 # ----------------------------
 # Global Variables
