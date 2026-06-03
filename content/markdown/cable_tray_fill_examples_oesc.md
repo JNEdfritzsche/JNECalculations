@@ -1,6 +1,10 @@
 ## Overview
 
-### Example: Single Layer Power Runs
+Before sizing a cable tray, the cable types, quantities, dimensions, and installation arrangement must be identified. The required tray width is determined based on the cable diameters and spacing requirements, while tray utilization is evaluated using the tray fill calculation:
+
+$$ \text{Tray Fill (\%)} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} \times 100 $$
+
+## Example 1 — Single Layer Power Runs
 
 We're running the following cables, evenly spaced in a horizontal layer, in a 4" cable tray. We need to determine the minimum width and fill percentage.
 
@@ -34,7 +38,7 @@ $$ \text{Tray fill \%} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}}
 
 </div>
 
-### Example: Sectioned Runs
+## Example 2 — Sectioned Runs
 
 We're running the the following cables in a 4"x12" cable tray divided into two section
 
