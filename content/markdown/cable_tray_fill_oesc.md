@@ -37,7 +37,7 @@ Trays come in many different manufactured size. Heights, lengths, useable length
 
 ## Clearances
 
-The clearance for cable trays are mostly concerned
+The clearance for cable trays are mostly concerned with the spacing between two trays, and the trays with walls and other obstructions.
 
 <div align="center">
 
