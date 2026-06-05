@@ -41,7 +41,7 @@ A Transformer has the following nameplate
 | $${V_S}$$ | 11 kV |
 | Impedance | 3.6% |
 
-According to rule 26-250, differentiating that our secondary is also > 750V, we size for the primary & secondary protection with the following multipliers:
+According to rule 26-250, noting our impedance and that our secondary is also > 750V, we size for the primary & secondary protection with the following multipliers:
 
 $${k_{CB,pri.}}$$ = 6.0
 
@@ -64,12 +64,57 @@ $$ I_{F,sec.}=I_P \cdot k_{F} = 39.36 \cdot 1.5 =  118.09 A $$ -> <mark> $$125A$
 ---
 ## Example 3 — Transformers < 750V; Oil type, Primary Side Protection
 
-number 6
+A Transformer has the following nameplate
+
+| Parametre | Value |
+|-|-|
+| Power | 100 kVA |
+| $${V_P}$$ | 600 V |
+| $${V_S}$$ | 240 V |
+| Type | Oil |
+
+According to rule 26-252, we size for the primary protection with the following multipliers:
+
+$${k_{CB}}$$ = $${k_{F}}$$ = 1.5
+
+Rounding up to the next standard size, our devices would be be sized to
+
+$$ I_{CB,pri.} = I_{F,pri.} = I_P \cdot k_{CB} = I_P \cdot k_{F} = 166.67 \cdot 1.5 =  250 A $$ -> <mark> $$250A$$
+
 
 ---
+
+-->
 ## Example 4 — Transformers < 750V; Dry-type, P&S Side Protection
 
-number 11
+A Transformer has the following nameplate
+
+| Parametre | Value |
+|-|-|
+| Power | 15 kVA |
+| $${V_P}$$ | 480 V |
+| $${V_S}$$ |  240 kV |
+| Type | Dry |
+
+According to rule 26-254, noting our impedance and that our secondary is also > 750V, we size for the primary & secondary protection with the following multipliers:
+
+$${k_{CB,pri.}}$$ = 6.0
+
+$${k_{F,pri.}}$$ = 3.0
+
+$${k_{CB,sec.}}$$ = 3.0
+
+$${k_{F,sec.}}$$ = 1.5
+
+Rounding up to the next standard size, our devices would be be sized to
+
+$$ I_{CB,pri.}=I_P \cdot k_{CB} = 13.12 \cdot 6 =  39.36 A $$ -> <mark> $$40A$$
+
+$$ I_{F,pri.}=I_P \cdot k_{F} = 13.12 \cdot 3 =  78.73 A $$ -> <mark> $$80A$$
+
+$$ I_{CB,sec.}=I_P \cdot k_{CB} = 39.36 \cdot 3 =  59.05 A $$ -> <mark> $$60A$$
+
+$$ I_{F,sec.}=I_P \cdot k_{F} = 39.36 \cdot 1.5 =  118.09 A $$ -> <mark> $$125A$$ 
 
 
 ---
