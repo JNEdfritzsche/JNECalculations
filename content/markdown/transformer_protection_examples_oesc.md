@@ -2,8 +2,6 @@
 
 These examples walk through the few different examples of sizing OCPDs for various transformers. The main three are 
 
-<!--
-
 ---
 
 ## Example 1 — Transformers > 750V; Primary side Protection
@@ -84,7 +82,6 @@ $$ I_{CB,pri.} = I_{F,pri.} = I_P \cdot k_{CB} = I_P \cdot k_{F} = 166.67 \cdot 
 
 ---
 
--->
 ## Example 4 — Transformers < 750V; Dry-type, P&S Side Protection
 
 A Transformer has the following nameplate
@@ -93,10 +90,10 @@ A Transformer has the following nameplate
 |-|-|
 | Power | 15 kVA |
 | $${V_P}$$ | 480 V |
-| $${V_S}$$ |  240 kV |
+| $${V_S}$$ |  240 V |
 | Type | Dry |
 
-According to rule 26-254, noting our impedance and that our secondary is also > 750V, we size for the primary & secondary protection with the following multipliers:
+According to rule 26-254, noting our impedance and that our secondary is also < 750V, we size for the primary & secondary protection with the following multipliers:
 
 $${k_{CB,pri.}}$$ = 6.0
 
@@ -108,13 +105,13 @@ $${k_{F,sec.}}$$ = 1.5
 
 Rounding up to the next standard size, our devices would be be sized to
 
-$$ I_{CB,pri.}=I_P \cdot k_{CB} = 13.12 \cdot 6 =  39.36 A $$ -> <mark> $$40A$$
+$$ I_{CB,pri.}=I_P \cdot k_{CB} = 18.04 \cdot 3 =  54.13 A $$ -> <mark> $$60A$$
 
-$$ I_{F,pri.}=I_P \cdot k_{F} = 13.12 \cdot 3 =  78.73 A $$ -> <mark> $$80A$$
+$$ I_{F,pri.}=I_P \cdot k_{F} = 18.04 \cdot 3 =  54.13 A $$ -> <mark> $$60A$$
 
-$$ I_{CB,sec.}=I_P \cdot k_{CB} = 39.36 \cdot 3 =  59.05 A $$ -> <mark> $$60A$$
+$$ I_{CB,sec.}=I_P \cdot k_{CB} = 36.08 \cdot 1.25 =  45.11 A $$ -> <mark> $$50A$$
 
-$$ I_{F,sec.}=I_P \cdot k_{F} = 39.36 \cdot 1.5 =  118.09 A $$ -> <mark> $$125A$$ 
+$$ I_{F,sec.}=I_P \cdot k_{F} = 36.08 \cdot 1.25 =  45.11 A $$ -> <mark> $$50A$$ 
 
 
 ---
