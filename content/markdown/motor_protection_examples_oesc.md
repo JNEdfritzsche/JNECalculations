@@ -3,7 +3,8 @@
 This section walks through worked examples for calculating motor overcurrent device currents, including time-delay fuses, non-time-delay fuses, and circuit breakers.<br/>
 
 The overcurrent device setting formula is:<br/>
-$$I\_{OCPD} = k \\cdot I\_{FLA}$$
+
+$$ I\_{OCPD} = k \cdot I_{FLA} $$
 
 ## Example 1 — DC Motor
 
