@@ -4,7 +4,7 @@ This section walks through worked examples for calculating motor overcurrent dev
 
 The overcurrent device setting formula is:<br/>
 
-$$ I\_{OCPD} = k \cdot I_{FLA} $$
+$$ I_{OCPD} = k \cdot I_{FLA} $$
 
 ## Example 1 — DC Motor
 
@@ -13,173 +13,173 @@ A motor has the following nameplate
 |Parameter|Value|
 |-|-|
 |$$V$$|180 V|
-|$$I\_{FLA}$$|9.5 A|
+|$$I_{FLA}$$|9.5 A|
 |Starter or Controller Type|N/A|
 
 According to rule 28-200, noting that our motor is DC, we size for the overcurrent device rating with the following multipliers:
 
-$${k\_{TD}}$$ = 1.50
+$${k_{TD}}$$ = 1.50
 
-$${k\_{NTD}}$$ = 1.50
+$${k_{NTD}}$$ = 1.50
 
-$${k\_{CB}}$$ = 1.50
+$${k_{CB}}$$ = 1.50
 
 Rounding up to the next standard overcurrent device rating, our devices would be sized to
 
-$$ I\_{OCPD(TD)}=I\_{FLA} \\cdot k\_{TD} = 9.5 \\cdot 1.50 =  14.25 A $$ -> <mark> $$15A$$
+$$ I_{OCPD(TD)}=I_{FLA} \cdot k_{TD} = 9.5 \cdot 1.50 =  14.25 A $$ -> <mark> $$15A$$
 
-$$ I\_{OCPD(NTD)}=I\_{FLA} \\cdot k\_{NTD} = 9.5 \\cdot 1.50 =  14.25 A $$ -> <mark> $$15A$$
+$$ I_{OCPD(NTD)}=I_{FLA} \cdot k_{NTD} = 9.5 \cdot 1.50 =  14.25 A $$ -> <mark> $$15A$$
 
-$$ I\_{OCPD(CB)}=I\_{FLA} \\cdot k\_{CB} = 9.5 \\cdot 1.50 =  14.25 A $$ -> <mark> $$15A$$
+$$ I_{OCPD(CB)}=I_{FLA} \cdot k_{CB} = 9.5 \cdot 1.50 =  14.25 A $$ -> <mark> $$15A$$
 
-\---
+---
 
-## Example 2 — AC Motor; 1$\\phi$
+## Example 2 — AC Motor; 1$\phi$
 
 A motor has the following nameplate
 
 |Parameter|Value|
 |-|-|
 |$$V$$|230 V|
-|$$I\_{FLA}$$|62 A|
+|$$I_{FLA}$$|62 A|
 |Phase|1|
 |Starter or Controller Type|N/A|
 
 According to rule 28-200, noting that motor is single-phased, we size for the overcurrent device rating with the following multipliers:
 
-$${k\_{TD}}$$ = 1.75
+$${k_{TD}}$$ = 1.75
 
-$${k\_{NTD}}$$ = 3.00
+$${k_{NTD}}$$ = 3.00
 
-$${k\_{CB}}$$ = 2.50
+$${k_{CB}}$$ = 2.50
 
 Rounding up to the next standard overcurrent device rating, our devices would be sized to
 
-$$ I\_{OCPD(TD)}=I\_{FLA} \\cdot k\_{TD} = 62 \\cdot 1.75 =  108.5 A $$ -> <mark> $$110A$$
+$$ I_{OCPD(TD)}=I\_{FLA} \cdot k_{TD} = 62 \cdot 1.75 =  108.5 A $$ -> <mark> $$110A$$
 
-$$ I\_{OCPD(NTD)}=I\_{FLA} \\cdot k\_{NTD} = 62  \\cdot 3.00 =  186 A $$ -> <mark> $$200A$$
+$$ I_{OCPD(NTD)}=I\_{FLA} \cdot k_{NTD} = 62  \cdot 3.00 =  186 A $$ -> <mark> $$200A$$
 
-$$ I\_{OCPD(CB)}=I\_{FLA} \\cdot k\_{CB} = 62  \\cdot 2.50 =  155 A $$ -> <mark> $$175A$$
+$$ I_{OCPD(CB)}=I\_{FLA} \cdot k_{CB} = 62  \cdot 2.50 =  155 A $$ -> <mark> $$175A$$
 
-\---
+---
 
-## Example 3 — AC Motor; 3$\\phi$; Squirrel-cage or Synchronous, Auto-TX or Star-Delta
+## Example 3 — AC Motor; 3$\phi$; Squirrel-cage or Synchronous, Auto-TX or Star-Delta
 
 A motor has the following nameplate
 
 |Parameter|Value|
 |-|-|
 |$$V$$|612 V|
-|$$I\_{FLA}$$|90 A|
+|$$I_{FLA}$$|90 A|
 |Phase|3|
 |Starter or Controller Type|Auto-TX or Star-Delta|
 
-According to rule 28-200, noting that our motor is 3-phase with a motor type of Squirrel-cage or Synchronous, a starter or controller type of Auto-TX or Star-Delta, and $$I\_{FLC}>30 A$$, we size for the overcurrent device rating with the following multipliers:
+According to rule 28-200, noting that our motor is 3-phase with a motor type of Squirrel-cage or Synchronous, a starter or controller type of Auto-TX or Star-Delta, and $$I_{FLC}>30 A$$, we size for the overcurrent device rating with the following multipliers:
 
-$${k\_{TD}}$$ = 1.75
+$${k_{TD}}$$ = 1.75
 
-$${k\_{NTD}}$$ = 2.00
+$${k_{NTD}}$$ = 2.00
 
-$${k\_{CB}}$$ = 2.00
+$${k_{CB}}$$ = 2.00
 
 Rounding up to the next standard overcurrent device rating, our devices would be sized to
 
-$$ I\_{OCPD(TD)}=I\_{FLA} \\cdot k\_{TD} = 90 \\cdot 1.75 =  157.5 A $$ -> <mark> $$175A$$
+$$ I_{OCPD(TD)}=I_{FLA} \cdot k_{TD} = 90 \cdot 1.75 =  157.5 A $$ -> <mark> $$175A$$
 
-$$ I\_{OCPD(NTD)}=I\_{FLA} \\cdot k\_{NTD} = 90 \\cdot 2.00 =  180 A $$ -> <mark> $$200A$$
+$$ I_{OCPD(NTD)}=I_{FLA} \cdot k_{NTD} = 90 \cdot 2.00 =  180 A $$ -> <mark> $$200A$$
 
-$$ I\_{OCPD(CB)}=I\_{FLA} \\cdot k\_{CB} = 90 \\cdot 2.00 =  180 A $$ -> <mark> $$200A$$
+$$ I_{OCPD(CB)}=I_{FLA} \cdot k_{CB} = 90 \cdot 2.00 =  180 A $$ -> <mark> $$200A$$
 
-\---
+---
 
-## Example 4 — AC Motor; 3$\\phi$, Squirrel-cage or Synchronous, Auto-TX or Star-Delta
+## Example 4 — AC Motor; 3$\phi$, Squirrel-cage or Synchronous, Auto-TX or Star-Delta
 
 A motor has the following nameplate
 
 |Parameter|Value|
 |-|-|
 |$$V$$|360 V|
-|$$I\_{FLA}$$|25 A|
+|$$I_{FLA}$$|25 A|
 |Phase|3|
 |Starter or Controller Type|Auto-TX or Star-Delta|
 
-According to rule 28-200, noting that our motor is 3-phase with a motor type of Squirrel-cage or Synchronous, a starter or controller type of Auto-TX or Star-Delta, and $$I\_{FLC}<30 A$$, we size for the overcurrent device rating with the following multipliers:
+According to rule 28-200, noting that our motor is 3-phase with a motor type of Squirrel-cage or Synchronous, a starter or controller type of Auto-TX or Star-Delta, and $$I_{FLC}<30 A$$, we size for the overcurrent device rating with the following multipliers:
 
-$${k\_{TD}}$$ = 1.75
+$${k_{TD}}$$ = 1.75
 
-$${k\_{NTD}}$$ = 2.50
+$${k_{NTD}}$$ = 2.50
 
-$${k\_{CB}}$$ = 2.00
+$${k_{CB}}$$ = 2.00
 
 Rounding up to the next standard overcurrent device rating, our devices would be sized to
 
-$$ I\_{OCPD(TD)}=I\_{FLA} \\cdot k\_{TD} = 25 \\cdot 1.75 =  43.75 A $$ -> <mark> $$45A$$
+$$ I_{OCPD(TD)}=I_{FLA} \cdot k_{TD} = 25 \cdot 1.75 =  43.75 A $$ -> <mark> $$45A$$
 
-$$ I\_{OCPD(NTD)}=I\_{FLA} \\cdot k\_{NTD} = 25 \\cdot 2.50 =  62.5 A $$ -> <mark> $$70A$$
+$$ I_{OCPD(NTD)}=I_{FLA} \cdot k_{NTD} = 25 \cdot 2.50 =  62.5 A $$ -> <mark> $$70A$$
 
-$$ I\_{OCPD(CB)}=I\_{FLA} \\cdot k\_{CB} = 25 \\cdot 2.00 =  50 A $$ -> <mark> $$50A$$
+$$ I_{OCPD(CB)}=I_{FLA} \cdot k_{CB} = 25 \cdot 2.00 =  50 A $$ -> <mark> $$50A$$
 
-\---
+---
 
 
 
-## Example 5 — AC Motor; 3$\\phi$; Squirrel-cage or Synchronous; FV\&R
+## Example 5 — AC Motor; 3$\phi$; Squirrel-cage or Synchronous; FV&R
 
 A motor has the following nameplate
 
 |Parameter|Value|
 |-|-|
 |$$V$$|230/460 V|
-|$$I\_{FLA}$$|144/72 A|
+|$$I_{FLA}$$|144/72 A|
 |Phase|3|
-|Starter or Controller Type|FV\&R|
+|Starter or Controller Type|FV&R|
 
-According to rule 28-200, noting that our motor is 3-phase with a motor type of Squirrel-cage or Synchronous and a starter or controller type of FV\&R, we size for the overcurrent device rating with the following multipliers:
+According to rule 28-200, noting that our motor is 3-phase with a motor type of Squirrel-cage or Synchronous and a starter or controller type of FV&R, we size for the overcurrent device rating with the following multipliers:
 
-$${k\_{TD}}$$ = 1.75
+$${k_{TD}}$$ = 1.75
 
-$${k\_{NTD}}$$ = 3.00
+$${k_{NTD}}$$ = 3.00
 
-$${k\_{CB}}$$ = 2.50
+$${k_{CB}}$$ = 2.50
 
 Rounding up to the next standard overcurrent device rating, our devices would be sized to
 
-$$ I\_{OCPD(TD)}=I\_{FLA} \\cdot k\_{TD} = 1.75 \\cdot 144 =  <mark> 252 A $$ -> <mark> $$300A$$
+$$ I_{OCPD(TD)}=I_{FLA} \cdot k\_{TD} = 1.75 \cdot 144 =  <mark> 252 A $$ -> <mark> $$300A$$
 
-$$ I\_{OCPD(NTD)}=I\_{FLA} \\cdot k\_{NTD} = 3.00 \\cdot 144 = 432  A $$ -> <mark> $$450A$$
+$$ I_{OCPD(NTD)}=I_{FLA} \cdot k\_{NTD} = 3.00 \cdot 144 = 432  A $$ -> <mark> $$450A$$
 
-$$ I\_{OCPD(CB)}=I\_{FLA} \\cdot k\_{CB} = 2.50 \\cdot 144 =  360 A $$ -> <mark> $$400A$$
+$$ I_{OCPD(CB)}=I_{FLA} \cdot k\_{CB} = 2.50 \cdot 144 =  360 A $$ -> <mark> $$400A$$
 
-\---
+---
 
-## Example 6 — AC Motor; 3$\\phi$, Wound Rotor
+## Example 6 — AC Motor; 3$\phi$, Wound Rotor
 
 A motor has the following nameplate
 
 |Parameter|Value|
 |-|-|
 |$$V$$|430 V|
-|$$I\_{FLA}$$|127 A|
+|$$I_{FLA}$$|127 A|
 |Phase|3|
 |Starter or Controller Type|Wound Rotor|
 
 According to rule 28-200, noting that our motor is 3-phase with a motor type of wound rotor, we size for the overcurrent device rating with the following multipliers:
 
-$${k\_{TD}}$$ = 1.50
+$${k_{TD}}$$ = 1.50
 
-$${k\_{NTD}}$$ = 1.50
+$${k_{NTD}}$$ = 1.50
 
-$${k\_{CB}}$$ = 1.50
+$${k_{CB}}$$ = 1.50
 
 Rounding up to the next standard overcurrent device rating, our devices would be sized to
 
-$$ I\_{OCPD(TD)}=I\_{FLA} \\cdot k\_{TD} = 127 \\cdot 1.50 =  190.5 A $$ -> <mark> $$200A$$
+$$ I_{OCPD(TD)}=I_{FLA} \\cdot k\_{TD} = 127 \cdot 1.50 =  190.5 A $$ -> <mark> $$200A$$
 
-$$ I\_{OCPD(NTD)}=I\_{FLA} \\cdot k\_{NTD} = 127 \\cdot 1.50 =  190.5 A $$ -> <mark> $$200A$$
+$$ I_{OCPD(NTD)}=I_{FLA} \\cdot k\_{NTD} = 127 \cdot 1.50 =  190.5 A $$ -> <mark> $$200A$$
 
-$$ I\_{OCPD(CB)}=I\_{FLA} \\cdot k\_{CB} = 127 \\cdot 1.50 =  190.5 A $$ -> <mark> $$200A$$
+$$ I_{OCPD(CB)}=I_{FLA} \\cdot k\_{CB} = 127 \cdot 1.50 =  190.5 A $$ -> <mark> $$200A$$
 
-\---
+---
 
 ## Appendix
 
