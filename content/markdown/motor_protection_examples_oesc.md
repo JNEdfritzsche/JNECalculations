@@ -12,7 +12,7 @@ A motor has the following nameplate
 
 |Parameter|Value|
 |-|-|
-|$$V$$|180 V|
+|$$V$$|180 VDC|
 |$$I_{FLA}$$|9.5 A|
 |Starter or Controller Type|N/A|
 
@@ -69,7 +69,7 @@ A motor has the following nameplate
 
 |Parameter|Value|
 |-|-|
-|$$V$$|612 V|
+|$$V$$|600 V|
 |$$I_{FLA}$$|90 A|
 |Phase|3|
 |Starter or Controller Type|Auto-TX or Star-Delta|
@@ -98,7 +98,7 @@ A motor has the following nameplate
 
 |Parameter|Value|
 |-|-|
-|$$V$$|360 V|
+|$$V$$|347 V|
 |$$I_{FLA}$$|25 A|
 |Phase|3|
 |Starter or Controller Type|Auto-TX or Star-Delta|
@@ -158,7 +158,7 @@ A motor has the following nameplate
 
 |Parameter|Value|
 |-|-|
-|$$V$$|430 V|
+|$$V$$|460 V|
 |$$I_{FLA}$$|127 A|
 |Phase|3|
 |Starter or Controller Type|Wound Rotor|
