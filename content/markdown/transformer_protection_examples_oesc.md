@@ -11,6 +11,7 @@ A Transformer has the following nameplate
 | Parametre | Value |
 |-|-|
 | Power | 2 MVA |
+| Phase | 3 |
 | $${V_P}$$ | 10.2 kV |
 | $${V_S}$$ | 415 V |
 | Impedance | 3.5% |
@@ -35,6 +36,7 @@ A Transformer has the following nameplate
 | Parametre | Value |
 |-|-|
 | Power | 750 kVA |
+| Phase | 3 |
 | $${V_P}$$ | 33 kV |
 | $${V_S}$$ | 11 kV |
 | Impedance | 3.6% |
@@ -67,6 +69,7 @@ A Transformer has the following nameplate
 | Parametre | Value |
 |-|-|
 | Power | 100 kVA |
+| Phase | 1 |
 | $${V_P}$$ | 600 V |
 | $${V_S}$$ | 240 V |
 | Type | Oil |
@@ -89,29 +92,30 @@ A Transformer has the following nameplate
 | Parametre | Value |
 |-|-|
 | Power | 15 kVA |
+| Phase | 1 |
 | $${V_P}$$ | 480 V |
 | $${V_S}$$ |  240 V |
 | Type | Dry |
 
 According to rule 26-254, noting our impedance and that our secondary is also < 750V, we size for the primary & secondary protection with the following multipliers:
 
-$${k_{CB,pri.}}$$ = 6.0
+$${k_{CB,pri.}}$$ = 3.0
 
 $${k_{F,pri.}}$$ = 3.0
 
-$${k_{CB,sec.}}$$ = 3.0
+$${k_{CB,sec.}}$$ = 1.25
 
-$${k_{F,sec.}}$$ = 1.5
+$${k_{F,sec.}}$$ = 1.25
 
 Rounding up to the next standard size, our devices would be be sized to
 
-$$ I_{CB,pri.}=I_P \cdot k_{CB} = 18.04 \cdot 3 =  54.13 A $$ -> <mark> $$60A$$
+$$ I_{CB,pri.}=I_P \cdot k_{CB} = 31.25 \cdot 3 =  39.06 A $$ -> <mark> $$40A$$
 
-$$ I_{F,pri.}=I_P \cdot k_{F} = 18.04 \cdot 3 =  54.13 A $$ -> <mark> $$60A$$
+$$ I_{F,pri.}=I_P \cdot k_{F} = 31.25 \cdot 3 =  39.06 A $$ -> <mark> $$40A$$
 
-$$ I_{CB,sec.}=I_P \cdot k_{CB} = 36.08 \cdot 1.25 =  45.11 A $$ -> <mark> $$50A$$
+$$ I_{CB,sec.}=I_P \cdot k_{CB} = 62.5 \cdot 1.25 =  78.125 A $$ -> <mark> $$80A$$
 
-$$ I_{F,sec.}=I_P \cdot k_{F} = 36.08 \cdot 1.25 =  45.11 A $$ -> <mark> $$50A$$ 
+$$ I_{F,sec.}=I_P \cdot k_{F} = 62.5 \cdot 1.25 =  78.125 A $$ -> <mark> $$80A$$ 
 
 
 ---
