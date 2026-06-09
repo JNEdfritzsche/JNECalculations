@@ -53,13 +53,13 @@ $${k_{F,sec.}}$$ = 1.5
 
 Rounding up to the next standard size, our devices would be be sized to
 
-$$ I_{CB,pri.}=I_P \cdot k_{CB} = 13.12 \cdot 6 =  39.36 A $$ -> <mark> $$40A$$
+$$ I_{CB,pri.}=I_P \cdot k_{CB} = 13.12 \cdot 6 =  78.73 A $$ -> <mark> $$80A$$
 
-$$ I_{F,pri.}=I_P \cdot k_{F} = 13.12 \cdot 3 =  78.73 A $$ -> <mark> $$80A$$
+$$ I_{F,pri.}=I_P \cdot k_{F} = 13.12 \cdot 3 =  39.36 A $$ -> <mark> $$40A$$
 
-$$ I_{CB,sec.}=I_P \cdot k_{CB} = 39.36 \cdot 3 =  59.05 A $$ -> <mark> $$60A$$
+$$ I_{CB,sec.}=I_P \cdot k_{CB} = 39.36 \cdot 3 =  118.09 A $$ -> <mark> $$125A$$
 
-$$ I_{F,sec.}=I_P \cdot k_{F} = 39.36 \cdot 1.5 =  118.09 A $$ -> <mark> $$125A$$ 
+$$ I_{F,sec.}=I_P \cdot k_{F} = 39.36 \cdot 1.5 =  59.05 A $$ -> <mark> $$60A$$ 
 
 ---
 ## Example 3 — Transformers < 750V; Oil type, Primary Side Protection
@@ -109,9 +109,9 @@ $${k_{F,sec.}}$$ = 1.25
 
 Rounding up to the next standard size, our devices would be be sized to
 
-$$ I_{CB,pri.}=I_P \cdot k_{CB} = 31.25 \cdot 3 =  39.06 A $$ -> <mark> $$40A$$
+$$ I_{CB,pri.}=I_P \cdot k_{CB} = 31.25 \cdot 3 =  93.75 A $$ -> <mark> $$100A$$
 
-$$ I_{F,pri.}=I_P \cdot k_{F} = 31.25 \cdot 3 =  39.06 A $$ -> <mark> $$40A$$
+$$ I_{F,pri.}=I_P \cdot k_{F} = 31.25 \cdot 3 =  93.75 A $$ -> <mark> $$100A$$
 
 $$ I_{CB,sec.}=I_P \cdot k_{CB} = 62.5 \cdot 1.25 =  78.125 A $$ -> <mark> $$80A$$
 
