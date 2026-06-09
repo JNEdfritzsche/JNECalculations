@@ -872,6 +872,9 @@ with st.sidebar:
 
     st.caption("This portal is provided for educational purposes only and is intended to support the understanding of engineering concepts. The tutorials, examples, and tools are not a substitute for professional judgment. Always consult applicable codes, regulations, and qualified engineers before making design or compliance decisions.")
 
+    st.markdown("---")
+    st.caption("Rev. 1.0")
+
 
 # ----------------------------
 # Page shell with Theory/Examples/Calculator tabs
