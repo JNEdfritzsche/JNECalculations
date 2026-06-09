@@ -144,11 +144,11 @@ $${k_{CB}}$$ = 2.50
 
 Rounding up to the next standard overcurrent device rating, our devices would be sized to
 
-$$ I_{OCPD(TD)}=I_{FLA} \cdot k_{TD} = 1.75 \cdot 72 = 126 A $$ -> <mark> $$150A$$
+$$ I_{OCPD(TD)}=I_{FLA} \cdot k_{TD} = 72 \cdot 1.75  = 126 A $$ -> <mark> $$150A$$
 
-$$ I_{OCPD(NTD)}=I_{FLA} \cdot k_{NTD} = 3.00 \cdot 72 = 216 A $$ -> <mark> $$225A$$
+$$ I_{OCPD(NTD)}=I_{FLA} \cdot k_{NTD} = 72 \cdot 3.00 = 216 A $$ -> <mark> $$225A$$
 
-$$ I_{OCPD(CB)}=I_{FLA} \cdot k_{CB} = 2.50 \cdot 72 =  180 A $$ -> <mark> $$200A$$
+$$ I_{OCPD(CB)}=I_{FLA} \cdot k_{CB} = 72 \cdot 2.50 =  180 A $$ -> <mark> $$200A$$
 
 ---
 
