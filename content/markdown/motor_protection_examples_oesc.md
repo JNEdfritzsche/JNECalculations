@@ -129,8 +129,8 @@ A motor has the following nameplate
 
 |Parameter|Value|
 |-|-|
-|$$V$$|230/460 V|
-|$$I_{FLA}$$|144/72 A|
+|$$V$$|460 V|
+|$$I_{FLA}$$|72 A|
 |Phase|3|
 |Starter or Controller Type|FV&R|
 
@@ -144,11 +144,11 @@ $${k_{CB}}$$ = 2.50
 
 Rounding up to the next standard overcurrent device rating, our devices would be sized to
 
-$$ I_{OCPD(TD)}=I_{FLA} \cdot k_{TD} = 1.75 \cdot 144 = 252 A $$ -> <mark> $$300A$$
+$$ I_{OCPD(TD)}=I_{FLA} \cdot k_{TD} = 1.75 \cdot 72 = 126 A $$ -> <mark> $$150A$$
 
-$$ I_{OCPD(NTD)}=I_{FLA} \cdot k_{NTD} = 3.00 \cdot 144 = 432  A $$ -> <mark> $$450A$$
+$$ I_{OCPD(NTD)}=I_{FLA} \cdot k_{NTD} = 3.00 \cdot 72 = 216 A $$ -> <mark> $$225A$$
 
-$$ I_{OCPD(CB)}=I_{FLA} \cdot k_{CB} = 2.50 \cdot 144 =  360 A $$ -> <mark> $$400A$$
+$$ I_{OCPD(CB)}=I_{FLA} \cdot k_{CB} = 2.50 \cdot 72 =  180 A $$ -> <mark> $$200A$$
 
 ---
 
@@ -158,7 +158,7 @@ A motor has the following nameplate
 
 |Parameter|Value|
 |-|-|
-|$$V$$|460 V|
+|$$V$$|575 V|
 |$$I_{FLA}$$|127 A|
 |Phase|3|
 |Starter or Controller Type|Wound Rotor|
