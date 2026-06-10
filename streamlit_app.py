@@ -1989,10 +1989,17 @@ elif page == "Motor Protection":
         # Calculate OCPD
         if multiplier is not None:
             ocpd_raw = fla * multiplier
+            selected_std = next_standard(ocpd_raw, OESC_TABLE13_STANDARD)
+            selected_std_text = fmt(selected_std, "A") if selected_std is not None else "No standard size available"
+
             st.markdown("### Calculation Result")
             st.info(f"**Table 29 {table_29_row_desc}** → Multiplier: **{multiplier}×** ({device_type})")
             st.metric("Overcurrent Device Setting (raw)", fmt(ocpd_raw, "A"))
-            st.caption("Round to the next standard overcurrent device rating from Table 13.")
+            st.metric("Selected standard OCPD rating", selected_std_text)
+            if selected_std is None:
+                st.error("Raw calculated value exceeds the standard Table 13 device ratings list.")
+            else:
+                st.caption("Rounded up to the next standard overcurrent device rating from Table 13.")
 
             st.markdown("### Equation used")
             eq(r"I_{OCPD}=k\cdot I_{FLA}")
@@ -2068,14 +2075,20 @@ elif page == "Motor Protection":
                     ("Overcurrent Device Type", device_type),
                     ("Multiplier (k) from Table 29", f"{multiplier}"),
                     ("Raw OCPD Setting (k × I_FLA)", f"{ocpd_raw:.2f} A"),
+                    ("Selected standard OCPD rating", selected_std_text),
                 ])
 
                 doc.add_heading("Notes", level=1)
-                doc.add_paragraph(
-                    f"Round the raw OCPD setting of {ocpd_raw:.2f} A to the next standard overcurrent device rating from Table 13. "
-                    "Consult Table 13 for available standard ratings.",
-                    style="CalcBullet"
-                )
+                if selected_std is None:
+                    doc.add_paragraph(
+                        f"Raw OCPD setting of {ocpd_raw:.2f} A exceeds the available standard ratings in Table 13.",
+                        style="CalcBullet"
+                    )
+                else:
+                    doc.add_paragraph(
+                        f"Raw OCPD setting of {ocpd_raw:.2f} A was rounded up to {selected_std_text}, the next standard rating from Table 13.",
+                        style="CalcBullet"
+                    )
 
                 return _save_word_doc(doc)
 
@@ -2122,9 +2135,16 @@ elif page == "Motor Protection":
                 ws[f"A{row}"] = "Raw OCPD Setting (A)"
                 ws[f"B{row}"] = _safe_float(ocpd_raw)
 
+                row += 1
+                ws[f"A{row}"] = "Selected standard OCPD rating"
+                ws[f"B{row}"] = selected_std_text
+
                 row += 2
                 ws[f"A{row}"] = "Notes"
-                ws[f"B{row}"] = f"Round {ocpd_raw:.2f} A to next standard rating from Table 13"
+                if selected_std is None:
+                    ws[f"B{row}"] = f"Raw OCPD setting of {ocpd_raw:.2f} A exceeds Table 13 standard ratings."
+                else:
+                    ws[f"B{row}"] = f"Raw OCPD setting of {ocpd_raw:.2f} A was rounded up to {selected_std_text}."
 
                 _autosize_excel_cols(ws)
                 return _wb_to_bytes(wb)
