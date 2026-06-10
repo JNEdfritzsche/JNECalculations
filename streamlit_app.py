@@ -1413,9 +1413,17 @@ d19 -> d20 [style=invis];
                         tp_results += [
                             ("Primary Fuse (200% × Ip)", f"{2.00*Ip:.2f}A", _std_oesc(2.00*Ip)),
                             ("Primary Breaker (400% × Ip)", f"{4.00*Ip:.2f}A", _std_oesc(4.00*Ip)),
-                            ("Secondary Fuse (125% × Is)", f"{1.25*Is:.2f}A", _std_oesc(1.25*Is)),
-                            ("Secondary Breaker (250% × Is)", f"{2.50*Is:.2f}A", _std_oesc(2.50*Is)),
                         ]
+                        if vsec > 750:
+                            tp_results += [
+                                ("Secondary Fuse (125% × Is)", f"{1.25*Is:.2f}A", _std_oesc(1.25*Is)),
+                                ("Secondary Breaker (250% × Is)", f"{2.50*Is:.2f}A", _std_oesc(2.50*Is)),
+                            ]
+                        else:
+                            tp_results += [
+                                ("Secondary Fuse (250% × Is)", f"{2.50*Is:.2f}A", _std_oesc(2.50*Is)),
+                                ("Secondary Breaker (250% × Is)", f"{2.50*Is:.2f}A", _std_oesc(2.50*Is)),
+                            ]
                 elif voltage_class == "≤ 750 V" and xfmr_type == "Oil-cooled (non-dry)" and prot_config == "Primary only" and Ip is not None:
                     mult = 3.00 if Ip < 2.0 else (1.67 if Ip < 9.0 else 1.50)
                     tp_results.append(("Primary OCPD (direct)", f"{mult*Ip:.2f}A ({mult:.2f}×)", _std_oesc(mult*Ip)))
