@@ -2418,12 +2418,12 @@ _D16_DATA = [
     [320, 400, None, 500, None, 600, 500, 600, 450, 450, 450],
     [340, 425, None, 500, None, 600, 500, 600, 500, 500, 500],
     [360, 450, None, 600, None, None, 600, None, 500, 500, 500],
-    [380, 475, None, 600, None, None, 600, None, 500, 500, 500],
+    [380, 475, None, None, None, None, 600, None, 500, 500, 500],
     [400, 500, None, None, None, None, None, None, 600, 600, 600],
     [420, 525, None, None, None, None, None, None, 600, 600, 600],
     [440, 550, None, None, None, None, None, None, 600, 600, 600],
     [460, 575, None, None, None, None, None, None, 600, 600, 600],
-    [480, 600, None, None, None, None, None, None, 600, 600, 600],
+    [480, 600, None, None, None, None, None, None, None, None, None],
     [500, 625, None, None, None, None, None, None, None, None, None],
 ]
 
