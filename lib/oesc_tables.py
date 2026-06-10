@@ -956,6 +956,9 @@ TABLE_9B = {
         "hdpe_dr13_5":     {"id_mm": 73.95, "area_mm2": 4295},
         "hdpe_dr15_5":     {"id_mm": 75.85, "area_mm2": 4519},
     },
+    91: {
+        "rtrc_id":         {"id_mm": 88.39, "area_mm2": 6136},
+    },
     103: {
         "rtrc_ips":        {"id_mm": 109.72, "area_mm2": 9455},
         "rtrc_id":         {"id_mm": 101.09, "area_mm2": 8026},
@@ -1209,6 +1212,9 @@ TABLE_9D = {
         "hdpe_dr13_5": {"id_mm": 73.95, "area_mm2": 2276.37},
         "hdpe_dr15_5": {"id_mm": 75.85, "area_mm2": 2394.84},
     },
+    91: {
+        "rtrc_id":     {"id_mm": 88.39, "area_mm2": 3252.16},
+    },
     103: {
         "rtrc_ips":    {"id_mm": 109.72, "area_mm2": 5011.15},
         "rtrc_id":     {"id_mm": 101.09, "area_mm2": 4253.85},
@@ -1455,6 +1461,9 @@ TABLE_9F = {
         "hdpe_dr13_5": {"id_mm": 73.95, "area_mm2": 1331.46},
         "hdpe_dr15_5": {"id_mm": 75.85, "area_mm2": 1400.76},
     },
+    91: {
+        "rtrc_id":     {"id_mm": 88.39, "area_mm2": 1902.21},
+    },
     103: {
         "rtrc_ips":    {"id_mm": 109.72, "area_mm2": 2931.05},
         "rtrc_id":     {"id_mm": 101.09, "area_mm2": 2488.10},
@@ -1700,6 +1709,9 @@ TABLE_9H = {
         "hdpe_dr11":   {"id_mm": 70.60, "area_mm2": 1565.88},
         "hdpe_dr13_5": {"id_mm": 73.95, "area_mm2": 1718.01},
         "hdpe_dr15_5": {"id_mm": 75.85, "area_mm2": 1807.43},
+    },
+    91: {
+        "rtrc_id":     {"id_mm": 88.39, "area_mm2": 2454.46},
     },
     103: {
         "rtrc_ips":    {"id_mm": 109.72, "area_mm2": 3782.00},
