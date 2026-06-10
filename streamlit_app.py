@@ -1274,7 +1274,16 @@ d19 -> d20 [style=invis];
             else:
                 _rule_ref = "26-254" if xfmr_type == "Dry-type" else "26-252"
                 _prot_label = "Primary only" if prot_config == "Primary only" else "P&S"
-                rule_path = f"{_rule_ref} (≤750V) — {_prot_label}"
+                if xfmr_type == "Oil-cooled (non-dry)" and prot_config == "Primary only" and Ip is not None:
+                    if Ip < 2.0:
+                        ip_label = "Ip < 2A"
+                    elif Ip < 9.0:
+                        ip_label = "Ip 2–9A"
+                    else:
+                        ip_label = "Ip > 9A"
+                    rule_path = f"{_rule_ref} (≤750V) — {_prot_label} ({ip_label})"
+                else:
+                    rule_path = f"{_rule_ref} (≤750V) — {_prot_label}"
         else:
             rule_path = ""
 
