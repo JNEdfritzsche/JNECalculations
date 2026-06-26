@@ -553,6 +553,15 @@ def next_standard(value, standard_list):
             return s
     return None
 
+def prev_standard(value, standard_list):
+    try:
+        v = float(value)
+    except Exception:
+        return None
+    for s in reversed(standard_list):
+        if s <= v - 1e-12:
+            return s
+    return None
 
 def calc_fla(kva, volts, phase):
     """
@@ -1997,7 +2006,7 @@ elif page == "Motor Protection":
         # Calculate OCPD
         if multiplier is not None:
             ocpd_raw = fla * multiplier
-            selected_std = next_standard(ocpd_raw, OESC_TABLE13_STANDARD)
+            selected_std = prev_standard(ocpd_raw, OESC_TABLE13_STANDARD)
             selected_std_text = fmt(selected_std, "A") if selected_std is not None else "No standard size available"
 
             st.markdown("### Calculation Result")
@@ -2007,7 +2016,7 @@ elif page == "Motor Protection":
             if selected_std is None:
                 st.error("Raw calculated value exceeds the standard Table 13 device ratings list.")
             else:
-                st.caption("Rounded up to the next standard overcurrent device rating from Table 13.")
+                st.caption("Rounded down to the next standard overcurrent device rating from Table 13.")
 
             st.markdown("### Equation used")
             eq(r"I_{OCPD}=k\cdot I_{FLA}")
