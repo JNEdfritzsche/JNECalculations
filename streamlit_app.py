@@ -2201,10 +2201,10 @@ elif page == "Motor Feeder":
         with c1:
             phase = st.selectbox("System", ["3-phase", "1-phase", "DC motor"], index=0, key="mf_phase")
         with c2:
-            power_unit = st.selectbox("Power unit", ["HP", "kW"], index=0)
+            power_unit = st.selectbox("Power unit", ["HP", "kW"], index=0, key="mf_power_unit")
             if power_unit == "HP":
                 power_value = st.number_input("Motor power (HP)", min_value=0.1, value=25.0, step=0.1, key="mf_hp")
-            else:               
+            else:
                 power_value = st.number_input("Motor power (kW)", min_value=0.001, value=18.65, step=0.001, key="mf_kw")
         with c3:
             volts = st.number_input(
