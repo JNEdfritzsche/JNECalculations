@@ -85,7 +85,7 @@ To determine which derating factors to apply and their exceptions, the reference
 ### Related OESC Rules
 
 Rule 4-004 — Ampacity of Wires and Cables<br/>
-Rule 4-006 — Temperature Limitations
+Rule 4-006 — Temperature Limitations<br/>
 Rule 26-208 — Conductor Size for Capacitors
 
 ### Related OESC Tables
