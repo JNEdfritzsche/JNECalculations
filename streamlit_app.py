@@ -2103,7 +2103,7 @@ elif page == "Motor Protection":
                     )
                 else:
                     doc.add_paragraph(
-                        f"Raw OCPD setting of {ocpd_raw:.2f} A was rounded up to {selected_std_text}, the next standard rating from Table 13.",
+                        f"Raw OCPD setting of {ocpd_raw:.2f} A was rounded down to {selected_std_text}, the next standard rating from Table 13.",
                         style="CalcBullet"
                     )
 
@@ -2161,7 +2161,7 @@ elif page == "Motor Protection":
                 if selected_std is None:
                     ws[f"B{row}"] = f"Raw OCPD setting of {ocpd_raw:.2f} A exceeds Table 13 standard ratings."
                 else:
-                    ws[f"B{row}"] = f"Raw OCPD setting of {ocpd_raw:.2f} A was rounded up to {selected_std_text}."
+                    ws[f"B{row}"] = f"Raw OCPD setting of {ocpd_raw:.2f} A was rounded down to {selected_std_text}."
 
                 _autosize_excel_cols(ws)
                 return _wb_to_bytes(wb)
