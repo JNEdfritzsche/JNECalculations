@@ -8,6 +8,10 @@ The main area of concern for conductors is sizing. When properly sizing conducto
 
 At the elementary level, running conductors/cables through free air at 30°C, we use **Tables 1/3** for single conductors and **Tables 2/4** for 1-3 multi-conductor cables (or 1-3 single conductors in a raceway). Since many rules consider upsizing the cable according to a service factor, it is generally recommended to upsize 125% for most loads.
 
+### Capacitors
+
+As per Rule 26-208, conductor ampacity for capacitor feeder circuits and branch circuits must be at least 135% of the capacitor's rated current.
+
 ---
 
 ## Temperature Derating
@@ -82,6 +86,7 @@ To determine which derating factors to apply and their exceptions, the reference
 
 Rule 4-004 — Ampacity of Wires and Cables<br/>
 Rule 4-006 — Temperature Limitations
+Rule 26-208 — Conductor Size for Capacitors
 
 ### Related OESC Tables
 
