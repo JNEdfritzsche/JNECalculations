@@ -1,0 +1,14 @@
+# title: Table 430.37 Overload Units
+# edition: 2026
+# header_rows: 1
+# note: *Exception: An overload unit in each phase shall not be required where overload protection is provided by other approved means.
+kind_of_motor,supply_system,number_and_location_of_overload_units
+1-phase ac or dc,"2-wire, 1-phase ac or dc ungrounded",1 in either conductor
+1-phase ac or dc,"2-wire, 1-phase ac or dc, one conductor grounded",1 in ungrounded conductor
+1-phase ac or dc,"3-wire, 1-phase ac or dc, grounded neutral conductor",1 in either ungrounded conductor
+1-phase ac,Any 3-phase,1 in ungrounded conductor
+2-phase ac,"3-wire, 2-phase ac, ungrounded","2, one in each phase"
+2-phase ac,"3-wire, 2-phase ac, one conductor grounded",2 in ungrounded conductors
+2-phase ac,"4-wire, 2-phase ac, grounded or ungrounded","2, one for each phase in ungrounded conductors"
+2-phase ac,"Grounded neutral or 5-wire, 2-phase ac, ungrounded","2, one for each phase in any ungrounded phase wire"
+3-phase ac,Any 3-phase,"3, one in each phase*"

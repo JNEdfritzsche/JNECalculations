@@ -1,0 +1,18 @@
+# title: Table 430.52(C)(1) Maximum Rating or Setting of Motor Branch-Circuit
+#   Short-Circuit and Ground-Fault Protective Devices
+# edition: 2026
+# header_rows: 3
+# note: Note: See 430.54 for certain exceptions to the values specified.
+# note: ¹The values in the Nontime Delay Fuse column apply to time-delay Class CC fuses.
+# note: ²The values given in the Inverse Time Breaker column also cover the ratings of nonadjustable inverse time types of circuit breakers that can be modified as in 430.52(C)(1)(a) and 430.52(C)(1)(b).
+# note: ³Synchronous motors of the low-torque, low-speed type (usually 450 rpm or lower), such as those used to drive reciprocating compressors, pumps, and so forth, that start unloaded, do not require a fuse rating or circuit-breaker setting in excess of 200 percent of full-load current.
+Type of Motor,Percentage of Full-Load Current,,,
+,Nontime Delay Fuse¹,Dual Element (Time-Delay) Fuse¹,Instantaneous-Trip Breaker,Inverse Time Breaker²
+type_of_motor,nontime_delay_fuse,dual_element_time_delay_fuse,instantaneous_trip_breaker,inverse_time_breaker
+Single-phase motors,300,175,800,250
+Alternating-current(ac) polyphase motors other than wound-rotor,300,175,800,250
+Squirrel cage - other than Design B or Cenergy-efficient - and Design B or Cpremium efficiency,300,175,800,250
+"Design B energy-efficient, Design B premium efficiency, Design BE and Design CE",300,175,1100,250
+Synchronous,300,175,800,250
+Wound-rotor,150,150,800,150
+Direct-current(dc) (constant voltage),150,150,250,150

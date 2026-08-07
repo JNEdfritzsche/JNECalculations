@@ -1,0 +1,18 @@
+# title: Table 430.251(A) Conversion Table of Single-Phase Locked-Rotor Currents
+#   for Selection of Disconnecting Means and Controllers as Determined from
+#   Horsepower and Voltage Rating
+# edition: 2026
+# header_rows: 3
+# note: Note: This table is for use only with 430.110, 440.12, 440.41, and 455.8(C).
+Rated Horsepower,"Maximum Locked-Rotor Current in Amperes, Single-Phase",,
+,115 Volts,208 Volts,230 Volts
+rated_horsepower,115_volts,208_volts,230_volts
+1/2,58.8,32.5,29.4
+3/4,82.8,45.8,41.4
+1,96,53,48
+1 1/2,120,66,60
+2,144,80,72
+3,204,113,102
+5,336,186,168
+7 1/2,480,265,240
+10,1000,332,300

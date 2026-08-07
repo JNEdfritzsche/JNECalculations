@@ -1,0 +1,23 @@
+# title: Table 392.22(B)(1) Allowable Cable Fill Area for Single-Conductor
+#   Cables in Ladder, Ventilated Trough, or Wire Mesh Cable Trays for Cables
+#   Rated 2000 Volts or Less
+# edition: 2026
+# header_rows: 4
+# note: ªThe maximum allowable fill areas in Column 2 shall be calculated. For example, the maximum allowable fill, in mm², for a 150-mm wide cable tray in Column 2 shall be 4200 minus (28 multiplied by Sd) [the maximum allowable fill, in square inches, for a 6-in. wide cable tray in Column 2 shall be 6.5 minus (1.1 multiplied by Sd)].
+# note: ᵇThe term Sd in Column 2 is equal to the sum of the diameters, in mm, of all cables 507 mm² (in inches, of all 1000 kcmil) and larger single-conductor cables in the same cable tray with small cables.
+Inside Width of Cable Tray,,"Maximum Allowable Fill Area for Single-Conductor Cables in Ladder, Ventilated Trough, or Wire Mesh Cable Trays",,,
+,,Column 1 Applicable for 392.22(B)(1)(b) Only,,Column 2ª Applicable for 392.22(B)(1)(c) Only,
+mm,in.,mm²,in.²,mm²,in.²
+inside_width_mm,inside_width_in,column_1_mm2,column_1_in2,column_2_mm2,column_2_in2
+50,2,1400,2.0,"1,400 - (28 Sd)",2.0 - (1.1 Sd)
+100,4,2800,4.5,"2,800 - (28 Sd)",4.5 - (1.1 Sd)
+150,6,4200,6.5,"4,200 - (28 Sd)",6.5 - (1.1 Sd)
+200,8,5600,8.5,"5,600 - (28 Sd)",8.5 - (1.1 Sd)
+225,9,6100,9.5,"6,100 - (28 Sd)",9.5 - (1.1 Sd)
+300,12,8400,13.0,"8,400 - (28 Sd)",13.0 - (1.1 Sd)
+400,16,11200,17.5,"11,200 - (28 Sd)",17.5 - (1.1 Sd)
+450,18,12600,19.5,"12,600 - (28 Sd)",19.5 - (1.1 Sd)
+500,20,14000,21.5,"14,000 - (28 Sd)",21.5 - (1.1 Sd)
+600,24,16800,26.0,"16,800 - (28 Sd)",26.0 - (1.1 Sd)
+750,30,21000,32.5,"21,000 - (28 Sd)",32.5 - (1.1 Sd)
+900,36,25200,39.0,"25,200 - (28 Sd)",39.0 - (1.1 Sd)

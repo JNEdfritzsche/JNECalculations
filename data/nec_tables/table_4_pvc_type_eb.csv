@@ -1,0 +1,19 @@
+# title: Table 4 Article 352 — Type EB, Rigid PVC Conduit (PVC)
+# edition: 2026
+# header_rows: 4
+,"Article 352 — Type EB, Rigid PVC Conduit (PVC)",,,,,,,,,,,,
+Metric Designator,Trade Size,Over 2 Wires 40%,,60%,,1 Wire 53%,,2 Wires 31%,,Nominal Internal Diameter,,Total Area 100%,
+,,mm²,in.²,mm²,in.²,mm²,in.²,mm²,in.²,mm,in.,mm²,in.²
+metric_designator,trade_size,over_2_wires_40_area_mm2,over_2_wires_40_area_in2,area_60_mm2,area_60_in2,one_wire_53_area_mm2,one_wire_53_area_in2,two_wires_31_area_mm2,two_wires_31_area_in2,nominal_internal_diameter_mm,nominal_internal_diameter_in,total_area_100_mm2,total_area_100_in2
+16,1/2,,,,,,,,,,,,
+21,3/4,,,,,,,,,,,,
+27,1,,,,,,,,,,,,
+35,1 1/4,,,,,,,,,,,,
+41,1 1/2,,,,,,,,,,,,
+53,2,999,1.550,1499,2.325,1324,2.053,774,1.201,56.4,2.221,2498,3.874
+63,2 1/2,,,,,,,,,,,,
+78,3,2248,3.484,3373,5.226,2979,4.616,1743,2.700,84.6,3.330,5621,8.709
+91,3 1/2,2932,4.546,4397,6.819,3884,6.023,2272,3.523,96.6,3.804,7329,11.365
+103,4,3726,5.779,5589,8.669,4937,7.657,2887,4.479,108.9,4.289,9314,14.448
+129,5,5726,8.878,8588,13.317,7586,11.763,4437,6.881,135.0,5.316,14314,22.195
+155,6,8133,12.612,12200,18.918,10776,16.711,6303,9.774,160.9,6.336,20333,31.530
