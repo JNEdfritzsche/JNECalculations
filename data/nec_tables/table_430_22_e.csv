@@ -1,0 +1,11 @@
+# title: Table 430.22(E) Duty-Cycle Service
+# edition: 2026
+# header_rows: 3
+# note: Note: Any motor application shall be considered as continuous duty unless the nature of the apparatus it drives is such that the motor will not operate continuously with load under any condition of use.
+Classification of Service,Nameplate Current Rating Percentages,,,
+,5-Minute Rated Motor,15-Minute Rated Motor,30- & 60- Minute Rated Motor,Contin- uous Rated Motor
+classification_of_service,5_minute_rated,15_minute_rated,30_and_60_minute_rated,continuous_rated
+"Short-time duty operating valves, raising or lowering rolls, etc.",110,120,150,
+"Intermittent duty freight and passenger elevators, tool heads, pumps, drawbridges, turntables, etc. (for arc welders, see 630.11)",85,85,90,140
+"Periodic duty rolls, ore- and coal-handling machines, etc.",85,90,95,140
+Varying duty,110,120,150,200

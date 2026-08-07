@@ -1,0 +1,48 @@
+# title: Table 310.16 Ampacities of Insulated Conductors with Not More Than
+#   Three Current-Carrying Conductors in Raceway, Cable, or Earth (Directly
+#   Buried)
+# edition: 2026
+# header_rows: 5
+# note: Notes:
+# note: 1. Section 310.15(B) shall be referenced for ampacity correction factors where the ambient temperature is other than 30°C (86°F).
+# note: 2. Section 310.15(C)(1) shall be referenced for more than three current-carrying conductors.
+# note: 3. Section 310.16 shall be referenced for conditions of use.
+# note: 4. Ampacity for 18 AWG copper Type MI and Type MTW shall be 14 amperes at 90°C (194°F).
+# note: 5. Ampacity for 16 AWG copper Type MI and Type MTW shall be 18 amperes at 90°C (194°F).
+# note: ¹Section 240.4(D) shall be referenced for conductor overcurrent protection limitations, except as modified elsewhere in the code.
+# note: ²Ampacity shall be used for adjustment or correction only.
+# note: ³Ampacity shall be applicable only to copper-clad aluminum conductors.
+Size AWG or kcmil,Temperature Rating of Conductor [See Table 310.4(1)],,,,,,Size AWG or kcmil
+,60°C (140°F),75°C (167°F),90°C (194°F),60°C (140°F),75°C (167°F),90°C (194°F),
+,"Types TW, UF","Types RHW, THHW, THW, THWN, XHHW, XHWN, USE, ZW","Types TBS, SA, SIS, FEP, FEPB, MI, PFA, RHH, RHW-2, THHN, THHW, THW-2, THWN-2, USE-2, XHH, XHHW, XHHW-2, XHWN-2, XHHN, Z, ZW-2","Types TW, UF","Types RHW, THHW, THW, THWN, XHHW, XHWN, USE","Types TBS, SA, SIS, THHN, THHW, THW-2, THWN-2, RHH, RHW-2, USE-2, XHH, XHHW, XHHW-2, XHWN-2, XHHN",
+,COPPER,,,ALUMINUM OR COPPER-CLAD ALUMINUM,,,
+size_awg_kcmil,copper_60c_ampacity,copper_75c_ampacity,copper_90c_ampacity,aluminum_or_copper_clad_aluminum_60c_ampacity,aluminum_or_copper_clad_aluminum_75c_ampacity,aluminum_or_copper_clad_aluminum_90c_ampacity,size_awg_kcmil_repeat
+16,10,15,20,,,,
+14,15,20,25,10,15,20,14
+12,20,25,30,15,20,25,12
+10,30,35,40,25,30,35,10
+8,40,50,55,35,40,45,8
+6,55,65,75,40,50,55,6
+4,70,85,95,55,65,75,4
+3,85,100,115,65,75,85,3
+2,95,115,130,75,90,100,2
+1,110,130,145,85,100,115,1
+1/0,125,150,170,100,120,135,1/0
+2/0,145,175,195,115,135,150,2/0
+3/0,165,200,225,130,155,175,3/0
+4/0,195,230,260,150,180,205,4/0
+250,215,255,290,170,205,230,250
+300,240,285,320,195,230,260,300
+350,260,310,350,210,250,280,350
+400,280,335,380,225,270,305,400
+500,320,380,430,260,310,350,500
+600,350,420,475,285,340,385,600
+700,385,460,520,315,375,425,700
+750,400,475,535,320,385,435,750
+800,410,490,555,330,395,445,800
+900,435,520,585,355,425,480,900
+1000,455,545,615,375,445,500,1000
+1250,495,590,665,405,485,545,1250
+1500,525,625,705,435,520,585,1500
+1750,545,650,735,455,545,615,1750
+2000,555,665,750,470,560,630,2000

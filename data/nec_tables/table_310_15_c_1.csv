@@ -1,0 +1,13 @@
+# title: Table 310.15(C)(1) Adjustment Factors for More Than Three
+#   Current-Carrying Conductors
+# edition: 2026
+# header_rows: 2
+# note: *Number of conductors is the total number of conductors in the raceway or cable, including spare conductors. The count shall be adjusted in accordance with 310.15(E) and 310.15(F). The count shall not include conductors that are connected to electrical components that cannot be simultaneously energized.
+Number of Conductors*,"Percent of Values in Table 310.16, 310.18, and 310.20 as Adjusted for Ambient Temperature if Necessary"
+number_of_conductors,adjustment_factor_percent
+4-6,80
+7-9,70
+10-20,50
+21-30,45
+31-40,40
+41 and above,35

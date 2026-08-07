@@ -1,0 +1,24 @@
+# title: Table 392.22(A)(1) Allowable Cable Fill Area for Multiconductor Cables
+#   in Ladder, Ventilated Trough, or Solid Bottom Cable Trays for Cables Rated
+#   2000 Volts or Less
+# edition: 2026
+# header_rows: 5
+# note: ªThe maximum allowable fill areas in Columns 2 and 4 shall be calculated. For example, the maximum allowable fill in mm² for a 150-mm wide cable tray in Column 2 shall be 4500 minus (30 multiplied by Sd) [the maximum allowable fill, in square inches, for a 6-in. wide cable tray in Column 2 shall be 7 minus (1.2 multiplied by Sd)].
+# note: ᵇThe term Sd in Columns 2 and 4 is equal to the sum of the diameters, in mm, of all cables 107.2 mm (in inches, of all 4/0 AWG) and larger multiconductor cables in the same cable tray with smaller cables.
+Inside Width of Cable Tray,,,Maximum Allowable Fill Area for Multiconductor Cables,,,,,,
+,,"Ladder or Ventilated Trough or Wire Mesh Cable Trays, 392.22(A)(1)",,,,"Solid Bottom Cable Trays, 392.22(A)(3)",,,
+,,Column 1 Applicable for 392.22(A)(1)(b) Only,,Column 2ª Applicable for 392.22(A)(1)(c) Only,,Column 3 Applicable for 392.22(A)(3)(b) Only,,Column 4ª Applicable for 392.22(A)(3)(c) Only,
+mm,in.,mm²,in.²,mm²,in.²,mm²,in.²,mm²,in.²
+inside_width_mm,inside_width_in,column_1_mm2,column_1_in2,column_2_mm2,column_2_in2,column_3_mm2,column_3_in2,column_4_mm2,column_4_in2
+50,2.0,1500,2.5,"1,500 - (30 Sd)",2.5 - (1.2 Sd),1200,2.0,"1,200 - (25 Sd)",2.0 - Sd
+100,4.0,3000,4.5,"3,000 - (30 Sd)",4.5 - (1.2 Sd),2300,3.5,"2,300 - (25 Sd)",3.5 - Sd
+150,6.0,4500,7.0,"4,500 - (30 Sd)",7 - (1.2 Sd),3500,5.5,"3,500 - (25 Sd)",5.5-Sd
+200,8.0,6000,9.5,"6,000 - (30 Sd)",9.5 - (1.2 Sd),4500,7.0,"4,500 - (25 Sd)",7.0 - Sd
+225,9.0,6800,10.5,"6,800 - (30 Sd)",10.5 - (1.2 Sd),5100,8.0,"5,100 - (25 Sd)",8.0 - Sd
+300,12.0,9000,14.0,"9,000 - (30 Sd)",14 - (1.2 Sd),7100,11.0,"7,100 - (25 Sd)",11.0 - Sd
+400,16.0,12000,18.5,"12,000 - (30 Sd)",18.5 - (1.2 Sd),9400,14.5,"9,400 - (25 Sd)",14.5 - Sd
+450,18.0,13500,21.0,"13,500 - (30 Sd)",21 - (1.2 Sd),10600,16.5,"10,600 - (25 Sd)",16.5 - Sd
+500,20.0,15000,23.5,"15,000 - (30 Sd)",23.5 - (1.2 Sd),11800,18.5,"11,800 - (25 Sd)",18.5 - Sd
+600,24.0,18000,28.0,"18,000 - (30 Sd)",28 - (1.2 Sd),14200,22.0,"14,200 - (25 Sd)",22.0 - Sd
+750,30.0,22500,35.0,"22,500 - (30 Sd)",35 - (1.2 Sd),17700,27.5,"17,700 - (25 Sd)",27.5 - Sd
+900,36.0,27000,42.0,"27,000 - (30 Sd)",42 - (1.2 Sd),21300,33.0,"21,300 - (25 Sd)",33.0 - Sd

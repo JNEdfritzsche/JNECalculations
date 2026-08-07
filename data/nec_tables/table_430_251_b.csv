@@ -1,0 +1,39 @@
+# title: Table 430.251(B) Conversion Table of Polyphase Design B, C, and D
+#   Maximum Locked-Rotor Currents for Selection of Disconnecting Means and
+#   Controllers as Determined from Horsepower and Voltage Rating and Design
+#   Letter
+# edition: 2026
+# header_rows: 4
+# note: Note: This table is for use only with 430.110, 440.12, 440.41, and 455.8(C).
+# note: *Design A motors are not limited to a maximum starting current or locked rotor current.
+Rated Horsepower,"Maximum Motor Locked-Rotor Current in Amperes, Two- and Three-Phase, Design B, C, and D*",,,,,
+,115 Volts,200 Volts,208 Volts,230 Volts,460 Volts,575 Volts
+,"B, C, D","B, C, D","B, C, D","B, C, D","B, C, D","B, C, D"
+rated_horsepower,115_volts_b_c_d,200_volts_b_c_d,208_volts_b_c_d,230_volts_b_c_d,460_volts_b_c_d,575_volts_b_c_d
+1/2,40,23,22.1,20,10,8
+3/4,50,28.8,27.6,25,12.5,10
+1,60,34.5,33,30,15,12
+1 1/2,80,46,44,40,20,16
+2,100,57.5,55,50,25,20
+3,,73.6,71,64,32,25.6
+5,,105.8,102,92,46,36.8
+7 1/2,,146,140,127,63.5,50.8
+10,,186.3,179,162,81,64.8
+15,,267,257,232,116,93
+20,,334,321,290,145,116
+25,,420,404,365,183,146
+30,,500,481,435,218,174
+40,,667,641,580,290,232
+50,,834,802,725,363,290
+60,,1001,962,870,435,348
+75,,1248,1200,1085,543,434
+100,,1668,1603,1450,725,580
+125,,2087,2007,1815,908,726
+150,,2496,2400,2170,1085,868
+200,,3335,3207,2900,1450,1160
+250,,,,,1825,1460
+300,,,,,2200,1760
+350,,,,,2550,2040
+400,,,,,2900,2320
+450,,,,,3250,2600
+500,,,,,3625,2900

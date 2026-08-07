@@ -1,0 +1,17 @@
+# title: Table 250.66 Grounding Electrode Conductor for ac Systems
+# edition: 2026
+# header_rows: 3
+# note: Notes:
+# note: 1. If multiple sets of service-entrance conductors connect directly to a service drop, set of overhead service conductors, set of underground service conductors, or service lateral, the equivalent size of the largest service-entrance conductor shall be determined by the largest sum of the areas of the corresponding conductors of each set.
+# note: 2. If there are no service-entrance conductors, the grounding electrode conductor size shall be determined by the equivalent size of the largest service-entrance conductor required for the load to be served.
+# note: 3. See installation restrictions in 250.64.
+Size of Largest Ungrounded Conductor or Equivalent Area for Parallel Conductors (AWG/kcmil),,Size of Grounding Electrode Conductor (AWG/kcmil),
+Copper,Aluminum or Copper-Clad Aluminum,Copper,Aluminum or Copper-Clad Aluminum
+size_of_largest_ungrounded_copper_awg_kcmil,size_of_largest_ungrounded_aluminum_awg_kcmil,size_of_gec_copper_awg_kcmil,size_of_gec_aluminum_awg_kcmil
+2 or smaller,1/0 or smaller,8,6
+1 or 1/0,2/0 or 3/0,6,4
+2/0 or 3/0,4/0 or 250,4,2
+Over 3/0 through 350,Over 250 through 500,2,1/0
+Over 350 through 600,Over 500 through 900,1/0,3/0
+Over 600 through 1100,Over 900 through 1750,2/0,4/0
+Over 1100,Over 1750,3/0,250

@@ -1,0 +1,13 @@
+# title: Table 450.5(B) Maximum Rating or Setting of Overcurrent Protection for
+#   Transformers 1000 Volts and Less (as a Percentage of Transformer-Rated
+#   Current)
+# edition: 2026
+# header_rows: 3
+# note: ¹Where 125 percent of this current does not correspond to a standard rating of a fuse or nonadjustable circuit breaker, in accordance with 240.6,a higher rating that does not exceed the next higher standard rating shall be permitted.
+# note: ²Where secondary overcurrent protection is required, the secondary OCPD shall be permitted to consist of not more than six circuit breakers or six sets of fuses grouped in one location. Where multiple OCPDs are utilized, the total of all the device ratings shall not exceed the allowed value of a single OCPD.
+# note: ³A transformer equipped with coordinated thermal overload protection by the manufacturer and arranged to interrupt the primary current shall be permitted to have a primary OCPD rated or set at a current value that is not more than six times the rated current of the transformer for transformers having not more than 6 percent impedance and not more than four times the rated current of the transformer for transformers having more than 6 percent but not more than 10 percent impedance.
+Protection Method,Primary Protection,,,Secondary Protection²,
+,Currents of 9 Amperes or More,Currents Less Than 9 Amperes,Currents Less Than 2 Amperes,Currents of 9 Amperes or More,Currents Less Than 9 Amperes
+Protection Method,Primary Protection - Currents of 9 Amperes or More,Primary Protection - Currents Less Than 9 Amperes,Primary Protection - Currents Less Than 2 Amperes,Secondary Protection - Currents of 9 Amperes or More,Secondary Protection - Currents Less Than 9 Amperes
+Primary only protection,125%,167%,300%,Not required,Not required
+Primary and secondary protection,250%,250%,250%,125%,167%
