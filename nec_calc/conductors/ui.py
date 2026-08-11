@@ -30,10 +30,6 @@ WIRE_TYPE_OPTIONS = [
     "Custom / Other",
 ]
 
-# Wire/cable types with a well-defined NEC insulation rating force that rating
-# below, since letting them be picked independently lets the two contradict
-# each other. "Custom / Other" has no implied rating, so it leaves the
-# conductor insulation rating input open for manual entry.
 WIRE_TYPE_TO_RATING = {
     "THHN / THWN-2 (90°C)": "90",
     "XHHW-2 (90°C)": "90",
@@ -93,9 +89,6 @@ def _build_ambient_options(table):
     return options_c, options_f, key_map
 
 
-# Ambient temperature options depend on which base table (30°C vs 40°C) is selected —
-# the 40°C base table extends to much higher ambient temperatures, so the option list
-# must be rebuilt per table rather than reused across both.
 AMBIENT_OPTIONS_BY_BASE = {
     "30c": _build_ambient_options(TABLE_310_15_B_1_1),
     "40c": _build_ambient_options(TABLE_310_15_B_1_2),
@@ -112,9 +105,6 @@ def render_calc():
         key="nec_cond_temp_unit",
     )
 
-    # Read before the input columns render, since a specified wire/cable type
-    # (if it implies a known NEC insulation rating) overrides the manual
-    # "Conductor insulation rating" input below.
     check_wire_type = st.session_state.get("nec_cond_check_wire_type", False)
     wire_type = st.session_state.get("nec_cond_wire_type", WIRE_TYPE_OPTIONS[0]) if check_wire_type else None
     forced_rating = WIRE_TYPE_TO_RATING.get(wire_type) if check_wire_type else None
@@ -219,8 +209,6 @@ def render_calc():
             key="nec_cond_number_of_conductors",
         )
 
-    # Initialize add-on states from session state
-    # (check_wire_type / wire_type were already read above the input columns)
     check_load = st.session_state.get("nec_cond_check_load", False)
     check_parallel = st.session_state.get("nec_cond_check_parallel", False)
 
@@ -244,8 +232,7 @@ def render_calc():
 
     st.divider()
     st.markdown("### Allowable Ampacity Results")
-    
-    # Primary calculated metrics laid out cleanly in 2 columns just like full-load currents in Transformer Protection
+
     m1, m2 = st.columns(2)
     
     if n_parallel > 1:
@@ -258,8 +245,7 @@ def render_calc():
     m2.metric("Derated ampacity ($I_{derated}$)", fmt(derated_val, "A"))
 
     st.write("")
-    
-    # Supporting calculated details displayed in clean, non-squished 2-column format
+
     d1, d2 = st.columns(2)
     with d1:
         st.write(f"- Table 310.16 base ampacity: **{fmt(result.get('table_ampacity'), 'A')}**")
@@ -270,9 +256,8 @@ def render_calc():
         st.write(f"- Conductor adjustment factor ($AF_{{cond}}$): **{fmt(result.get('conductor_adjustment'))}**")
 
     st.divider()
-    st.markdown("### Optional Add-Ons & Advanced Settings")
-    st.caption("Toggle optional features below to reveal specialized inputs and their dedicated calculation results.")
-
+    st.markdown("### Optional Add-Ons")
+    
     opt_col1, opt_col2, opt_col3 = st.columns(3)
     with opt_col1:
         st.checkbox("Check against design load & auto-size", key="nec_cond_check_load")
@@ -281,7 +266,7 @@ def render_calc():
     with opt_col3:
         st.checkbox("Specify wire / cable insulation type", key="nec_cond_check_wire_type")
 
-    # Display disclosed optional inputs and optional results directly below them when enabled
+
     if check_load or check_parallel or check_wire_type:
         st.write("") # Spacer
         add_col1, add_col2, add_col3 = st.columns(3, gap="large")
