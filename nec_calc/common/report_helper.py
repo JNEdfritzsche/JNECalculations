@@ -392,8 +392,10 @@ def write_source_table_to_excel(ws, start_row, source_table):
 # ============================================================
 # Standard report builders
 # ============================================================
-def can_export_result(result: dict[str, Any] | None, required_keys: tuple[str, ...]) -> bool:
-    return result is not None and all(get_first(result, key) is not None for key in required_keys)
+def can_export_result(result: dict[str, Any] | None, required_keys: tuple[str, ...] = ()) -> bool:
+    if not isinstance(result, dict) or not result:
+        return False
+    return all(get_first(result, key) is not None for key in required_keys)
 
 
 def build_standard_word_report(
@@ -481,39 +483,11 @@ def render_standard_export_report(
 # ============================================================
 # Export button pair
 # ============================================================
-def _render_export_button(
-    prefix,
-    ext,
-    label,
-    file_name,
-    mime,
-    builder,
-    can_export,
-):
-    build_key = f"{prefix}_build_{ext}"
-    bytes_key = f"{prefix}_{ext}_bytes"
-    download_key = f"{prefix}_download_{ext}"
-
-    if st.button(f"Prepare {label} report (.{ext})", key=build_key):
-        try:
-            st.session_state[bytes_key] = builder()
-            st.success(f"{label} report prepared. Use the download button below.")
-        except Exception as e:
-            st.error(f"Failed to build {label} report: {e}")
-
-    file_bytes = st.session_state.get(bytes_key)
-
-    st.download_button(
-        f"⬇️ Download {label} report (.{ext})",
-        data=file_bytes or b"",
-        file_name=file_name,
-        mime=mime,
-        disabled=(not can_export) or (file_bytes is None),
-        key=download_key,
-    )
-
-
 def render_export_buttons(prefix, docx_file, xlsx_file, can_export, word_builder, excel_builder):
+    # Built eagerly, during the script run. st.download_button also accepts a callable
+    # for deferred building, but Streamlit invokes it without a script context, so
+    # anything reading st.session_state (queued rows, the letterhead's project number
+    # and designer name) comes back empty and the report exports blank.
     exports = [
         (
             "docx",
@@ -531,13 +505,26 @@ def render_export_buttons(prefix, docx_file, xlsx_file, can_export, word_builder
         ),
     ]
 
-    for col, export in zip(st.columns([1, 1], gap="large"), exports):
-        with col:
-            _render_export_button(
-                prefix,
-                *export,
-                can_export=can_export,
-            )
+    for col, (ext, label, file_name, mime, builder) in zip(st.columns([1, 1], gap="large"), exports):
+        data = b""
+        failed = False
+
+        if can_export:
+            try:
+                data = builder()
+            except Exception as exc:
+                col.error(f"Could not build the {label} report: {exc}")
+                failed = True
+
+        col.download_button(
+            f"⬇️ Download {label} report (.{ext})",
+            data=data,
+            file_name=file_name,
+            mime=mime,
+            disabled=(not can_export) or failed,
+            key=f"{prefix}_download_{ext}",
+            width="stretch",
+        )
 
 
 __all__ = [
