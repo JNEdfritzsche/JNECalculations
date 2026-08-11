@@ -224,8 +224,8 @@ def read_table_file(path: Path) -> dict[str, Any]:
     """Parse one CSV into the table dict shape used across the app."""
     if not path.exists():
         raise TableFormatError(
-            f"{path.name}: no such file in {DATA_DIR}"
-            f"{_did_you_mean(path.name, [p.name for p in DATA_DIR.glob('*.csv')])}"
+            f"{path.name}: no such file in {path.parent}"
+            f"{_did_you_mean(path.name, [p.name for p in path.parent.glob('*.csv')])}"
         )
 
     try:
@@ -332,14 +332,14 @@ def read_table_file(path: Path) -> dict[str, Any]:
     return table
 
 
-def nec_table(table_id: str, group: str | None = None) -> dict[str, Any]:
-    """Load data/nec_tables/<table_id>.csv and register it.
+def nec_table(table_id: str, version: str = "2026", group: str | None = None) -> dict[str, Any]:
+    """Load data/nec_tables/<version>/<table_id>.csv and register it.
 
     Declaring the constant is what puts the table in TABLES, so there is no separate
     registry to keep in step. Group parts register under their group instead.
     """
     DECLARED.add(table_id)
-    table = read_table_file(DATA_DIR / f"{table_id}.csv")
+    table = read_table_file(DATA_DIR / version / f"{table_id}.csv")
     table["_id"] = table_id
 
     if group is None:

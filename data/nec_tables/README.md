@@ -1,6 +1,6 @@
 # NEC Tables
 
-One CSV per table. Metadata lives at the top as `#` comment lines, then the data.
+One CSV per table. Tables are grouped into versioned subfolders (e.g., `2026/table_310_16.csv`). Metadata lives at the top as `#` comment lines, then the data.
 
 ```
 # title: Table 310.16 Ampacities of Insulated Conductors...
@@ -19,10 +19,10 @@ Only `# title:` is required. Other keys: `# edition:`, `# source:`, `# note:` (o
 
 **Values** are raw data, not typeset. Leave cells empty where the book uses an em dash. Use plain hyphens for ranges (`8-6`) and fractions as printed (`1 1/2`). No thousands separators. Strip footnote markers from values — the footnote text goes in a `# note:` line.
 
-**Filename** mirrors the table number: `Table 430.52(C)(1)` → `table_430_52_c_1.csv`. To register a new table, drop the CSV in and add one line to `lib/nec_tables.py`:
+**Filename** mirrors the table number: `Table 430.52(C)(1)` → `2026/table_430_52_c_1.csv`. To register a new table, drop the CSV into the appropriate version folder and add one line to `lib/nec_tables.py`:
 
 ```python
-TABLE_430_52_C_1 = nec_table("table_430_52_c_1")
+TABLE_430_52_C_1 = nec_table("table_430_52_c_1", version="2026")
 ```
 
 Importing `lib.nec_tables` validates all files and will tell you what's wrong.

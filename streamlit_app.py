@@ -50,6 +50,10 @@ ENABLE_PASSWORD_PROTECTION = True
 PROJECT_NUMBER = ""
 DESIGNER_NAME = ""
 PANEL_TEMPLATE_PATH = Path("content/files/panel_schedule_template.xlsx")
+SUPPORTED_CODE_VERSIONS = {
+    "NEC": ["2026"],
+    "OESC": ["2024"]
+}
 
 # ----------------------------
 # Data / math utilities
@@ -614,7 +618,7 @@ def header(title: str, subtitle: str = ""):
 
 def show_code_note(selected_code: str):
     st.info(
-        f"Code mode: **{selected_code}**. "
+        f"Code mode: **{selected_code} ({code_version})** "
         "This site is written to be easy to follow. Always verify final selections against the code, "
         "project specs, equipment data, and a coordination study where required."
     )
@@ -846,7 +850,12 @@ with st.sidebar:
 
     st.divider()
     st.header("Jurisdiction")
-    code_mode = st.selectbox("Select electrical code", ["NEC", "OESC"], index=1)
+    
+    available_codes = list(SUPPORTED_CODE_VERSIONS.keys())
+    default_index = 1 if len(available_codes) > 1 and available_codes[1] == "OESC" else 0
+    
+    code_mode = st.selectbox("Select electrical code", available_codes, index=default_index)
+    code_version = st.selectbox("Select version", SUPPORTED_CODE_VERSIONS.get(code_mode, []))
 
     st.divider()
     st.header("Report Information")
@@ -5226,15 +5235,25 @@ elif page == "Table Library":
                     if meta.get("header_tiers") is not None and pd is not None:
                         _tiers = meta["header_tiers"]
                         _cols = meta.get("columns") or []
+                        
+                        # Resolve tiers horizontally (banded headers continue to the right)
+                        _resolved_tiers = []
+                        for _tier in _tiers:
+                            _resolved_tier = []
+                            _current = ""
+                            for _i in range(len(_cols)):
+                                _cell = _tier[_i].strip() if _i < len(_tier) else ""
+                                if _cell:
+                                    _current = _cell
+                                _resolved_tier.append(_current)
+                            _resolved_tiers.append(_resolved_tier)
+                            
+                        # Stack them vertically for Pandas MultiIndex
                         _stacked = []
                         for _i in range(len(_cols)):
-                            _path = []
-                            _current = ""
-                            for _tier in _tiers:
-                                _cell = _tier[_i].strip() if _i < len(_tier) else ""
-                                _current = _cell or _current
-                                _path.append(_current)
-                            _stacked.append(tuple(_path))
+                            _path = tuple(_rt[_i] for _rt in _resolved_tiers)
+                            _stacked.append(_path)
+                            
                         try:
                             df = pd.DataFrame(df)[_cols]
                             df.columns = pd.MultiIndex.from_tuples(_stacked)
