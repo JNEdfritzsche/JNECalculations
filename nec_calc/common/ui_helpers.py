@@ -24,21 +24,6 @@ def eq(latex: str):
     st.latex(latex)
 
 
-_STICKY_COLUMN_CLASS = "jne-sticky-col"
-
-
-def sticky_column(top: str = "4.5rem"):
-    st.markdown(
-        f'<span class="{_STICKY_COLUMN_CLASS}"></span>'
-        "<style>"
-        f'div[data-testid="stColumn"]:has(.{_STICKY_COLUMN_CLASS}) {{'
-        f"position: sticky; top: {top}; align-self: flex-start;"
-        "}"
-        "</style>",
-        unsafe_allow_html=True,
-    )
-
-
 def enum_selectbox(container, label: str, options, format_func=lambda m: getattr(m, "label", getattr(m, "name", str(m))), **kwargs):
     return container.selectbox(
         label=label, 
@@ -153,6 +138,6 @@ def _show_result(
     return result
 
 __all__ = [
-    "header", "show_code_note", "eq", "sticky_column", "enum_selectbox", "enum_radio",
+    "header", "show_code_note", "eq", "enum_selectbox", "enum_radio",
     "quant_selectbox", "quant_unit_input", "transformer_feeder_inputs", "_show_result",
 ]

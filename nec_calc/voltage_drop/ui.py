@@ -11,7 +11,7 @@ from nec_calc.common.enums import (
 )
 
 from nec_calc.common.formatting import fmt
-from nec_calc.common.ui_helpers import enum_radio, enum_selectbox, eq, sticky_column
+from nec_calc.common.ui_helpers import enum_radio, enum_selectbox, eq
 from nec_calc.common.units import Current, Voltage
 
 from lib.nec_tables import (
@@ -323,61 +323,59 @@ def render_calc():
             use_custom_T_op=use_custom_T_op,
         )
     
-    with result_pane:
-        sticky_column()
-        with st.container(border=True):
-            if result.get("voltage_drop") is None or result.get("percent_drop") is None:
-                st.info("Complete the inputs to see a result.")
-            else:
-                st.markdown("### Results")
+    with result_pane, st.container(border=True):
+        if result.get("voltage_drop") is None or result.get("percent_drop") is None:
+            st.info("Complete the inputs to see a result.")
+        else:
+            st.markdown("### Results")
 
-                m1, m2 = st.columns(2)
+            m1, m2 = st.columns(2)
 
-                m1.metric("Estimated voltage drop", fmt(result["voltage_drop"], "V"))
-                m2.metric("Voltage drop (%)", fmt(result["percent_drop"], "%"))
+            m1.metric("Estimated voltage drop", fmt(result["voltage_drop"], "V"))
+            m2.metric("Voltage drop (%)", fmt(result["percent_drop"], "%"))
 
-            st.divider()
-            render_add_to_schedule(result)  
+        st.divider()
+        render_add_to_schedule(result)  
 
-            with st.expander("Parameters & equations used", expanded=False):
-                st.markdown("### Parameters used")
-                # COMMON PARAMETERS
-                st.write(f"- system type: **{result['system_type_label']}**")
-                st.write(f"- power factor pf: **{result['pf']}**")
-                st.write(f"- I: **{fmt(result['current'], 'A')}**")
-                st.write(f"- **$V_{{nom}}$: {fmt(result['v_nom'], 'V')}**")
-                st.write(f"- one-way length: **{fmt(result['length'], 'ft')}**")
-                st.write(
-                    f"- parallel conductors: **{result['parallel_conductors']}** "
-                    f"→ I per conductor = **{fmt(result['I_eff'], 'A')}**"
-                )
-                st.write(f"- factor f: **{result['f']}**")
+        with st.expander("Parameters & equations used", expanded=False):
+            st.markdown("### Parameters used")
+            # COMMON PARAMETERS
+            st.write(f"- system type: **{result['system_type_label']}**")
+            st.write(f"- power factor pf: **{result['pf']}**")
+            st.write(f"- I: **{fmt(result['current'], 'A')}**")
+            st.write(f"- **$V_{{nom}}$: {fmt(result['v_nom'], 'V')}**")
+            st.write(f"- one-way length: **{fmt(result['length'], 'ft')}**")
+            st.write(
+                f"- parallel conductors: **{result['parallel_conductors']}** "
+                f"→ I per conductor = **{fmt(result['I_eff'], 'A')}**"
+            )
+            st.write(f"- factor f: **{result['f']}**")
 
-                # TABLE 8 PARAMETERS
-                if vd_mode == VDMode.TABLE8_R:
-                    st.write(f"- conductor size: **{result['conductor_size']} {size_unit}**")
-                    st.write(f"- conductor material: **{result['conductor_material']}**")
+            # TABLE 8 PARAMETERS
+            if vd_mode == VDMode.TABLE8_R:
+                st.write(f"- conductor size: **{result['conductor_size']} {size_unit}**")
+                st.write(f"- conductor material: **{result['conductor_material']}**")
 
-                    if result.get("coating_type"):
-                        st.write(f"- coating type: **{result['coating_type']}**")
+                if result.get("coating_type"):
+                    st.write(f"- coating type: **{result['coating_type']}**")
 
-                    st.write(f"- operating temperature: **{result['temperature']} °C**")
+                st.write(f"- operating temperature: **{result['temperature']} °C**")
 
-                # TABLE 9 PARAMETERS
-                if vd_mode == VDMode.TABLE9_Z:
-                    st.write(f"- conductor size: **{result['conductor_size']} {result['size_unit']}**")
-                    st.write(f"- conductor material: **{result['conductor_material']}**")
-                    st.write(f"- conduit material: **{result['conduit_material']}**")
-                    st.write(f"- power factor: **{result['pf']}**")
-                    st.write(f"- operating temperature: **{result['temperature']} °C**")
-                # MANUAL R PARAMETERS
-                if vd_mode == VDMode.MANUAL_R:
-                    st.write(f"- manual R-value : **{result['manual_r']} Ω/kft**")
+            # TABLE 9 PARAMETERS
+            if vd_mode == VDMode.TABLE9_Z:
+                st.write(f"- conductor size: **{result['conductor_size']} {result['size_unit']}**")
+                st.write(f"- conductor material: **{result['conductor_material']}**")
+                st.write(f"- conduit material: **{result['conduit_material']}**")
+                st.write(f"- power factor: **{result['pf']}**")
+                st.write(f"- operating temperature: **{result['temperature']} °C**")
+            # MANUAL R PARAMETERS
+            if vd_mode == VDMode.MANUAL_R:
+                st.write(f"- manual R-value : **{result['manual_r']} Ω/kft**")
 
-                _render_equations_used(
-                    vd_mode=vd_mode,
-                    use_custom_pf=use_custom_pf,
-                    use_custom_T_op=use_custom_T_op,
-                )
+            _render_equations_used(
+                vd_mode=vd_mode,
+                use_custom_pf=use_custom_pf,
+                use_custom_T_op=use_custom_T_op,
+            )
     st.divider()
     render_schedule_section()

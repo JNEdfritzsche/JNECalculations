@@ -7,11 +7,7 @@ from nec_calc.common.formatting import next_standard_size
 from nec_calc.common.table_helpers import get_table_row
 
 # Reuse the full-load-current lookup already implemented for the motor feeder.
-from nec_calc.motor_feeder.calculation import (
-    get_appropriate_table,
-    get_valid_voltages,
-    _get_table_flc,
-)
+from nec_calc.motor_feeder.calculation import _get_table_flc
 
 
 # ============================================================
@@ -23,8 +19,8 @@ MOTOR_CATEGORY_ROWS: dict[str, str] = {
     "single_phase": "Single-phase motors",
     "ac_polyphase": "Alternating-current(ac) polyphase motors other than wound-rotor",
     "squirrel_cage": (
-        "Squirrel cage — other than Design B or C energy-efficient — "
-        "and Design B or C premium efficiency"
+        "Squirrel cage - other than Design B or Cenergy-efficient - "
+        "and Design B or Cpremium efficiency"
     ),
     "design_b_energy_efficient": (
         "Design B energy-efficient, Design B premium efficiency, "

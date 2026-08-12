@@ -2,25 +2,104 @@ from __future__ import annotations
 
 from typing import Any
 
+from nec_calc.common.formatting import fmt, format_cond_size
 from nec_calc.common.report_helper import (
     add_word_equation,
-    build_standard_excel_report,
-    build_standard_word_report,
     get_first,
     omml_r,
     omml_sub,
-    render_standard_export_report,
+)
+from nec_calc.common.report_schedule import (
+    Column,
+    ReportSpec,
+    render_schedule_commit,
+    render_schedule_table,
+)
+from lib.nec_tables import (
+    TABLE_310_16,
+    TABLE_430_247,
+    TABLE_430_248,
+    TABLE_430_250,
 )
 
 
-REPORT_TITLE = "NEC Motor Feeder Calculation Report"
-SHEET_NAME = "Motor Feeder"
+PHASE_FLC_TABLES = {
+    "dc": TABLE_430_247,
+    "single_phase": TABLE_430_248,
+    "three_phase": TABLE_430_250,
+}
+
+FLC_TABLE_LABELS = {
+    "dc": "430.247",
+    "single_phase": "430.248",
+    "three_phase": "430.250",
+}
 
 
 # ============================================================
-# Equations
+# Column value helpers
 # ============================================================
-def add_motor_feeder_equations(doc, context: dict[str, Any]) -> None:
+def _hp(result: dict[str, Any]) -> str:
+    label = get_first(result, "hp_label", "hp")
+    return "—" if label is None else f"{label} HP"
+
+
+def _duty(result: dict[str, Any]) -> str:
+    label = get_first(result, "sizing_factor_label")
+    if not label:
+        return "—"
+    _factor, _sep, description = str(label).partition("—")
+    return description.strip() or str(label)
+
+
+def _size(result: dict[str, Any]) -> str:
+    size = get_first(result, "conductor_size")
+    return "—" if size is None else format_cond_size(size)
+
+
+def _insulation(result: dict[str, Any]) -> str:
+    temp_rating = get_first(result, "temp_rating")
+    return "—" if temp_rating is None else f"{temp_rating}°C"
+
+
+# ============================================================
+# Code reference — edition comes from the table's own CSV front matter
+# ============================================================
+def _nec_edition(table: dict[str, Any] | None = None) -> str:
+    edition = (table or TABLE_310_16).get("edition") or TABLE_430_250.get("edition")
+    return f"NEC {edition}" if edition else "NEC"
+
+
+def _edition(result: dict[str, Any]) -> str:
+    table = PHASE_FLC_TABLES.get(get_first(result, "phase")) or TABLE_310_16
+    return _nec_edition(table)
+
+
+def _source_tables(result: dict[str, Any]) -> str:
+    tables = []
+
+    flc_table = FLC_TABLE_LABELS.get(get_first(result, "phase"))
+    if flc_table and get_first(result, "table_flc") is not None:
+        tables.append(flc_table)
+
+    if get_first(result, "conductor_size") is not None:
+        tables.append("310.16")
+
+    if get_first(result, "max_overload") is not None:
+        tables.append("430.32")
+
+    return ", ".join(tables) if tables else "—"
+
+
+# ============================================================
+# Report-wide text
+# ============================================================
+def _code_reference(results: list[dict[str, Any]]) -> str:
+    return f"Per {_nec_edition()} 430.22 and 430.6(A)"
+
+
+def _word_reference(doc, results: list[dict[str, Any]]) -> None:
+    """Equations used across the calculations in the schedule (Word report only)."""
     doc.add_heading("Equations Used", level=1)
 
     add_word_equation(
@@ -28,7 +107,8 @@ def add_motor_feeder_equations(doc, context: dict[str, Any]) -> None:
         "Feeder conductor ampacity",
         omml_sub("I", "cond") + omml_r(" = k × ") + omml_sub("I", "FLC"),
     )
-    if context["has_overload"]:
+
+    if any(get_first(r, "max_overload") is not None for r in results):
         add_word_equation(
             doc,
             "Maximum overload protection",
@@ -36,110 +116,78 @@ def add_motor_feeder_equations(doc, context: dict[str, Any]) -> None:
         )
 
 
-def _build_equations_for_excel(context: dict[str, Any]) -> list[tuple[str, str]]:
-    equations = [("Feeder conductor ampacity", "I_cond = k × I_FLC")]
-    if context["has_overload"]:
-        equations.append(("Maximum overload protection", "I_OL = SF × I_FLA,nameplate"))
-    return equations
+def _footnotes(results: list[dict[str, Any]]) -> list[str]:
+    edition = _nec_edition()
 
-
-# ============================================================
-# Report sections
-# ============================================================
-def _build_result_pairs(result: dict[str, Any]) -> list[tuple[str, Any]]:
-    pairs: list[tuple[str, Any]] = [
-        ("Feeder conductor ampacity, I_cond (A)", get_first(result, "conductor_ampacity")),
-    ]
-    if get_first(result, "conductor_size") is not None:
-        pairs.append(("Minimum conductor size (Table 310.16)", get_first(result, "conductor_size")))
-    pairs.append(("Maximum overload protection, I_OL (A)", get_first(result, "max_overload")))
-    return pairs
-
-
-def _build_input_pairs(result: dict[str, Any]) -> list[tuple[str, Any]]:
-    pairs = [
-        ("System", get_first(result, "phase_label")),
-        ("Motor size (HP)", get_first(result, "hp_label")),
-    ]
-    if result.get("motor_type"):
-        pairs.append(("Motor type", get_first(result, "motor_type")))
-    pairs += [
-        ("Voltage (V)", get_first(result, "voltage")),
-        ("Full-load current, I_FLC (A)", get_first(result, "flc")),
-        ("Full-load current source", get_first(result, "flc_source")),
-        ("Conductor sizing factor, k", get_first(result, "sizing_factor_label")),
-    ]
-    if result.get("material_label"):
-        pairs.append(("Conductor material", get_first(result, "material_label")))
-    if result.get("temp_rating") is not None:
-        pairs.append(("Insulation temp rating (°C)", get_first(result, "temp_rating")))
-    if result.get("nameplate_fla") is not None:
-        pairs.append(("Nameplate FLA (A)", get_first(result, "nameplate_fla")))
-    if result.get("service_factor_label"):
-        pairs.append(("Service factor, SF", get_first(result, "service_factor_label")))
-    return pairs
-
-
-def _build_notes(context: dict[str, Any]) -> list[str]:
     notes = [
-        "This report is based on the input values entered into the calculator.",
-        "Per NEC 430.6(A), branch-circuit and feeder conductor sizing uses the full-load current from Tables 430.247 through 430.250, not the motor nameplate current.",
-        "The feeder conductor ampacity shown is the minimum for a single motor per NEC 430.22. Apply temperature correction, ambient and conduit-fill adjustment, voltage drop, and NEC 430.24 for multiple-motor feeders as applicable.",
+        f"Per {edition} 430.6(A), branch-circuit and feeder conductor sizing uses the "
+        "full-load current from Tables 430.247 through 430.250, not the motor nameplate "
+        "current. Rows whose FLC source is Nameplate had no table value for the selected "
+        "horsepower and voltage.",
+        "The Code Edition and Source Tables columns give the tables each row was read "
+        "from: the full-load current table for the system type, Table 310.16 for the "
+        "conductor size, and 430.32 where an overload maximum was calculated.",
+        f"The feeder conductor ampacity shown is the minimum for a single motor per "
+        f"{edition} 430.22. Apply temperature correction, ambient and conduit-fill "
+        "adjustment, voltage drop, and 430.24 for multiple-motor feeders as applicable.",
+        "Conductor sizes are the smallest Table 310.16 entry meeting the required "
+        "ampacity in the selected material and insulation temperature column, before "
+        "any 110.14(C) terminal temperature limit is applied.",
     ]
-    if context["has_overload"]:
+
+    if any(get_first(r, "max_overload") is not None for r in results):
         notes.append(
-            "The maximum overload protection is sized per NEC 430.32 using the marked nameplate full-load current and service factor. Verify against the selected device rating and the specific conditions of 430.32."
+            f"The maximum overload protection is sized per {edition} 430.32 using the "
+            "marked nameplate full-load current and service factor. Verify against the "
+            "selected device rating and the specific conditions of 430.32."
         )
+
     notes.append(
-        "Final selections and design decisions should be verified against the NEC, project specifications, equipment data, and engineering judgement."
+        "This report is based on the input values entered into the calculator. Final "
+        "selections and design decisions should be verified against the NEC, project "
+        "specifications, equipment data, and engineering judgement."
     )
+
     return notes
 
 
-def _build_report_context(result: dict[str, Any]) -> dict[str, Any]:
-    context = {
-        "has_overload": get_first(result, "max_overload") is not None,
-    }
-    context.update(
-        {
-            "notes": _build_notes(context),
-            "input_pairs": _build_input_pairs(result),
-            "result_pairs": _build_result_pairs(result),
-            "source_table": None,
-        }
-    )
-    return context
-
-
 # ============================================================
-# Builders
+# Schedule spec + entry point
 # ============================================================
-def build_word_report(result: dict[str, Any]) -> bytes:
-    return build_standard_word_report(
-        report_title=REPORT_TITLE,
-        result=result,
-        context_builder=_build_report_context,
-        word_equation_builder=add_motor_feeder_equations,
-    )
+MF_SCHEDULE_SPEC = ReportSpec(
+    prefix="nec_motor_feeder_schedule",
+    report_title="Motor Feeder — Calculation Results",
+    sheet_name="Motor Feeder Schedule",
+    tag="Tag / ID",
+    cols=[
+        Column("System", lambda r: get_first(r, "phase_label", default="—")),
+        Column("Motor", _hp),
+        Column("Voltage (V)", lambda r: fmt(get_first(r, "voltage"), "V")),
+        Column("I_FLC (A)", lambda r: fmt(get_first(r, "flc"), "A")),
+        Column("FLC source", lambda r: get_first(r, "flc_source", default="—")),
+        Column("k", lambda r: fmt(get_first(r, "sizing_factor"))),
+        Column("Duty basis", _duty),
+        Column("Required ampacity (A)", lambda r: fmt(get_first(r, "conductor_ampacity"), "A"), color="green"),
+        Column("Conductor Size", _size, color="blue"),
+        Column("Size ampacity (A)", lambda r: fmt(get_first(r, "conductor_size_ampacity"), "A")),
+        Column("Material", lambda r: get_first(r, "material_label", default="—")),
+        Column("Insulation", _insulation),
+        Column("Nameplate FLA (A)", lambda r: fmt(get_first(r, "nameplate_fla"), "A")),
+        Column("SF", lambda r: get_first(r, "service_factor_label", default="—")),
+        Column("Max overload (A)", lambda r: fmt(get_first(r, "max_overload"), "A"), color="green"),
+        Column("Code Edition", _edition),
+        Column("Source Tables", _source_tables),
+    ],
+    code_reference=_code_reference,
+    notes=_footnotes,
+    word_reference=_word_reference,
+)
 
 
-def build_excel_report(result: dict[str, Any]) -> bytes:
-    return build_standard_excel_report(
-        report_title=REPORT_TITLE,
-        sheet_name=SHEET_NAME,
-        result=result,
-        context_builder=_build_report_context,
-        excel_equation_builder=_build_equations_for_excel,
-    )
+def render_add_to_schedule(result: dict[str, Any] | None) -> None:
+    can_add = result is not None and get_first(result, "conductor_ampacity") is not None
+    render_schedule_commit(MF_SCHEDULE_SPEC, result, can_add=can_add)
 
 
-def render_export_report(result: dict[str, Any] | None) -> None:
-    render_standard_export_report(
-        prefix="nec_motor_feeder",
-        docx_file="nec_motor_feeder_report.docx",
-        xlsx_file="nec_motor_feeder_report.xlsx",
-        result=result,
-        required_keys=("conductor_ampacity",),
-        word_builder=build_word_report,
-        excel_builder=build_excel_report,
-    )
+def render_schedule_section() -> None:
+    render_schedule_table(MF_SCHEDULE_SPEC)

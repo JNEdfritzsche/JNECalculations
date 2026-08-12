@@ -5,153 +5,276 @@ from typing import Any
 from nec_calc.common.formatting import fmt
 from nec_calc.common.report_helper import (
     add_word_equation,
-    build_standard_excel_report,
-    build_standard_word_report,
     get_first,
+    omml_frac,
     omml_r,
     omml_sub,
-    render_standard_export_report,
+)
+from nec_calc.common.report_schedule import (
+    Column,
+    ReportSpec,
+    render_schedule_commit,
+    render_schedule_table,
+)
+from lib.nec_tables import (
+    TABLE_430_52_C_1,
+    TABLE_430_247,
+    TABLE_430_248,
+    TABLE_430_250,
 )
 
 
-REPORT_TITLE = "NEC Motor Protection Calculation Report"
-SHEET_NAME = "Motor Protection"
+PHASE_FLC_TABLES = {
+    "dc": TABLE_430_247,
+    "single_phase": TABLE_430_248,
+    "three_phase": TABLE_430_250,
+}
+
+FLC_TABLE_LABELS = {
+    "dc": "430.247",
+    "single_phase": "430.248",
+    "three_phase": "430.250",
+}
+
+LRC_TABLE_LABELS = {
+    "table_430_251_a": "430.251(A)",
+    "table_430_251_b": "430.251(B)",
+    "table_430_251_c": "430.251(C)",
+}
+
+CATEGORY_LABELS = {
+    "single_phase": "Single-phase",
+    "ac_polyphase": "AC polyphase",
+    "squirrel_cage": "Squirrel cage",
+    "design_b_energy_efficient": "Design B energy-efficient",
+    "synchronous": "Synchronous",
+    "wound_rotor": "Wound-rotor",
+    "dc": "DC",
+}
+
+DEVICE_HEADERS = [
+    ("nontime_delay_fuse", "Non-time-delay fuse"),
+    ("dual_element_time_delay_fuse", "Dual-element fuse"),
+    ("instantaneous_trip_breaker", "Inst.-trip breaker"),
+    ("inverse_time_breaker", "Inverse-time breaker"),
+]
 
 
 # ============================================================
-# Equations
+# Column value helpers
 # ============================================================
-def add_equations(doc, context: dict[str, Any]) -> None:
+def _hp(result: dict[str, Any]) -> str:
+    label = get_first(result, "hp_label", "hp")
+    return "—" if label is None else f"{label} HP"
+
+
+def _category(result: dict[str, Any]) -> str:
+    key = get_first(result, "category_key")
+    return CATEGORY_LABELS.get(str(key or ""), str(key or "—"))
+
+
+def _device(result: dict[str, Any], key: str) -> str:
+    devices = (result.get("branch") or {}).get("devices") or []
+    device = next((d for d in devices if d.get("key") == key), None)
+    if device is None:
+        return "—"
+
+    value = device.get("standard") if device.get("standard") is not None else device.get("raw")
+    if value is None:
+        return "—"
+
+    pct = device.get("pct")
+    return f"{fmt(value, 'A')} ({pct}%)" if pct is not None else fmt(value, "A")
+
+
+def _overload(result: dict[str, Any], size_key: str, factor_key: str) -> str:
+    overload = result.get("overload") or {}
+    size = overload.get(size_key)
+    if size is None:
+        return "—"
+
+    factor = overload.get(factor_key)
+    return f"{fmt(size, 'A')} ({int(factor * 100)}%)" if factor is not None else fmt(size, "A")
+
+
+def _disconnect(result: dict[str, Any]) -> str:
+    return fmt((result.get("disconnect") or {}).get("min_disconnect_ampere"), "A")
+
+
+def _lrc(result: dict[str, Any], key: str) -> str:
+    return fmt((result.get(key) or {}).get("locked_rotor_current"), "A")
+
+
+# ============================================================
+# Code reference — edition comes from the table's own CSV front matter
+# ============================================================
+def _nec_edition(table: dict[str, Any] | None = None) -> str:
+    edition = (table or TABLE_430_52_C_1).get("edition") or TABLE_430_250.get("edition")
+    return f"NEC {edition}" if edition else "NEC"
+
+
+def _edition(result: dict[str, Any]) -> str:
+    table = PHASE_FLC_TABLES.get(get_first(result, "phase")) or TABLE_430_52_C_1
+    return _nec_edition(table)
+
+
+def _source_tables(result: dict[str, Any]) -> str:
+    tables = []
+
+    flc_table = FLC_TABLE_LABELS.get(get_first(result, "phase"))
+    if flc_table and get_first(result, "table_flc") is not None:
+        tables.append(flc_table)
+
+    devices = (result.get("branch") or {}).get("devices") or []
+    if any(d.get("pct") is not None for d in devices):
+        tables.append("430.52(C)(1)")
+
+    if (result.get("overload") or {}).get("max_overload") is not None:
+        tables.append("430.32")
+
+    lrc_table = result.get("lrc_table") or {}
+    if lrc_table.get("locked_rotor_current") is not None:
+        tables.append(LRC_TABLE_LABELS.get(lrc_table.get("table"), "430.251"))
+
+    if (result.get("lrc_code") or {}).get("locked_rotor_current") is not None:
+        tables.append("430.7(B)")
+
+    return ", ".join(tables) if tables else "—"
+
+
+# ============================================================
+# Report-wide text
+# ============================================================
+def _code_reference(results: list[dict[str, Any]]) -> str:
+    return f"Per {_nec_edition()} 430.52(C)(1), 430.32 and 430.110"
+
+
+def _has_overload(results: list[dict[str, Any]]) -> bool:
+    return any((r.get("overload") or {}).get("max_overload") is not None for r in results)
+
+
+def _has_code_letter(results: list[dict[str, Any]]) -> bool:
+    return any((r.get("lrc_code") or {}).get("locked_rotor_current") is not None for r in results)
+
+
+def _word_reference(doc, results: list[dict[str, Any]]) -> None:
+    """Equations used across the calculations in the schedule (Word report only)."""
     doc.add_heading("Equations Used", level=1)
+
     add_word_equation(
         doc,
         "Branch-circuit device (430.52)",
         omml_sub("I", "branch") + omml_r(" = mult% × ") + omml_sub("I", "FLC"),
     )
-    if context["has_overload"]:
+
+    if _has_overload(results):
         add_word_equation(
             doc,
             "Overload protection (430.32)",
             omml_sub("I", "OL") + omml_r(" = k × ") + omml_sub("I", "FLA,nameplate"),
         )
 
-
-def _build_equations_for_excel(context: dict[str, Any]) -> list[tuple[str, str]]:
-    equations = [("Branch-circuit device (430.52)", "I_branch = mult% × I_FLC")]
-    if context["has_overload"]:
-        equations.append(("Overload protection (430.32)", "I_OL = k × I_FLA,nameplate"))
-    return equations
-
-
-# ============================================================
-# Report sections
-# ============================================================
-def _build_result_pairs(result: dict[str, Any]) -> list[tuple[str, Any]]:
-    pairs: list[tuple[str, Any]] = [
-        ("Full-load current, I_FLC (A)", fmt(get_first(result, "flc"))),
-    ]
-    branch = result.get("branch") or {}
-    for d in branch.get("devices", []):
-        std = d.get("standard")
-        value = fmt(std) if std is not None else fmt(d.get("raw"))
-        pairs.append((f"Branch device — {d['label']} ({d['pct']}%)", value))
-
-    overload = result.get("overload") or {}
-    if overload.get("max_overload") is not None:
-        pairs.append((f"Max overload ({int(overload['factor'] * 100)}%) (A)", fmt(overload["max_overload"])))
-
-    disconnect = result.get("disconnect") or {}
-    if disconnect.get("min_disconnect_ampere") is not None:
-        pairs.append(("Min. disconnect rating (115% FLC) (A)", fmt(disconnect["min_disconnect_ampere"])))
-
-    lrc_t = result.get("lrc_table") or {}
-    if lrc_t.get("locked_rotor_current") is not None:
-        pairs.append(("Locked-rotor current, Table 430.251 (A)", fmt(lrc_t["locked_rotor_current"])))
-    return pairs
-
-
-def _build_input_pairs(result: dict[str, Any]) -> list[tuple[str, Any]]:
-    pairs = [
-        ("System", get_first(result, "phase_label")),
-        ("Motor size (HP)", get_first(result, "hp_label")),
-    ]
-    if result.get("motor_type"):
-        pairs.append(("Motor type", get_first(result, "motor_type")))
-    branch = result.get("branch") or {}
-    if branch.get("category_label"):
-        pairs.append(("Motor category (430.52)", branch["category_label"]))
-    pairs += [
-        ("Voltage (V)", get_first(result, "voltage")),
-        ("Full-load current source", get_first(result, "flc_source")),
-    ]
-    if result.get("nameplate_fla") is not None:
-        pairs.append(("Nameplate FLA (A)", get_first(result, "nameplate_fla")))
-    if result.get("service_factor_label"):
-        pairs.append(("Service factor", get_first(result, "service_factor_label")))
-    if result.get("code_letter"):
-        pairs.append(("Locked-rotor code letter", get_first(result, "code_letter")))
-    return pairs
-
-
-def _build_notes(context: dict[str, Any]) -> list[str]:
-    notes = [
-        "This report is based on the input values entered into the calculator.",
-        "Per NEC 430.6(A), branch-circuit and feeder sizing uses the full-load current from Tables 430.247 through 430.250, not the motor nameplate current.",
-        "Branch-circuit short-circuit and ground-fault device ratings are the maximums from Table 430.52(C)(1). Exception 1 permits the next higher standard rating (240.6(A)); Exception 2 is the ceiling permitted where the motor will not start.",
-    ]
-    if context["has_overload"]:
-        notes.append(
-            "Overload protection is sized per NEC 430.32 from the marked nameplate full-load current and service factor / temperature rise."
-        )
-    notes.append(
-        "Final selections should be verified against the NEC, project specifications, equipment data, a coordination study where required, and engineering judgement."
+    add_word_equation(
+        doc,
+        "Disconnecting means (430.110(C)(1))",
+        omml_sub("I", "disc") + omml_r(" = 1.15 × ") + omml_sub("I", "FLC"),
     )
+
+    if _has_code_letter(results):
+        add_word_equation(
+            doc,
+            "Locked-rotor current from code letter (430.7(B))",
+            omml_sub("I", "LR")
+            + omml_r(" = ")
+            + omml_frac(
+                omml_r("(kVA/hp) × hp × 1000"),
+                omml_r("V × ") + omml_sub("k", "φ"),
+            ),
+        )
+
+
+def _footnotes(results: list[dict[str, Any]]) -> list[str]:
+    edition = _nec_edition()
+
+    notes = [
+        f"Per {edition} 430.6(A), branch-circuit sizing uses the full-load current from "
+        "Tables 430.247 through 430.250, not the motor nameplate current. Rows whose FLC "
+        "source is Nameplate had no table value for the selected horsepower and voltage.",
+        "Branch-circuit short-circuit and ground-fault device ratings are the maximums from "
+        "Table 430.52(C)(1), shown as the next higher standard rating permitted by Exception "
+        "No. 1 (240.6(A)). The instantaneous-trip value is an adjustable setting rather than a "
+        "standard rating, so it is shown unrounded.",
+        "Exception No. 2 ceilings (permitted only where the table value will not start the "
+        "motor) are not shown in this schedule; check them on the calculator before selecting "
+        "a device above the table maximum.",
+        "The Code Edition and Source Tables columns give the tables each row was read from: "
+        "the full-load current table for the system type, Table 430.52(C)(1) for the branch "
+        "device, and 430.32, 430.251 and 430.7(B) where those values were calculated.",
+    ]
+
+    if _has_overload(results):
+        notes.append(
+            f"Overload protection is sized per {edition} 430.32 from the marked nameplate "
+            "full-load current and service factor / temperature rise. The start allowance is "
+            "the 430.32(C) value, permitted only where the base value will not allow the motor "
+            "to start or carry the load."
+        )
+
+    notes.append(
+        f"The minimum disconnecting means rating is 115% of the full-load current per "
+        f"{edition} 430.110(C)(1). Locked-rotor currents are for selecting disconnects and "
+        "controllers; the Table 430.251 value and the code-letter value are independent bases."
+    )
+
+    notes.append(
+        "This report is based on the input values entered into the calculator. Final "
+        "selections should be verified against the NEC, project specifications, equipment "
+        "data, a coordination study where required, and engineering judgement."
+    )
+
     return notes
 
 
-def _build_report_context(result: dict[str, Any]) -> dict[str, Any]:
-    overload = result.get("overload") or {}
-    context = {"has_overload": overload.get("max_overload") is not None}
-    context.update(
-        {
-            "notes": _build_notes(context),
-            "input_pairs": _build_input_pairs(result),
-            "result_pairs": _build_result_pairs(result),
-            "source_table": None,
-        }
-    )
-    return context
-
-
 # ============================================================
-# Builders
+# Schedule spec + entry point
 # ============================================================
-def build_word_report(result: dict[str, Any]) -> bytes:
-    return build_standard_word_report(
-        report_title=REPORT_TITLE,
-        result=result,
-        context_builder=_build_report_context,
-        word_equation_builder=add_equations,
-    )
+MP_SCHEDULE_SPEC = ReportSpec(
+    prefix="nec_motor_protection_schedule",
+    report_title="Motor Protection — Calculation Results",
+    sheet_name="Motor Protection Schedule",
+    tag="Tag / ID",
+    cols=[
+        Column("System", lambda r: get_first(r, "phase_label", default="—")),
+        Column("Motor", _hp),
+        Column("Voltage (V)", lambda r: fmt(get_first(r, "voltage"), "V")),
+        Column("Motor category", _category),
+        Column("I_FLC (A)", lambda r: fmt(get_first(r, "flc"), "A")),
+        Column("FLC source", lambda r: get_first(r, "flc_source", default="—")),
+        *[
+            Column(header, lambda r, key=key: _device(r, key), color="green")
+            for key, header in DEVICE_HEADERS
+        ],
+        Column("Nameplate FLA (A)", lambda r: fmt(get_first(r, "nameplate_fla"), "A")),
+        Column("SF", lambda r: get_first(r, "service_factor_label", default="—")),
+        Column("Max overload", lambda r: _overload(r, "max_overload", "factor"), color="green"),
+        Column("Start allowance", lambda r: _overload(r, "max_overload_start", "start_factor")),
+        Column("Min disconnect (A)", _disconnect, color="blue"),
+        Column("LRC, Table 430.251 (A)", lambda r: _lrc(r, "lrc_table")),
+        Column("Code letter", lambda r: get_first(r, "code_letter", default="—")),
+        Column("LRC, code letter (A)", lambda r: _lrc(r, "lrc_code")),
+        Column("Code Edition", _edition),
+        Column("Source Tables", _source_tables),
+    ],
+    code_reference=_code_reference,
+    notes=_footnotes,
+    word_reference=_word_reference,
+)
 
 
-def build_excel_report(result: dict[str, Any]) -> bytes:
-    return build_standard_excel_report(
-        report_title=REPORT_TITLE,
-        sheet_name=SHEET_NAME,
-        result=result,
-        context_builder=_build_report_context,
-        excel_equation_builder=_build_equations_for_excel,
-    )
+def render_add_to_schedule(result: dict[str, Any] | None) -> None:
+    can_add = result is not None and get_first(result, "flc") is not None
+    render_schedule_commit(MP_SCHEDULE_SPEC, result, can_add=can_add)
 
 
-def render_export_report(result: dict[str, Any] | None) -> None:
-    render_standard_export_report(
-        prefix="nec_motor_protection",
-        docx_file="nec_motor_protection_report.docx",
-        xlsx_file="nec_motor_protection_report.xlsx",
-        result=result,
-        required_keys=("flc",),
-        word_builder=build_word_report,
-        excel_builder=build_excel_report,
-    )
+def render_schedule_section() -> None:
+    render_schedule_table(MP_SCHEDULE_SPEC)

@@ -1,7 +1,7 @@
 import streamlit as st
 
 from nec_calc.common.formatting import fmt
-from nec_calc.common.ui_helpers import eq, sticky_column
+from nec_calc.common.ui_helpers import eq
 from nec_calc.conductors.calculation import calc_conductors
 from lib.nec_tables import (
     TABLE_310_15_B_1_1,
@@ -98,7 +98,7 @@ AMBIENT_OPTIONS_BY_BASE = {
 def render_calc():
     inputs_pane, result_pane = st.columns([1.45,1], gap="large")
     
-    with inputs_pane, st.container(border=True):
+    with inputs_pane, st.container(border=True,):
         st.markdown("### Display Settings")
         temp_unit = st.radio(
             "Temperature display unit",
@@ -304,58 +304,56 @@ def render_calc():
                         )
         
 
-    with result_pane:
-        sticky_column()
-        with st.container(border=True):
-            st.markdown("### Allowable Ampacity Results")
+    with result_pane, st.container(border=True):
+        st.markdown("### Allowable Ampacity Results")
 
-            m1, m2 = st.columns(2)
+        m1, m2 = st.columns(2)
+        
+        if n_parallel > 1:
+            m1.metric(f"Allowable total ampacity across {n_parallel} runs", f"{fmt(result.get('calculated_value'), 'A')}")
+            st.caption(f"Based on {n_parallel} parallel runs × {fmt(result.get('allowable_single'), 'A')} per conductor.")
+        else:
+            m1.metric("Allowable ampacity per run  \n($I_{allowable}$)", fmt(result.get("calculated_value"), "A"))
             
-            if n_parallel > 1:
-                m1.metric(f"Allowable total ampacity across {n_parallel} runs", f"{fmt(result.get('calculated_value'), 'A')}")
-                st.caption(f"Based on {n_parallel} parallel runs × {fmt(result.get('allowable_single'), 'A')} per conductor.")
-            else:
-                m1.metric("Allowable ampacity per run  \n($I_{allowable}$)", fmt(result.get("calculated_value"), "A"))
-                
-            derated_val = result.get("derated_ampacity")
-            m2.metric("Derated ampacity   \n($I_{derated}$)", fmt(derated_val, "A"))
+        derated_val = result.get("derated_ampacity")
+        m2.metric("Derated ampacity   \n($I_{derated}$)", fmt(derated_val, "A"))
 
-            st.divider()
-            render_add_to_schedule(result)  
-                       
-            with st.expander("Parameters & equations used:", expanded=False):
-                st.markdown("### Parameters used")
-                st.write(f"- conductor material: **{result.get('material_label', material)}**")
-                st.write(f"- selected conductor size: **{result.get('selected_size_display', conductor_size)}**")
-                if check_wire_type and wire_type:
-                    st.write(f"- wire / cable insulation type: **{wire_type}**")
-                if check_load and load_current_val is not None:
-                    st.write(f"- minimum required conductor size: **{result.get('min_recommended_size_display', '—')}**")
-                st.write(f"- conductor insulation temperature rating: **{rating_choice}**")
-                st.write(f"- equipment terminal temperature limit: **{terminal_choice if terminal_choice else 'None'}**")
-                st.write(f"- ambient temperature base table: **{result.get('ambient_base_label', ambient_base)}**")
-                st.write(f"- ambient operating temperature: **{ambient_choice}**")
-                st.write(f"- number of current-carrying conductors: **{number_of_conductors}**")
-                if n_parallel > 1:
-                    st.write(f"- parallel runs per phase ($N_{{parallel}}$): **{n_parallel}**")
-                if load_current_val is not None:
-                    st.write(f"- design load current: **{fmt(load_current_val, 'A')}**")
-        
-                st.write(f"- Table 310.16 base ampacity (per conductor): **{fmt(result.get('table_ampacity'), 'A')}**")
-                st.write(f"- ambient correction factor ($CF_{{temp}}$): **{fmt(result.get('ambient_correction'))}**")
-                st.write(f"- conductor adjustment factor ($AF_{{cond}}$): **{fmt(result.get('conductor_adjustment'))}**")
-                st.write(f"- derated ampacity per conductor ($I_{{derated}}$): **{fmt(derated_val, 'A')}**")
-                term_single = result.get("terminal_limit_ampacity")
-                st.write(f"- terminal limit ampacity per conductor ($I_{{terminal}}$): **{fmt(term_single, 'A') if term_single is not None else 'None'}**")
-                if n_parallel > 1:
-                    st.write(f"- total allowable circuit ampacity across {n_parallel} runs: **{fmt(result.get('calculated_value'), 'A')}**")
-        
-                st.markdown("### Equations used")
-                eq(r"I_{\text{derated}} = I_{\text{table}} \times CF_{\text{temp}} \times AF_{\text{cond}}")
-                if n_parallel > 1:
-                    eq(r"I_{\text{allowable, total}} = N_{\text{parallel}} \times \min(I_{\text{derated}}, I_{\text{terminal}})")
-                else:
-                    eq(r"I_{\text{allowable}} = \min(I_{\text{derated}}, I_{\text{terminal}})")
+        st.divider()
+        render_add_to_schedule(result)  
+                    
+        with st.expander("Parameters & equations used:", expanded=False):
+            st.markdown("### Parameters used")
+            st.write(f"- conductor material: **{result.get('material_label', material)}**")
+            st.write(f"- selected conductor size: **{result.get('selected_size_display', conductor_size)}**")
+            if check_wire_type and wire_type:
+                st.write(f"- wire / cable insulation type: **{wire_type}**")
+            if check_load and load_current_val is not None:
+                st.write(f"- minimum required conductor size: **{result.get('min_recommended_size_display', '—')}**")
+            st.write(f"- conductor insulation temperature rating: **{rating_choice}**")
+            st.write(f"- equipment terminal temperature limit: **{terminal_choice if terminal_choice else 'None'}**")
+            st.write(f"- ambient temperature base table: **{result.get('ambient_base_label', ambient_base)}**")
+            st.write(f"- ambient operating temperature: **{ambient_choice}**")
+            st.write(f"- number of current-carrying conductors: **{number_of_conductors}**")
+            if n_parallel > 1:
+                st.write(f"- parallel runs per phase ($N_{{parallel}}$): **{n_parallel}**")
+            if load_current_val is not None:
+                st.write(f"- design load current: **{fmt(load_current_val, 'A')}**")
+    
+            st.write(f"- Table 310.16 base ampacity (per conductor): **{fmt(result.get('table_ampacity'), 'A')}**")
+            st.write(f"- ambient correction factor ($CF_{{temp}}$): **{fmt(result.get('ambient_correction'))}**")
+            st.write(f"- conductor adjustment factor ($AF_{{cond}}$): **{fmt(result.get('conductor_adjustment'))}**")
+            st.write(f"- derated ampacity per conductor ($I_{{derated}}$): **{fmt(derated_val, 'A')}**")
+            term_single = result.get("terminal_limit_ampacity")
+            st.write(f"- terminal limit ampacity per conductor ($I_{{terminal}}$): **{fmt(term_single, 'A') if term_single is not None else 'None'}**")
+            if n_parallel > 1:
+                st.write(f"- total allowable circuit ampacity across {n_parallel} runs: **{fmt(result.get('calculated_value'), 'A')}**")
+    
+            st.markdown("### Equations used")
+            eq(r"I_{\text{derated}} = I_{\text{table}} \times CF_{\text{temp}} \times AF_{\text{cond}}")
+            if n_parallel > 1:
+                eq(r"I_{\text{allowable, total}} = N_{\text{parallel}} \times \min(I_{\text{derated}}, I_{\text{terminal}})")
+            else:
+                eq(r"I_{\text{allowable}} = \min(I_{\text{derated}}, I_{\text{terminal}})")
                     
     st.divider()
     render_schedule_section()

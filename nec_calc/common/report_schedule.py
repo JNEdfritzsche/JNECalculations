@@ -29,7 +29,7 @@ WordRefBuilder = Callable[[Any, list[dict[str, Any]]], None]
 class Column:
     header: str
     get: ValueGetter
-    color: str | None = None   # tints the on-screen column: see _TABLE_COLORS
+    color: str | None = None
 
 
 @dataclass
@@ -186,38 +186,7 @@ def build_schedule_excel(spec: ReportSpec, rows: list[dict[str, Any]]):
 # UI
 # ============================================================
 
-# Text hues that stay legible on both the light and dark Streamlit themes.
-_TABLE_COLORS = {
-    "blue": "#4a90d9",
-    "green": "#1aa06d",
-    "red": "#e0574f",
-    "orange": "#d98b2b",
-    "violet": "#9b7fd4",
-    "gray": "#8a8f98",
-}
-
-
-def _schedule_frame(spec: ReportSpec, rows: list[dict[str, Any]]):
-    """The on-screen schedule, built from the same rows/headers the exports use."""
-    frame = pd.DataFrame(_build_table_rows(spec, rows), columns=_headers(spec))
-    frame.index = pd.RangeIndex(1, len(frame) + 1)
-
-    tinted = {
-        c.header: _TABLE_COLORS[c.color]
-        for c in _as_columns(spec)
-        if c.color in _TABLE_COLORS and c.header in frame.columns
-    }
-    if not tinted:
-        return frame
-
-    styler = frame.style
-    for header, css in tinted.items():
-        styler = styler.map(lambda _value, css=css: f"color: {css}", subset=[header])
-    return styler
-
-
 def render_schedule_commit(spec: ReportSpec, result: dict[str, Any] | None, can_add: bool) -> None:
-    """Tag field + add button. Small enough to sit beside the result it captures."""
     rows = get_rows(spec)
     placeholder = f"Calc {len(rows) + 1}"
 
@@ -225,9 +194,9 @@ def render_schedule_commit(spec: ReportSpec, result: dict[str, Any] | None, can_
         tag = st.text_input(spec.tag, key=f"{spec.prefix}_tag", placeholder=placeholder)
         submitted = st.form_submit_button(
             "Add to schedule",
-            type="primary",
             width="stretch",
             disabled=not can_add,
+            type="primary"
         )
 
     if not can_add:
@@ -241,7 +210,6 @@ def render_schedule_commit(spec: ReportSpec, result: dict[str, Any] | None, can_
 
 
 def render_schedule_table(spec: ReportSpec) -> None:
-    """Full-width schedule + exports. Mirrors the exported table column for column."""
     rows = get_rows(spec)
 
     st.markdown("### Report schedule")
@@ -255,7 +223,7 @@ def render_schedule_table(spec: ReportSpec) -> None:
     remove_col, clear_col = c2.columns(2)
     
     state = st.dataframe(
-        _schedule_frame(spec, rows),
+        pd.DataFrame(_build_table_rows(spec, rows), columns=_headers(spec)),
         width="stretch",
         on_select="rerun",
         selection_mode="multi-row",
@@ -291,7 +259,6 @@ def render_schedule_table(spec: ReportSpec) -> None:
 
 
 def render_schedule_ui(spec: ReportSpec, result: dict[str, Any] | None, can_add: bool):
-    """Single-call version for calculators that aren't split into panes yet."""
     st.markdown("### Add to report")
     render_schedule_commit(spec, result, can_add)
     st.divider()

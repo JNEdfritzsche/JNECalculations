@@ -5,22 +5,19 @@ from typing import Any
 from nec_calc.common.formatting import fmt
 from nec_calc.common.report_helper import (
     add_word_equation,
-    autosize_cols,
-    build_standard_word_report,
     get_first,
-    init_excel_report,
     omml_frac,
     omml_r,
     omml_sub,
-    render_standard_export_report,
-    wb_to_bytes,
-    write_kv_sections_to_excel,
-    yes_no,
 )
+from nec_calc.common.report_schedule import (
+    Column,
+    ReportSpec,
+    render_schedule_commit,
+    render_schedule_table,
+)
+from lib.nec_tables import TABLE_450_5A, TABLE_450_5B
 
-
-REPORT_TITLE = "NEC Transformer Protection Calculation Report"
-SHEET_NAME = "Transformer Protection"
 
 PHASE_LABELS = {
     "dc": "DC",
@@ -28,11 +25,35 @@ PHASE_LABELS = {
     "three_phase": "Three-phase",
 }
 
+PHASE_ORDER = ("single_phase", "three_phase")
+
+VOLTAGE_CLASS_LABELS = {
+    "low": "≤ 1000 V",
+    "high": "> 1000 V",
+}
+
+SOURCE_TABLE_LABELS = {
+    "table_450_5_a": "Table 450.5(A)",
+    "table_450_5_b": "Table 450.5(B)",
+}
+
+TABLE_SOURCES = {
+    "table_450_5_a": TABLE_450_5A,
+    "table_450_5_b": TABLE_450_5B,
+}
+
 
 # ============================================================
-# Small helpers
+# Column value helpers
 # ============================================================
-def _phase_label(phase: str | None) -> str:
+def _phase(result: dict[str, Any]) -> str | None:
+    return get_first(result, "phase", "system_type")
+
+
+def _phase_label(result: dict[str, Any]) -> str:
+    if result.get("nameplate_used"):
+        return "—"
+    phase = _phase(result)
     return PHASE_LABELS.get(str(phase or ""), str(phase or "—"))
 
 
@@ -40,21 +61,84 @@ def _enum_label(value: Any) -> str:
     return getattr(value, "label", None) or "—"
 
 
+def _flc_source(result: dict[str, Any]) -> str:
+    return "Nameplate" if result.get("nameplate_used") else "Calculated"
+
+
+def _rating_kva(result: dict[str, Any]) -> str:
+    rating = get_first(result, "transformer_rating")
+    return "—" if rating is None else fmt(float(rating) / 1000.0, "kVA")
+
+
+def _fla(result: dict[str, Any], key: str) -> str:
+    return fmt((result.get("flas") or {}).get(key), "A")
+
+
+def _voltage_class(result: dict[str, Any]) -> str:
+    voltage_class = get_first(result, "voltage_class")
+    return VOLTAGE_CLASS_LABELS.get(str(voltage_class or ""), "—")
+
+
+def _ocpd(result: dict[str, Any], side: str) -> str:
+    cb = result.get(f"{side}_cb") or {}
+    fr = result.get(f"{side}_fr") or {}
+
+    if cb.get("size") is None and fr.get("size") is None:
+        return "Not required"
+    if cb == fr:
+        return f"{fmt(cb.get('size'), 'A')} ({cb.get('mult')}%)"
+    return (
+        f"CB {fmt(cb.get('size'), 'A')} ({cb.get('mult')}%) / "
+        f"Fuse {fmt(fr.get('size'), 'A')} ({fr.get('mult')}%)"
+    )
+
+
+# ============================================================
+# Code reference — edition comes from the table's own CSV front matter
+# ============================================================
+def _nec_edition(table: dict[str, Any] | None = None) -> str:
+    edition = (table or TABLE_450_5B).get("edition") or TABLE_450_5A.get("edition")
+    return f"NEC {edition}" if edition else "NEC"
+
+
+def _edition(result: dict[str, Any]) -> str:
+    table = TABLE_SOURCES.get(get_first(result, "table_used"))
+    return "—" if table is None else _nec_edition(table)
+
+
+def _source_table(result: dict[str, Any]) -> str:
+    return SOURCE_TABLE_LABELS.get(str(get_first(result, "table_used") or ""), "—")
+
+
+# ============================================================
+# Report-wide text
+# ============================================================
+def _code_reference(results: list[dict[str, Any]]) -> str:
+    tables = {get_first(r, "table_used") for r in results}
+    parts = [SOURCE_TABLE_LABELS[key] for key in SOURCE_TABLE_LABELS if key in tables]
+    return f"Per {_nec_edition()} 450.3 " + ("; ".join(parts) if parts else "Table 450.5")
+
+
+def _phases_present(results: list[dict[str, Any]]) -> list[str]:
+    phases = {_phase(r) for r in results if not r.get("nameplate_used")}
+    return [p for p in PHASE_ORDER if p in phases]
+
+
 def _denominator_for_phase(phase: str | None, voltage_inner: str) -> str:
     return omml_r("√3 × ") + voltage_inner if phase == "three_phase" else voltage_inner
 
 
-# ============================================================
-# Equations
-# ============================================================
-def add_transformer_protection_equations(doc, context: dict[str, Any]) -> None:
-    phase = context["phase"]
+def _word_reference(doc, results: list[dict[str, Any]]) -> None:
+    """Equations used across the calculations in the schedule (Word report only)."""
+    phases = _phases_present(results)
     doc.add_heading("Equations Used", level=1)
 
-    if not context["nameplate_used"]:
+    for phase in phases:
+        suffix = f" — {PHASE_LABELS[phase]}" if len(phases) > 1 else ""
+
         add_word_equation(
             doc,
-            "Full-load current",
+            f"Full-load current{suffix}",
             omml_r("I = ") + omml_frac(omml_r("S"), _denominator_for_phase(phase, omml_r("V"))),
         )
 
@@ -65,176 +149,75 @@ def add_transformer_protection_equations(doc, context: dict[str, Any]) -> None:
     )
 
 
-# ============================================================
-# Report sections
-# ============================================================
-def _ocpd_result_pairs(result: dict[str, Any]) -> list[tuple[str, Any]]:
-    pairs: list[tuple[str, Any]] = []
+def _footnotes(results: list[dict[str, Any]]) -> list[str]:
+    edition = _nec_edition()
 
-    for side in ("primary", "secondary"):
-        cb = result.get(f"{side}_cb")
-        fr = result.get(f"{side}_fr")
-        title = side.title()
-
-        if cb.get("size") is None and fr.get("size") is None:
-            pairs.append((f"{title} protection", "Not required"))
-        elif cb == fr:
-            pairs.append((f"Max {title} breaker/fuse ({cb.get('mult')}% × I_flc), A", cb.get("size")))
-        else:
-            pairs.append((f"Max {title} breaker ({cb.get('mult')}% × I_flc), A", cb.get("size")))
-            pairs.append((f"Max {title} fuse ({fr.get('mult')}% × I_flc), A", fr.get("size")))
-
-    return pairs
-
-
-def _build_input_pairs(result: dict[str, Any]) -> list[tuple[str, Any]]:
-    flas = result.get("flas", {})
-    pairs: list[tuple[str, Any]] = []
-
-    phase = get_first(result, "phase")
-    if phase is not None:
-        pairs.append(("System type", _phase_label(phase)))
-
-    transformer_rating = get_first(result, "transformer_rating")
-    if transformer_rating is not None:
-        pairs.append(("Transformer rating, S (VA)", transformer_rating))
-
-    pairs += [
-        ("Primary transformer voltage, V1 (V)", get_first(result, "V_primary")),
-        ("Secondary transformer voltage, V2 (V)", get_first(result, "V_secondary")),
-        ("Voltage class", str(result.get("voltage_class")).title()),
-        ("Nameplate FLA used", yes_no(result.get("nameplate_used"))),
-        ("Primary full-load current, I1 (A)", flas.get("primary_fla")),
-        ("Secondary full-load current, I2 (A)", flas.get("secondary_fla")),
-    ]
-
-    protection_method = result.get("protection_method")
-    if protection_method is not None:
-        pairs.append(("Protection configuration", _enum_label(protection_method)))
-
-    location_type = result.get("location_type")
-    if location_type is not None:
-        pairs.append(("Location type", _enum_label(location_type)))
-
-    tx_z = result.get("tx_z")
-    if tx_z is not None:
-        pairs.append(("Transformer rated impedance, %Z", tx_z))
-
-    return pairs
-
-
-def _build_notes(result: dict[str, Any]) -> list[str]:
-    phase = get_first(result, "phase")
     notes = [
-        "This report is based on the input values entered into the calculator.",
-        "Maximum OCPD ratings are taken from NEC Table 450.5(A) for transformers over 1000 V and Table 450.5(B) for transformers 1000 V and less, based on protection configuration, location, and transformer rated impedance.",
-        "OCPD values are the code-based maximums; the next standard rating at or below each value should be selected.",
-        "Final selections and design decisions should be verified against the NEC, project specifications, equipment data, and engineering judgement.",
+        f"Maximum OCPD ratings are taken from {edition} Table 450.5(A) for transformers "
+        "over 1000 V and Table 450.5(B) for transformers 1000 V and less, based on "
+        "protection configuration, location, and transformer rated impedance.",
+        "The Code Edition and Source Table columns give the table each row's multipliers "
+        "were read from. Where the breaker and fuse multipliers differ, both maximums are "
+        "shown; where the table gives one multiplier for both devices, a single figure is shown.",
+        "OCPD values are the code-based maximums; the next standard rating at or below each "
+        "value should be selected.",
     ]
-    if not result.get("nameplate_used"):
+
+    if _phases_present(results):
         notes.append(
-            "Full-load currents are calculated from the transformer rating and voltages using S / (√3 × V)."
-            if phase == "three_phase"
-            else "Full-load currents are calculated from the transformer rating and voltages using S / V."
+            "Full-load currents are calculated from the transformer rating and voltages; "
+            "three-phase voltages are treated as line-to-line."
         )
-    else:
-        notes.append("Full-load currents are taken from the transformer nameplate values entered by the user.")
+    if any(r.get("nameplate_used") for r in results):
+        notes.append(
+            "Rows marked Nameplate use the full-load currents entered from the transformer "
+            "nameplate rather than calculated values."
+        )
+
+    notes.append(
+        "This report is based on the input values entered into the calculator. Final "
+        "selections and design decisions should be verified against the NEC, project "
+        "specifications, equipment data, and engineering judgement."
+    )
+
     return notes
 
 
-def _excel_input_pairs(result: dict[str, Any]) -> list[tuple[str, Any]]:
-    pairs: list[tuple[str, Any]] = []
-
-    phase = get_first(result, "phase")
-    if phase is not None:
-        pairs.append(("System type", _phase_label(phase)))
-
-    transformer_rating = get_first(result, "transformer_rating")
-    if transformer_rating is not None:
-        pairs.append(("Transformer rating, S (VA)", transformer_rating))
-
-    pairs += [
-        ("Primary transformer voltage, V1 (V)", get_first(result, "V_primary")),
-        ("Secondary transformer voltage, V2 (V)", get_first(result, "V_secondary")),
-        ("Nameplate FLA used", yes_no(result.get("nameplate_used"))),
-    ]
-
-    return pairs
-
-
-def _excel_flc_pairs(result: dict[str, Any]) -> list[tuple[str, Any]]:
-    flas = result.get("flas", {})
-    return [
-        ("Primary full-load current, I1 (A)", flas.get("primary_fla")),
-        ("Secondary full-load current, I2 (A)", flas.get("secondary_fla")),
-    ]
-
-
-def _excel_protection_pairs(result: dict[str, Any]) -> list[tuple[str, Any]]:
-    pairs: list[tuple[str, Any]] = [("Voltage class", str(result.get("voltage_class")).title())]
-
-    protection_method = result.get("protection_method")
-    if protection_method is not None:
-        pairs.append(("Protection configuration", _enum_label(protection_method)))
-
-    location_type = result.get("location_type")
-    if location_type is not None:
-        pairs.append(("Location type", _enum_label(location_type)))
-
-    tx_z = result.get("tx_z")
-    if tx_z is not None:
-        pairs.append(("Transformer rated impedance, %Z", tx_z))
-
-    return pairs + _ocpd_result_pairs(result)
-
-
-def _build_report_context(result: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "phase": get_first(result, "phase"),
-        "nameplate_used": bool(result.get("nameplate_used")),
-        "notes": _build_notes(result),
-        "input_pairs": _build_input_pairs(result),
-        "result_pairs": _ocpd_result_pairs(result),
-        "source_table": None,
-    }
-
-
 # ============================================================
-# Builders
+# Schedule spec + entry point
 # ============================================================
-def build_word_report(result: dict[str, Any]) -> bytes:
-    return build_standard_word_report(
-        report_title=REPORT_TITLE,
-        result=result,
-        context_builder=_build_report_context,
-        word_equation_builder=add_transformer_protection_equations,
-    )
+TP_SCHEDULE_SPEC = ReportSpec(
+    prefix="nec_transformer_protection_schedule",
+    report_title="Transformer Protection — Calculation Results",
+    sheet_name="Transformer Protection Schedule",
+    tag="Tag / ID",
+    cols=[
+        Column("System", _phase_label),
+        Column("Rating, S", _rating_kva),
+        Column("V1 (V)", lambda r: fmt(get_first(r, "V_primary"), "V")),
+        Column("V2 (V)", lambda r: fmt(get_first(r, "V_secondary"), "V")),
+        Column("Voltage class", _voltage_class),
+        Column("FLA source", _flc_source),
+        Column("I1 (A)", lambda r: _fla(r, "primary_fla")),
+        Column("I2 (A)", lambda r: _fla(r, "secondary_fla")),
+        Column("Protection", lambda r: _enum_label(r.get("protection_method"))),
+        Column("Location", lambda r: _enum_label(r.get("location_type"))),
+        Column("%Z", lambda r: fmt(get_first(r, "tx_z"), "%")),
+        Column("Max primary OCPD", lambda r: _ocpd(r, "primary"), color="green"),
+        Column("Max secondary OCPD", lambda r: _ocpd(r, "secondary"), color="green"),
+        Column("Code Edition", _edition),
+        Column("Source Table", _source_table),
+    ],
+    code_reference=_code_reference,
+    notes=_footnotes,
+    word_reference=_word_reference,
+)
 
 
-def build_excel_report(result: dict[str, Any]) -> bytes:
-    wb, ws, row = init_excel_report(REPORT_TITLE, SHEET_NAME)
-
-    write_kv_sections_to_excel(
-        ws,
-        row,
-        [
-            ("Inputs", _excel_input_pairs(result)),
-            ("Full-Load Currents", _excel_flc_pairs(result)),
-            ("Code-Based Protection", _excel_protection_pairs(result)),
-        ],
-    )
-
-    autosize_cols(ws)
-    return wb_to_bytes(wb)
+def render_add_to_schedule(result: dict[str, Any] | None) -> None:
+    can_add = result is not None and get_first(result, "table_used") is not None
+    render_schedule_commit(TP_SCHEDULE_SPEC, result, can_add=can_add)
 
 
-def render_export_report(result: dict[str, Any] | None) -> None:
-    render_standard_export_report(
-        prefix="nec_transformer_protection",
-        docx_file="nec_transformer_protection_report.docx",
-        xlsx_file="nec_transformer_protection_report.xlsx",
-        result=result,
-        required_keys=("primary_cb", "secondary_cb"),
-        word_builder=build_word_report,
-        excel_builder=build_excel_report,
-    )
+def render_schedule_section() -> None:
+    render_schedule_table(TP_SCHEDULE_SPEC)
