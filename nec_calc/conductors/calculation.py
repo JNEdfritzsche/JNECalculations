@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 from lib import nec_tables
-from nec_calc.common.table_helpers import get_table_row
+from calc_common.table_helpers import get_table_row
 
 
 def format_conductor_size_display(size: str | None) -> str:

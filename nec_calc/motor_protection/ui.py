@@ -4,10 +4,10 @@ import pandas as pd
 import streamlit as st
 
 from lib.nec_tables import TABLES
-from nec_calc.common.enums import ServiceFactors, SystemTypes
-from nec_calc.common.formatting import fmt
-from nec_calc.common.table_helpers import get_row_headers
-from nec_calc.common.ui_helpers import enum_selectbox, eq
+from calc_common.enums import ServiceFactors, SystemTypes
+from calc_common.formatting import fmt
+from calc_common.table_helpers import get_row_headers
+from calc_common.ui_helpers import enum_selectbox, eq
 
 from nec_calc.motor_feeder.calculation import get_appropriate_table, get_valid_voltages
 from nec_calc.motor_protection.calculation import calc_motor_protection

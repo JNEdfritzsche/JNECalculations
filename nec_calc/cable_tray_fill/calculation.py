@@ -5,7 +5,7 @@ import re
 from typing import Any
 
 from lib.nec_tables import TABLES
-from nec_calc.common.formatting import _to_float
+from calc_common.formatting import _to_float
 
 AREA_UNITS = {"metric": "mm²", "imperial": "in²"}
 LENGTH_UNITS = {"metric": "mm", "imperial": "in"}

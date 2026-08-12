@@ -2,7 +2,7 @@ from typing import Any
 
 import streamlit as st
 
-from nec_calc.common.enums import (
+from calc_common.enums import (
     ConductorMaterial,
     ConduitMaterial,
     CopperCoating,
@@ -10,9 +10,9 @@ from nec_calc.common.enums import (
     VDMode,
 )
 
-from nec_calc.common.formatting import fmt
-from nec_calc.common.ui_helpers import enum_radio, enum_selectbox, eq
-from nec_calc.common.units import Current, Voltage
+from calc_common.formatting import fmt
+from calc_common.ui_helpers import enum_radio, enum_selectbox, eq
+from calc_common.units import Current, Voltage
 
 from lib.nec_tables import (
     TABLE_9_LOOKUP_KEYS_kft,

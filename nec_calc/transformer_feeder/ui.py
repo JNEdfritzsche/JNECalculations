@@ -1,8 +1,8 @@
 import streamlit as st
 
-from nec_calc.common.enums import SystemTypes
-from nec_calc.common.formatting import fmt
-from nec_calc.common.ui_helpers import eq, transformer_feeder_inputs
+from calc_common.enums import SystemTypes
+from calc_common.formatting import fmt
+from calc_common.ui_helpers import eq, transformer_feeder_inputs
 
 from nec_calc.transformer_feeder.calculation import calc_transformer_feeder
 from nec_calc.transformer_feeder.report import render_add_to_schedule, render_schedule_section

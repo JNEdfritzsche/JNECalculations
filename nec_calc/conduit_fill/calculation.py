@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from lib.nec_tables import TABLE_2, TABLE_4, TABLE_5, get_cross_sectional_area_percent
-from nec_calc.common.table_helpers import get_table_row
+from calc_common.table_helpers import get_table_row
 
 AREA_UNITS = {"metric": "mm²", "imperial": "in²"}
 LENGTH_UNITS = {"metric": "mm", "imperial": "in"}

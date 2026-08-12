@@ -1,4 +1,4 @@
-from nec_calc.common.calc_helpers import calc_flas
+from calc_common.calc_helpers import calc_flas
 
 # ----------------------------
 # results helper functions

@@ -1,7 +1,7 @@
 import streamlit as st
 
-from nec_calc.common.formatting import fmt
-from nec_calc.common.ui_helpers import eq
+from calc_common.formatting import fmt
+from calc_common.ui_helpers import eq
 from nec_calc.conductors.calculation import calc_conductors
 from lib.nec_tables import (
     TABLE_310_15_B_1_1,

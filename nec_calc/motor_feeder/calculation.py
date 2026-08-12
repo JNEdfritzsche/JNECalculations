@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from lib.nec_tables import TABLES
-from nec_calc.common.table_helpers import (
+from calc_common.table_helpers import (
     get_col_integers,
     get_populated_columns,
     get_table_row,

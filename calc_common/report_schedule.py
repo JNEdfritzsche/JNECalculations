@@ -11,7 +11,7 @@ from openpyxl.styles import Font
 import pandas as pd
 import streamlit as st
 
-from nec_calc.common.report_helper import (
+from calc_common.report_helper import (
     add_word_table,
     autosize_cols,
     init_word_doc,

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from nec_calc.common.formatting import fmt
-from nec_calc.common.report_helper import (
+from calc_common.formatting import fmt
+from calc_common.report_helper import (
     add_word_equation,
     get_first,
     omml_r,
     omml_sub,
 )
-from nec_calc.common.report_schedule import (
+from calc_common.report_schedule import (
     Column,
     ReportSpec,
     render_schedule_commit,

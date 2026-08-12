@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import streamlit as st
 
-from nec_calc.common.units import MetricPrefix, Voltage, ApparentPower
-from nec_calc.common.enums import LabeledEnum, SystemTypes
-from nec_calc.common.formatting import fmt, next_standard_size
+from calc_common.units import MetricPrefix, Voltage, ApparentPower
+from calc_common.enums import LabeledEnum, SystemTypes
+from calc_common.formatting import fmt, next_standard_size
 from lib.nec_tables import NEC_2406A_STANDARD
 
 def header(title: str, subtitle: str = ""):

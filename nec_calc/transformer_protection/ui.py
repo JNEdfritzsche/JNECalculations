@@ -1,12 +1,12 @@
 import streamlit as st
 
-from nec_calc.common.enums import LocationTypes, ProtectionOptions, SystemTypes, TransformerSourceOptions
-from nec_calc.common.formatting import fmt
-from nec_calc.common.ui_helpers import enum_radio, enum_selectbox, quant_unit_input, transformer_feeder_inputs, _show_result, eq
-from nec_calc.common.units import Voltage
+from calc_common.enums import LocationTypes, ProtectionOptions, SystemTypes, TransformerSourceOptions
+from calc_common.formatting import fmt
+from calc_common.ui_helpers import enum_radio, enum_selectbox, quant_unit_input, transformer_feeder_inputs, _show_result, eq
+from calc_common.units import Voltage
 from content.charts.flowcharts import get_nec_transformer_protection_flowchart
 from nec_calc.transformer_protection.calculation import calc_transformer_protection, calc_voltage_class
-from nec_calc.common.calc_helpers import calc_flas
+from calc_common.calc_helpers import calc_flas
 from nec_calc.transformer_protection.report import render_add_to_schedule, render_schedule_section
 from lib.nec_tables import TABLES
 

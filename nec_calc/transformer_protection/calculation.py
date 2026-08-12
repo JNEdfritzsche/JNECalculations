@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from typing import Any
-from nec_calc.common.calc_helpers import get_table_entry
-from nec_calc.common.enums import LocationTypes, ProtectionOptions
-from nec_calc.common.units import Voltage
+from calc_common.calc_helpers import get_table_entry
+from calc_common.enums import LocationTypes, ProtectionOptions
+from calc_common.units import Voltage
 
 # ----------------------------
 # results helper functions

@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Any
 
 from lib.nec_tables import NEC_2406A_STANDARD, TABLES
-from nec_calc.common.formatting import next_standard_size
-from nec_calc.common.table_helpers import get_table_row
+from calc_common.formatting import next_standard_size
+from calc_common.table_helpers import get_table_row
 
 # Reuse the full-load-current lookup already implemented for the motor feeder.
 from nec_calc.motor_feeder.calculation import _get_table_flc
