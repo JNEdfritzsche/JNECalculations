@@ -14,7 +14,8 @@ DISPLAY_UNITS = (METRIC, IMPERIAL)
 
 
 def conduit_types() -> dict[str, str]:
-    return dict(oesc_tables.CONDUIT_TYPE_LABELS)
+    # CONDUIT_TYPE_LABELS is label -> internal key; calculators key off the internal key.
+    return {key: label for label, key in oesc_tables.CONDUIT_TYPE_LABELS.items()}
 
 
 def trade_sizes(conduit_type: str) -> list[int]:
