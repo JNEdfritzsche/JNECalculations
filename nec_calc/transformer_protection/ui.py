@@ -6,18 +6,18 @@ from calc_common.ui_helpers import enum_radio, enum_selectbox, quant_unit_input,
 from calc_common.units import Voltage
 from content.charts.flowcharts import get_nec_transformer_protection_flowchart
 from nec_calc.transformer_protection.calculation import calc_transformer_protection, calc_voltage_class
-from calc_common.calc_helpers import calc_flas
+from calc_common.physics import calc_flas
 from nec_calc.transformer_protection.report import render_add_to_schedule, render_schedule_section
-from lib.nec_tables import TABLES
+from lib.nec_tables import NEC_2406A_STANDARD, TABLES
 
 def _show_ocpd(side, cb, fr):
     if cb.get("size") is None and fr.get("size") is None:
         st.info(f"{side} protection: **Not required**")
     elif cb == fr:
-        _show_result(label=rf"Max {side} Breaker/Fuse ({cb.get("mult")}% $\times I_{{flc}}$)", raw=cb.get("size"))
+        _show_result(label=rf"Max {side} Breaker/Fuse ({cb.get("mult")}% $\times I_{{flc}}$)", raw=cb.get("size"), std_list=NEC_2406A_STANDARD)
     else:
-        _show_result(label=rf"Max {side} Breaker ({cb.get("mult")}% $\times I_{{flc}}$)", raw=cb.get("size"))
-        _show_result(label=rf"Max {side} Fuse ({fr.get("mult")}% $\times I_{{flc}}$)", raw=fr.get("size"))
+        _show_result(label=rf"Max {side} Breaker ({cb.get("mult")}% $\times I_{{flc}}$)", raw=cb.get("size"), std_list=NEC_2406A_STANDARD)
+        _show_result(label=rf"Max {side} Fuse ({fr.get("mult")}% $\times I_{{flc}}$)", raw=fr.get("size"), std_list=NEC_2406A_STANDARD)
 
 @st.fragment
 def render_calc():

@@ -110,9 +110,32 @@ def set_table_borders(table):
     table._tbl.tblPr.append(borders)
 
 
+def report_identity() -> tuple[str, str]:
+    # (project number, designer name) as entered in the sidebar 
+    return (
+        st.session_state.get("project_number", ""),
+        st.session_state.get("designer_name", ""),
+    )
+
+
+def add_identity_line(doc: Document) -> None:
+    project_number, designer_name = report_identity()
+    parts = [
+        text
+        for text in (
+            f"Project No.: {project_number}" if project_number else "",
+            f"Designer: {designer_name}" if designer_name else "",
+            datetime.now().strftime("%B %d, %Y"),
+        )
+        if text
+    ]
+    run = doc.add_paragraph().add_run("   |   ".join(parts))
+    run.italic = True
+    run.font.size = Pt(9)
+
+
 def fill_doc_header(doc: Document, title: str) -> None:
-    project_number = st.session_state.get("project_number", "")
-    designer_name = st.session_state.get("designer_name", "")
+    project_number, designer_name = report_identity()
     values = {
         (0, 3): project_number,
         (0, 4): "#",
@@ -133,8 +156,10 @@ def fill_doc_header(doc: Document, title: str) -> None:
 def init_word_doc(title: str, template_path: str = "content/files/Template.docx") -> Document:
     path = Path(template_path)
     if not path.exists():
+        # No letterhead to carry the project number and designer name, so print them.
         doc = Document()
         doc.add_heading(title, level=0)
+        add_identity_line(doc)
         return doc
 
     doc = Document(str(path))
@@ -276,6 +301,8 @@ __all__ = [
     "add_word_equation",
 
     # Word document helpers
+    "report_identity",
+    "add_identity_line",
     "init_word_doc",
     "save_word_doc",
     "add_word_table",

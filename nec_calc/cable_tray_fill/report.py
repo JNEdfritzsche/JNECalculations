@@ -198,7 +198,8 @@ def _footnotes(results: list[dict[str, Any]]) -> list[str]:
 # Schedule spec + entry point
 # ============================================================
 CT_SCHEDULE_SPEC = ReportSpec(
-    prefix="nec_cable_tray_fill_schedule",
+    code="nec",
+    calculator="cable_tray_fill",
     report_title="Cable Tray Fill — Calculation Results",
     sheet_name="Cable Tray Fill Schedule",
     tag="Tag / ID",

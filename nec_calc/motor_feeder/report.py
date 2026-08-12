@@ -155,7 +155,8 @@ def _footnotes(results: list[dict[str, Any]]) -> list[str]:
 # Schedule spec + entry point
 # ============================================================
 MF_SCHEDULE_SPEC = ReportSpec(
-    prefix="nec_motor_feeder_schedule",
+    code="nec",
+    calculator="motor_feeder",
     report_title="Motor Feeder — Calculation Results",
     sheet_name="Motor Feeder Schedule",
     tag="Tag / ID",

@@ -5,7 +5,6 @@ import streamlit as st
 from calc_common.units import MetricPrefix, Voltage, ApparentPower
 from calc_common.enums import LabeledEnum, SystemTypes
 from calc_common.formatting import fmt, next_standard_size
-from lib.nec_tables import NEC_2406A_STANDARD
 
 def header(title: str, subtitle: str = ""):
     st.header(title)
@@ -106,7 +105,7 @@ def transformer_feeder_inputs(
 def _show_result(
     label: str,
     raw: float | None,
-    std_list: list[float] | None = NEC_2406A_STANDARD,
+    std_list: list[float] | None,
     round_to_std: bool = True,
     direction: str = "up",
     selected_label: str = "Selected standard",

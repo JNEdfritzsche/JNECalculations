@@ -441,3 +441,35 @@ def get_table_dataframe(table_id: str):
         return _df(rows)
 
     return None
+
+def get_table_entry(
+    table: str,
+    criteria: dict[str, Any],
+    entry_key: str
+) -> Any | None:
+    """One cell out of a table, found by matching criteria against its rows.
+
+    The table id, the criteria columns and the wanted column are all named as strings, and
+    several of them are assembled at runtime, so each one is checked and reported by name.
+    Returning None for a typo would leave the calculator showing a blank with no clue why.
+    """
+    table_id = table
+    table = TABLES.get(table_id)
+    if table is None:
+        raise KeyError(
+            f"no NEC table '{table_id}'. Tables are: {sorted(TABLES)}"
+        )
+
+    columns = table.get("columns") or []
+    unknown = [key for key in list(criteria) + [entry_key] if key not in columns]
+    if unknown:
+        raise KeyError(
+            f"{table.get('title', table_id)}: no column {unknown}. "
+            f"Columns are: {columns}"
+        )
+
+    row = None
+    for r in table["rows"]:
+        if all(r.get(key) == value for key, value in criteria.items()):
+            row = r
+    return row[entry_key] if row else None

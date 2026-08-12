@@ -119,7 +119,8 @@ def _footnotes(results: list[dict[str, Any]]) -> list[str]:
 
 
 COND_SCHEDULE_SPEC = ReportSpec(
-    prefix="nec_conductors_schedule",
+    code="nec",
+    calculator="conductors",
     report_title="Conductors — Calculation Results",
     sheet_name="Conductors Schedule",
     tag="Tag / ID",

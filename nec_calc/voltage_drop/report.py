@@ -228,7 +228,8 @@ def _footnotes(results: list[dict[str, Any]]) -> list[str]:
 # Schedule spec + entry point
 # ============================================================
 VD_SCHEDULE_SPEC = ReportSpec(
-    prefix="nec_voltage_drop_schedule",
+    code="nec",
+    calculator="voltage_drop",
     report_title="Voltage Drop — Calculation Results",
     sheet_name="Voltage Drop Schedule",
     tag="Tag / ID",

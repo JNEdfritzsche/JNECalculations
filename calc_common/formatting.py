@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import re
 
-from lib.nec_tables import NEC_2406A_STANDARD
-
 
 def _safe_float(x):
     """Convert to float, returning None on failure."""
@@ -106,8 +104,11 @@ def format_cond_size(size_value):
     except Exception:
         return s
 
-def next_standard(value, standard_list=NEC_2406A_STANDARD):
-    """Return the next standard value >= value. If value exceeds the list, return None."""
+def next_standard(value, standard_list):
+    """Return the next standard value >= value. If value exceeds the list, return None.
+
+    The list is the caller's: NEC 240.6(A) or OESC Table 13.
+    """
     try:
         v = float(value)
     except Exception:

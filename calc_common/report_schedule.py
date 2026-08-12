@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Callable
 
@@ -16,6 +16,7 @@ from calc_common.report_helper import (
     autosize_cols,
     init_word_doc,
     render_export_buttons,
+    report_identity,
     save_word_doc,
     wb_to_bytes,
     write_columnar_table,
@@ -34,7 +35,8 @@ class Column:
 
 @dataclass
 class ReportSpec:
-    prefix: str # jurisdiction & calculator type (eg. nec_voltage_drop)
+    code: str # jurisdiction (eg. nec, oesc)
+    calculator: str # package directory name (eg. voltage_drop)
     report_title: str # eg. Voltage Drop — Calculation Results
     sheet_name: str # name for the excel sheet
     cols: list[Column | tuple[str, ValueGetter]]  # Column, or legacy (header, getter) tuple
@@ -42,6 +44,10 @@ class ReportSpec:
     notes: Callable[[list[dict[str, Any]]], list[str]]  # note lines under the table
     tag: str = "Tag"
     word_reference: WordRefBuilder | None = None  # appends equations/assumptions to the Word report
+    prefix: str = field(init=False)  # namespaces every session_state and widget key
+
+    def __post_init__(self):
+        self.prefix = f"{self.code}_{self.calculator}_schedule"
 
 
 # ============================================================
@@ -155,15 +161,20 @@ def build_schedule_excel(spec: ReportSpec, rows: list[dict[str, Any]]):
     results = [row.get("result", {}) for row in rows]
 
     wb = Workbook()
-
-    # One sheet: the schedule table (headers on row 1, data below), then the code
-    # reference and notes underneath it. Per-row citations live in the table's own
-    # reference columns, so there is nothing left to put on a second tab.
+    
     ws = wb.active
     ws.title = spec.sheet_name
-    row = write_columnar_table(ws, 1, None, _build_table_rows(spec, rows), _headers(spec))
 
-    # Size columns to the table before the long footer lines land, so the notes
+    row = 1
+    for label, value in zip(("Project No.", "Designer"), report_identity()):
+        ws.cell(row=row, column=1, value=label).font = Font(bold=True)
+        ws.cell(row=row, column=2, value=value)
+        row += 1
+    row += 1
+
+    row = write_columnar_table(ws, row, None, _build_table_rows(spec, rows), _headers(spec))
+
+    # s ize columns to the table before the long footer lines land, so the notes
     # overflow to the right rather than stretching column A to fit them.
     autosize_cols(ws)
 

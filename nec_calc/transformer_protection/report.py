@@ -187,7 +187,8 @@ def _footnotes(results: list[dict[str, Any]]) -> list[str]:
 # Schedule spec + entry point
 # ============================================================
 TP_SCHEDULE_SPEC = ReportSpec(
-    prefix="nec_transformer_protection_schedule",
+    code="nec",
+    calculator="transformer_protection",
     report_title="Transformer Protection — Calculation Results",
     sheet_name="Transformer Protection Schedule",
     tag="Tag / ID",
