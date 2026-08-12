@@ -31,7 +31,7 @@ Notes:
 
 from __future__ import annotations
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, List, Optional
 
 # ----------------------------
 # Helpers
@@ -47,6 +47,9 @@ def _rows_from_columns(columns: list[str], data: list[list[Any]]) -> list[dict[s
 # Friendly title overrides
 # (Some legacy tables are stored in "raw" structures, so their titles are not embedded in the object.)
 # ----------------------------
+EDITION = "2024"  # CSA C22.1:24 with the Ontario amendments
+SOURCE = "CSA C22.1:24 (Canadian Electrical Code, Part I) — Ontario amendments"
+
 TITLE_OVERRIDES: Dict[str, str] = {
     "6A": "Table 6A — Dimensions of single Class B R90XLPE, RW75XLPE, RW90XLPE, and RPV90 unjacketed 600 V insulated conductors for calculating conduit and tubing fill",
     "6B": "Table 6B — Dimensions of single Class B R90XLPE, RW75XLPE, RW90XLPE, and RPV90 unjacketed 1000 V insulated conductors for calculating conduit and tubing fill",
@@ -81,6 +84,14 @@ TITLE_OVERRIDES: Dict[str, str] = {
 # ----------------------------
 # Table 13 — Rating or setting of overcurrent devices protecting conductors
 # ----------------------------
+# The NEC 240.6(A) ladder, as the calculators have always used. Wider than TABLE_13's
+# permitted column (15-800 A), so narrowing to that would change results at both ends.
+STANDARD_DEVICE_RATINGS: List[int] = [
+    10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 110, 125, 150, 175, 200,
+    225, 250, 300, 350, 400, 450, 500, 600, 700, 800, 1000, 1200, 1600, 2000, 2500,
+    3000, 4000, 5000, 6000,
+]
+
 TABLE_13: Dict[str, Any] = {
     "title": "Table 13 — Rating or setting of overcurrent devices protecting conductors",
     "units": "A",
@@ -2873,6 +2884,10 @@ def get_table_rows(table_id: str) -> Optional[List[Dict[str, Any]]]:
     if not meta:
         return None
     return meta.get("rows")
+
+def edition_of(table_id: Optional[str] = None) -> str:
+    meta = get_table_meta(table_id) if table_id else None
+    return (meta or {}).get("edition") or EDITION
 
 
 # ----------------------------

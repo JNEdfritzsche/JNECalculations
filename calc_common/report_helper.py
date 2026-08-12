@@ -156,7 +156,6 @@ def fill_doc_header(doc: Document, title: str) -> None:
 def init_word_doc(title: str, template_path: str = "content/files/Template.docx") -> Document:
     path = Path(template_path)
     if not path.exists():
-        # No letterhead to carry the project number and designer name, so print them.
         doc = Document()
         doc.add_heading(title, level=0)
         add_identity_line(doc)

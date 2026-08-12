@@ -49,48 +49,55 @@ def quant_selectbox(container, label: str, options, **kwargs):
     
 
 def quant_unit_input(
-    label: str, 
-    options, 
-    value: float = 0.0, 
-    min_value: float | None = 0.0, 
-    max_value: float | None = None, 
-    step: float = 1.0, 
-    unit_index: int = 0
+    label: str,
+    options,
+    value: float = 0.0,
+    min_value: float | None = 0.0,
+    max_value: float | None = None,
+    step: float = 1.0,
+    unit_index: int = 0,
+    key_prefix: str = ""
 ):
+    key_base = f"{key_prefix}_{label}" if key_prefix else label
+
     c1, c2 = st.columns([4, 1])
-    
+
     unit = quant_selectbox(
-        container=c2, 
-        label="Unit", 
-        options=options, 
+        container=c2,
+        label="Unit",
+        options=options,
         index=unit_index,
-        key=f"{label}_unit"
+        key=f"{key_base}_unit"
     )
-    
+
     quant = c1.number_input(
-        label=f"{label} ({options.unit(unit)})", 
+        label=f"{label} ({options.unit(unit)})",
         value=value,
-        min_value=min_value, 
+        min_value=min_value,
         max_value=max_value,
         step=step,
-        key=f"{label}_quant"
+        key=f"{key_base}_quant"
     )
-    
+
     return options.of(quant, unit)
 
 def transformer_feeder_inputs(
-    system_type: SystemTypes | None = None, 
-    transformer_rating: ApparentPower | None = None, 
-    v_pri: Voltage | None = None, 
-    v_sec: Voltage | None = None
+    system_type: SystemTypes | None = None,
+    transformer_rating: ApparentPower | None = None,
+    v_pri: Voltage | None = None,
+    v_sec: Voltage | None = None,
+    key_prefix: str = ""
 ):
     c1, _ = st.columns([4, 1])
-    
-    system_type = system_type or enum_selectbox(c1, "System Type", SystemTypes.exclude(SystemTypes.DC), index=0)
-    
-    v_pri = v_pri or quant_unit_input("Primary transformer voltage", Voltage, value=480.0, step=1.0, unit_index=1)
-    v_sec = v_sec or quant_unit_input("Secondary transformer voltage", Voltage, value=120.0, step=1.0, unit_index=1)
-    transformer_rating = transformer_rating or quant_unit_input("Transformer rating", ApparentPower, value=15.0, step=0.1, unit_index=2)
+
+    system_type = system_type or enum_selectbox(
+        c1, "System Type", SystemTypes.exclude(SystemTypes.DC), index=0,
+        key=f"{key_prefix}_system_type" if key_prefix else None,
+    )
+
+    v_pri = v_pri or quant_unit_input("Primary transformer voltage", Voltage, value=480.0, step=1.0, unit_index=1, key_prefix=key_prefix)
+    v_sec = v_sec or quant_unit_input("Secondary transformer voltage", Voltage, value=120.0, step=1.0, unit_index=1, key_prefix=key_prefix)
+    transformer_rating = transformer_rating or quant_unit_input("Transformer rating", ApparentPower, value=15.0, step=0.1, unit_index=2, key_prefix=key_prefix)
     
     return {
         "phase": system_type.key,

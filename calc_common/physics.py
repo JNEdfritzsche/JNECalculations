@@ -9,6 +9,21 @@ def _rated_current(S, V_L, phase_factor):
 def calc_fla(S, phase_factor, voltage):
     return _rated_current(S, voltage, phase_factor)
 
+def turns_ratio(V_1, V_2):
+    return V_1 / V_2
+
+def transformer_type(phase, V_1, V_2):
+    ph = "Three-phase" if phase == "three_phase" else "Single-phase"
+
+    if V_1 > V_2:
+        direction = "Step-down"
+    elif V_1 < V_2:
+        direction = "Step-up"
+    else:
+        direction = "Isolation (1:1)"
+
+    return ph + " " + direction
+
 def calc_flas(inputs: dict[str, Any]) -> dict[str, float]:
     fla = {}
     for v_key, v_val in inputs["V_data"].items():
