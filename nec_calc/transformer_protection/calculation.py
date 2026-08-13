@@ -1,9 +1,15 @@
 from __future__ import annotations
 
 from typing import Any
-from lib.nec_tables import get_table_entry
+from lib.nec_tables import NEC_2406A_FUSE, NEC_2406A_STANDARD, get_table_entry
 from calc_common.enums import LocationTypes, ProtectionOptions
+from calc_common.formatting import next_standard_size
 from calc_common.units import Voltage
+
+# How each table's Note 1 lets a calculated maximum be moved to a device rating.
+NEXT_HIGHER = "Next higher standard rating (240.6)"
+NEXT_LOWER = "Table maximum — no rounding up permitted"
+COMMERCIAL = "Next higher commercially available rating"
 
 # ----------------------------
 # results helper functions
@@ -43,6 +49,29 @@ def calc_impedance_class(Z_percent):
         return "high"
     else:
         return None
+
+
+def _rounding_basis(table: str, mult: int | None, entry_key: str) -> str | None:
+    """Which rounding each table's Note 1 actually permits for this cell.
+
+    Table 450.5(B) Note 1 is written against "125 percent of this current", so the
+    167%, 250% and 300% cells are hard maximums that may not be rounded up.
+    Table 450.5(A) Note 1 permits the next higher rating for every cell, taken from
+    240.6 at 1000 V and below and from commercially available ratings above that.
+    """
+    if mult is None:
+        return None
+    if table == "table_450_5_b":
+        return NEXT_HIGHER if mult == 125 else NEXT_LOWER
+    return NEXT_HIGHER if "1000 Volts or Less" in entry_key else COMMERCIAL
+
+
+def _select_standard(size: float | None, basis: str | None, cb_fr: str) -> float | None:
+    """The device rating to specify. None where 240.6 does not supply one."""
+    if size is None or basis == COMMERCIAL:
+        return None
+    ratings = NEC_2406A_FUSE if cb_fr == "fr" else NEC_2406A_STANDARD
+    return next_standard_size(size, ratings, "down" if basis == NEXT_LOWER else "up")
 
 
 def _get_appropriate_table(voltage_class):
@@ -139,8 +168,12 @@ def _calc_protection(inputs: dict[str, Any]):
                 mult = int(table_entry.strip("%"))
                 size = flas.get(pri_sec + "_fla") * mult / 100
 
+            basis = _rounding_basis(table, mult, entry_key)
+
             OCPD[pri_sec][cb_fr]["mult"] = mult
             OCPD[pri_sec][cb_fr]["size"] = size
+            OCPD[pri_sec][cb_fr]["standard"] = _select_standard(size, basis, cb_fr)
+            OCPD[pri_sec][cb_fr]["basis"] = basis
             OCPD[pri_sec][cb_fr]["column"] = entry_key
 
     OCPD["table"] = table

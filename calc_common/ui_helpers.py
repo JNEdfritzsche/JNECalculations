@@ -4,7 +4,6 @@ import streamlit as st
 
 from calc_common.units import MetricPrefix, Voltage, ApparentPower
 from calc_common.enums import LabeledEnum, SystemTypes
-from calc_common.formatting import fmt, next_standard_size
 
 def header(title: str, subtitle: str = ""):
     st.header(title)
@@ -109,41 +108,7 @@ def transformer_feeder_inputs(
         },
     }
     
-def _show_result(
-    label: str,
-    raw: float | None,
-    std_list: list[float] | None,
-    round_to_std: bool = True,
-    direction: str = "up",
-    selected_label: str = "Selected standard",
-    caption: str | None = None,
-) -> float | None:
-    if raw is None:
-        st.error(f"{label}: no value computed.")
-        return None
-
-    if round_to_std and std_list:
-        std = next_standard_size(raw, std_list, direction)
-        if std is None:
-            edge = "exceeds" if direction == "up" else "is below"
-            st.error(
-                f"{label}: Raw = **{fmt(raw, 'A')}** → {edge} the standard list. "
-            )
-        else:
-            st.success(
-                f"{label}: Raw = **{fmt(raw, 'A')}** → {selected_label} = **{fmt(std, 'A')}**"
-            )
-        result = std
-    else:
-        st.success(f"{label}: **{fmt(raw, 'A')}**")
-        result = raw
-
-    if caption:
-        st.caption(caption)
-
-    return result
-
 __all__ = [
     "header", "show_code_note", "eq", "enum_selectbox", "enum_radio",
-    "quant_selectbox", "quant_unit_input", "transformer_feeder_inputs", "_show_result",
+    "quant_selectbox", "quant_unit_input", "transformer_feeder_inputs",
 ]

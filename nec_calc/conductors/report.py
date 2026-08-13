@@ -11,6 +11,7 @@ from calc_common.report_helper import (
 )
 from calc_common.report_schedule import (
     Column,
+    Group,
     ReportSpec,
     render_schedule_commit,
     render_schedule_table,
@@ -36,18 +37,18 @@ def _wire_type(result: dict[str, Any]) -> str:
 
 def _rating(result: dict[str, Any]) -> str:
     tr = get_first(result, "temp_rating")
-    return f"{tr}°C" if tr else "—"
+    return fmt(tr, "°C") if tr else "—"
 
 
 def _ambient(result: dict[str, Any]) -> str:
     amb = get_first(result, "ambient_temp_c")
-    return f"{amb}°C" if amb else "—"
+    return fmt(amb, "°C") if amb else "—"
 
 
 def _terminal(result: dict[str, Any]) -> str:
     term = get_first(result, "terminal_temp_rating")
     if term and term not in ("None", "—", ""):
-        return f"{term}°C"
+        return fmt(term, "°C")
     return "—"
 
 
@@ -126,23 +127,28 @@ COND_SCHEDULE_SPEC = ReportSpec(
     tag="Tag / ID",
     cols=[
         Column("Size", lambda r: get_first(r, "selected_size_display", default="—"), color="blue"),
-        Column("Material", _material),
-        Column("Insulation Type", _wire_type),
-        Column("Rating", _rating),
-        Column("Ambient", _ambient),
-        Column("CCCs", lambda r: get_first(r, "number_of_conductors", default="—")),
-        Column("Term Limit", _terminal),
+        Column("Material", _material, group="conductor"),
+        Column("Insulation Type", _wire_type, group="conductor"),
+        Column("Rating", _rating, group="conductor"),
+        Column("Ambient", _ambient, group="conditions"),
+        Column("CCCs", lambda r: get_first(r, "number_of_conductors", default="—"), group="conditions"),
+        Column("Term Limit", _terminal, group="conditions"),
         Column("Parallel", lambda r: get_first(r, "n_parallel", default="1")),
         Column("Load (A)", lambda r: fmt(get_first(r, "load_current"), "A")),
-        Column("Derated (A)", lambda r: fmt(get_first(r, "derated_ampacity"), "A")),
-        Column("Allowable (A)", lambda r: fmt(get_first(r, "calculated_value"), "A"), color="green"),
-        Column("Adequate?", lambda r: _yes_no(get_first(r, "is_adequate"))),
-        Column("Base Amp (A)", lambda r: fmt(get_first(r, "table_ampacity"), "A")),
-        Column("Ambient CF", lambda r: fmt(get_first(r, "ambient_correction"))),
-        Column("Cond AF", lambda r: fmt(get_first(r, "conductor_adjustment"))),
+        Column("Derated (A)", lambda r: fmt(get_first(r, "derated_ampacity"), "A"), result=True),
+        Column("Allowable (A)", lambda r: fmt(get_first(r, "calculated_value"), "A"), color="green", result=True),
+        Column("Adequate?", lambda r: _yes_no(get_first(r, "is_adequate")), result=True),
+        Column("Base Amp (A)", lambda r: fmt(get_first(r, "table_ampacity"), "A"), result=True),
+        Column("Ambient CF", lambda r: fmt(get_first(r, "ambient_correction")), result=True, group="factors"),
+        Column("Cond AF", lambda r: fmt(get_first(r, "conductor_adjustment")), result=True, group="factors"),
         Column("Code Edition", _edition),
         Column("Source Tables", _source_tables),
     ],
+    groups={
+        "conductor": Group("Conductor"),
+        "conditions": Group("Ambient / CCCs / term"),
+        "factors": Group("Ambient CF / cond AF"),
+    },
     code_reference=lambda rs: "Per NEC 310.15 and 110.14(C)",
     notes=_footnotes,
     word_reference=_word_reference,

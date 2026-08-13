@@ -11,6 +11,7 @@ from calc_common.report_helper import (
 )
 from calc_common.report_schedule import (
     Column,
+    Group,
     ReportSpec,
     render_schedule_commit,
     render_schedule_table,
@@ -58,8 +59,7 @@ def _size(result: dict[str, Any]) -> str:
 
 
 def _insulation(result: dict[str, Any]) -> str:
-    temp_rating = get_first(result, "temp_rating")
-    return "—" if temp_rating is None else f"{temp_rating}°C"
+    return fmt(get_first(result, "temp_rating"), "°C")
 
 
 # ============================================================
@@ -164,21 +164,25 @@ MF_SCHEDULE_SPEC = ReportSpec(
         Column("System", lambda r: get_first(r, "phase_label", default="—")),
         Column("Motor", _hp),
         Column("Voltage (V)", lambda r: fmt(get_first(r, "voltage"), "V")),
-        Column("I_FLC (A)", lambda r: fmt(get_first(r, "flc"), "A")),
+        Column("I_FLC (A)", lambda r: fmt(get_first(r, "flc"), "A"), result=True),
         Column("FLC source", lambda r: get_first(r, "flc_source", default="—")),
-        Column("k", lambda r: fmt(get_first(r, "sizing_factor"))),
+        Column("k", lambda r: fmt(get_first(r, "sizing_factor")), result=True),
         Column("Duty basis", _duty),
-        Column("Required ampacity (A)", lambda r: fmt(get_first(r, "conductor_ampacity"), "A"), color="green"),
-        Column("Conductor Size", _size, color="blue"),
-        Column("Size ampacity (A)", lambda r: fmt(get_first(r, "conductor_size_ampacity"), "A")),
-        Column("Material", lambda r: get_first(r, "material_label", default="—")),
-        Column("Insulation", _insulation),
-        Column("Nameplate FLA (A)", lambda r: fmt(get_first(r, "nameplate_fla"), "A")),
-        Column("SF", lambda r: get_first(r, "service_factor_label", default="—")),
-        Column("Max overload (A)", lambda r: fmt(get_first(r, "max_overload"), "A"), color="green"),
+        Column("Required ampacity (A)", lambda r: fmt(get_first(r, "conductor_ampacity"), "A"), color="green", result=True),
+        Column("Conductor Size", _size, color="blue", result=True),
+        Column("Size ampacity (A)", lambda r: fmt(get_first(r, "conductor_size_ampacity"), "A"), result=True),
+        Column("Material", lambda r: get_first(r, "material_label", default="—"), group="conductor"),
+        Column("Insulation", _insulation, group="conductor"),
+        Column("Nameplate FLA (A)", lambda r: fmt(get_first(r, "nameplate_fla"), "A"), group="nameplate"),
+        Column("SF", lambda r: get_first(r, "service_factor_label", default="—"), group="nameplate"),
+        Column("Max overload (A)", lambda r: fmt(get_first(r, "max_overload"), "A"), color="green", result=True),
         Column("Code Edition", _edition),
         Column("Source Tables", _source_tables),
     ],
+    groups={
+        "conductor": Group("Conductor material / insulation"),
+        "nameplate": Group("Nameplate FLA / SF"),
+    },
     code_reference=_code_reference,
     notes=_footnotes,
     word_reference=_word_reference,

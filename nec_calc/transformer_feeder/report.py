@@ -12,6 +12,7 @@ from calc_common.report_helper import (
 )
 from calc_common.report_schedule import (
     Column,
+    Group,
     ReportSpec,
     render_schedule_commit,
     render_schedule_table,
@@ -37,14 +38,6 @@ def _phase(result: dict[str, Any]) -> str | None:
 def _phase_label(result: dict[str, Any]) -> str:
     phase = _phase(result)
     return PHASE_LABELS.get(str(phase or ""), str(phase or "—"))
-
-
-def _phase_factor_text(phase: str | None) -> str:
-    return "√3" if phase == "three_phase" else "1"
-
-
-def _factor(result: dict[str, Any]) -> str:
-    return _phase_factor_text(_phase(result))
 
 
 def _configuration(result: dict[str, Any]) -> str:
@@ -177,18 +170,21 @@ TF_SCHEDULE_SPEC = ReportSpec(
     sheet_name="Transformer Feeder Schedule",
     tag="Tag / ID",
     cols=[
-        Column("System", _phase_label),
-        Column("Configuration", _configuration),
+        Column("System", _phase_label, group="system"),
+        Column("Configuration", _configuration, group="system"),
         Column("Rating, S", _rating_kva),
-        Column("V1 (V)", lambda r: fmt(get_first(r, "V_primary", "v_primary", "primary_voltage"), "V")),
-        Column("V2 (V)", lambda r: fmt(get_first(r, "V_secondary", "v_secondary", "secondary_voltage"), "V")),
-        Column("Phase factor", _factor),
-        Column("I1 (A)", lambda r: fmt(get_first(r, "primary_fla", "primary_flc"), "A"), color="green"),
-        Column("I2 (A)", lambda r: fmt(get_first(r, "secondary_fla", "secondary_flc"), "A"), color="green"),
-        Column("Turns ratio (V1/V2)", lambda r: fmt(get_first(r, "turns_ratio")), color="blue"),
+        Column("V1 (V)", lambda r: fmt(get_first(r, "V_primary", "v_primary", "primary_voltage"), "V"), group="volts"),
+        Column("V2 (V)", lambda r: fmt(get_first(r, "V_secondary", "v_secondary", "secondary_voltage"), "V"), group="volts"),
+        Column("I1 (A)", lambda r: fmt(get_first(r, "primary_fla", "primary_flc"), "A"), color="green", result=True),
+        Column("I2 (A)", lambda r: fmt(get_first(r, "secondary_fla", "secondary_flc"), "A"), color="green", result=True),
+        Column("Turns ratio (V1/V2)", lambda r: fmt(get_first(r, "turns_ratio")), color="blue", result=True),
         Column("Code Edition", _edition),
         Column("Code Reference", _reference),
     ],
+    groups={
+        "system": Group("System"),
+        "volts": Group("V1 / V2 (V)"),
+    },
     code_reference=_code_reference,
     notes=_footnotes,
     word_reference=_word_reference,

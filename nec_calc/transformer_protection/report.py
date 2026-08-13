@@ -12,6 +12,7 @@ from calc_common.report_helper import (
 )
 from calc_common.report_schedule import (
     Column,
+    Group,
     ReportSpec,
     render_schedule_commit,
     render_schedule_table,
@@ -79,18 +80,40 @@ def _voltage_class(result: dict[str, Any]) -> str:
     return VOLTAGE_CLASS_LABELS.get(str(voltage_class or ""), "—")
 
 
-def _ocpd(result: dict[str, Any], side: str) -> str:
-    cb = result.get(f"{side}_cb") or {}
-    fr = result.get(f"{side}_fr") or {}
+def _devices(result: dict[str, Any], side: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    return result.get(f"{side}_cb") or {}, result.get(f"{side}_fr") or {}
 
-    if cb.get("size") is None and fr.get("size") is None:
+
+def _ocpd(result: dict[str, Any], side: str, kind: str, key: str) -> str:
+    """One device slot. Table 450.5(B) gives a single value per current band, so
+    the breaker and fuse columns carry the same maximum for those rows; Table
+    450.5(A) rates them separately."""
+    device = result.get(f"{side}_{kind}") or {}
+    if device.get("mult") is None:
         return "Not required"
-    if cb == fr:
-        return f"{fmt(cb.get('size'), 'A')} ({cb.get('mult')}%)"
-    return (
-        f"CB {fmt(cb.get('size'), 'A')} ({cb.get('mult')}%) / "
-        f"Fuse {fmt(fr.get('size'), 'A')} ({fr.get('mult')}%)"
-    )
+    return fmt(device.get(key))
+
+
+def _mults(result: dict[str, Any]) -> str:
+    parts = []
+    for side in ("primary", "secondary"):
+        cb = (result.get(f"{side}_cb") or {}).get("mult")
+        fr = (result.get(f"{side}_fr") or {}).get("mult")
+        if cb is None and fr is None:
+            continue
+        label = side.title()
+        parts.append(f"{label} {cb}%" if cb == fr else f"{label} CB {cb}% / fuse {fr}%")
+    return " / ".join(parts) if parts else "Not required"
+
+
+def _basis(result: dict[str, Any]) -> str:
+    bases = [
+        (result.get(f"{side}_{kind}") or {}).get("basis")
+        for side in ("primary", "secondary")
+        for kind in ("cb", "fr")
+    ]
+    unique = list(dict.fromkeys(b for b in bases if b))
+    return " / ".join(unique) if unique else "—"
 
 
 # ============================================================
@@ -157,10 +180,23 @@ def _footnotes(results: list[dict[str, Any]]) -> list[str]:
         "over 1000 V and Table 450.5(B) for transformers 1000 V and less, based on "
         "protection configuration, location, and transformer rated impedance.",
         "The Code Edition and Source Table columns give the table each row's multipliers "
-        "were read from. Where the breaker and fuse multipliers differ, both maximums are "
-        "shown; where the table gives one multiplier for both devices, a single figure is shown.",
-        "OCPD values are the code-based maximums; the next standard rating at or below each "
-        "value should be selected.",
+        "were read from, and the Multipliers column the percentages that table supplied. "
+        "Table 450.5(B) gives one multiplier per current band whether a breaker or a fuse "
+        "is used, so the breaker and fuse columns carry the same maximum for those rows; "
+        "Table 450.5(A) rates the two separately.",
+        "The max columns are the code-based maximums, mult% × FLC. The selected columns are "
+        "the device rating to specify, moved to a standard rating in the direction the "
+        "applicable table note permits — see the Rounding basis column.",
+        f"Table 450.5(B) Note 1 permits the next higher standard rating of {edition} 240.6 "
+        "only where the multiplier is 125%. The 167%, 250% and 300% cells are hard maximums, "
+        "so the largest standard rating at or below the maximum is selected for those rows.",
+        f"Table 450.5(A) Note 1 permits the next higher rating for every cell — from "
+        f"{edition} 240.6 at 1000 V and below, and from the next higher commercially "
+        "available rating above 1000 V. Commercially available ratings vary by manufacturer, "
+        "so no selected rating is shown for the over-1000 V columns; specify from the "
+        "equipment data at or below the maximum shown.",
+        f"Standard ratings are those of {edition} 240.6(A). The 1, 3, 6, 10 and 601 A "
+        "ratings are standard for fuses only and are not applied to circuit breakers.",
     ]
 
     if _phases_present(results):
@@ -193,22 +229,41 @@ TP_SCHEDULE_SPEC = ReportSpec(
     sheet_name="Transformer Protection Schedule",
     tag="Tag / ID",
     cols=[
+        # Inputs and the references the row was resolved against.
         Column("System", _phase_label),
         Column("Rating, S", _rating_kva),
-        Column("V1 (V)", lambda r: fmt(get_first(r, "V_primary"), "V")),
-        Column("V2 (V)", lambda r: fmt(get_first(r, "V_secondary"), "V")),
-        Column("Voltage class", _voltage_class),
-        Column("FLA source", _flc_source),
-        Column("I1 (A)", lambda r: _fla(r, "primary_fla")),
-        Column("I2 (A)", lambda r: _fla(r, "secondary_fla")),
-        Column("Protection", lambda r: _enum_label(r.get("protection_method"))),
-        Column("Location", lambda r: _enum_label(r.get("location_type"))),
+        Column("V1 (V)", lambda r: fmt(get_first(r, "V_primary"), "V"), group="volts"),
+        Column("V2 (V)", lambda r: fmt(get_first(r, "V_secondary"), "V"), group="volts"),
+        Column("Voltage class", _voltage_class, group="config"),
+        Column("Protection", lambda r: _enum_label(r.get("protection_method")), group="config"),
+        Column("Location", lambda r: _enum_label(r.get("location_type")), group="config"),
         Column("%Z", lambda r: fmt(get_first(r, "tx_z"), "%")),
-        Column("Max primary OCPD", lambda r: _ocpd(r, "primary"), color="green"),
-        Column("Max secondary OCPD", lambda r: _ocpd(r, "secondary"), color="green"),
+        Column("FLA source", _flc_source),
+        Column("Multipliers", _mults),
+        Column("Rounding basis", _basis),
         Column("Code Edition", _edition),
         Column("Source Table", _source_table),
+
+        # Calculated values.
+        Column("I1 (A)", lambda r: _fla(r, "primary_fla"), result=True),
+        Column("I2 (A)", lambda r: _fla(r, "secondary_fla"), result=True),
+        Column("Pri. breaker max (A)", lambda r: _ocpd(r, "primary", "cb", "size"), result=True, group="pri_cb"),
+        Column("Pri. breaker selected (A)", lambda r: _ocpd(r, "primary", "cb", "standard"), color="green", result=True, group="pri_cb"),
+        Column("Pri. fuse max (A)", lambda r: _ocpd(r, "primary", "fr", "size"), result=True, group="pri_fr"),
+        Column("Pri. fuse selected (A)", lambda r: _ocpd(r, "primary", "fr", "standard"), color="green", result=True, group="pri_fr"),
+        Column("Sec. breaker max (A)", lambda r: _ocpd(r, "secondary", "cb", "size"), result=True, group="sec_cb"),
+        Column("Sec. breaker selected (A)", lambda r: _ocpd(r, "secondary", "cb", "standard"), color="green", result=True, group="sec_cb"),
+        Column("Sec. fuse max (A)", lambda r: _ocpd(r, "secondary", "fr", "size"), result=True, group="sec_fr"),
+        Column("Sec. fuse selected (A)", lambda r: _ocpd(r, "secondary", "fr", "standard"), color="green", result=True, group="sec_fr"),
     ],
+    groups={
+        "volts": Group("V1 / V2 (V)"),
+        "config": Group("Configuration"),
+        "pri_cb": Group("Pri. breaker (A)", " → "),
+        "pri_fr": Group("Pri. fuse (A)", " → "),
+        "sec_cb": Group("Sec. breaker (A)", " → "),
+        "sec_fr": Group("Sec. fuse (A)", " → "),
+    },
     code_reference=_code_reference,
     notes=_footnotes,
     word_reference=_word_reference,

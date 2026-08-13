@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import re
 
 
@@ -40,6 +41,27 @@ def _best_col(cols, include=(), exclude=()):
             return c
     return None
 
+class Quantity(str):
+    """Formatted text that remembers the number and unit it was built from.
+
+    It is a plain string everywhere except the Excel schedule writer, which uses
+    .number and .unit to put a real number in the cell and the unit in the header.
+    """
+
+    def __new__(cls, text, number, unit):
+        quantity = super().__new__(cls, text)
+        quantity.number = number
+        quantity.unit = unit
+        return quantity
+
+def _fixed_point(x, significant):
+    """Round to significant digits and render without an exponent."""
+    if x == 0:
+        return "0"
+    decimals = max(0, min(12, significant - 1 - math.floor(math.log10(abs(x)))))
+    text = f"{x:,.{decimals}f}"
+    return text.rstrip("0").rstrip(".") if "." in text else text
+
 def fmt(x, unit=""):
     if x is None:
         return "—"
@@ -47,13 +69,10 @@ def fmt(x, unit=""):
         x = float(x)
     except Exception:
         return str(x)
-    if abs(x) >= 1e6:
-        s = f"{x:,.3g}"
-    elif abs(x) >= 1:
-        s = f"{x:,.4g}"
-    else:
-        s = f"{x:.6g}"
-    return f"{s} {unit}".strip()
+    if not math.isfinite(x):
+        return str(x)
+    s = _fixed_point(x, 6 if abs(x) < 1 else 4)
+    return Quantity(f"{s} {unit}".strip(), x, unit)
 
 def safe_div(a, b):
     return None if b == 0 else a / b
@@ -158,7 +177,7 @@ def select_table9_fill_rule(num_cables: int):
         }
 
 __all__ = [
-    "_safe_float", "_norm", "_lower", "_to_float", "_best_col", "fmt", "safe_div",
+    "_safe_float", "_norm", "_lower", "_to_float", "_best_col", "Quantity", "fmt", "safe_div",
     "_numeric_sort_key", "_numeric_sort", "format_cond_size", "next_standard",
     "next_standard_size", "select_table9_fill_rule",
 ]

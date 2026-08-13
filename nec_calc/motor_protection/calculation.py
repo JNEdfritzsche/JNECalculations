@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from lib.nec_tables import NEC_2406A_STANDARD, TABLES
+from lib.nec_tables import NEC_2406A_FUSE, NEC_2406A_STANDARD, TABLES
 from calc_common.formatting import next_standard_size
 from calc_common.table_helpers import get_table_row
 
@@ -55,15 +55,20 @@ def _exception2_ceiling_pct(device_key: str, flc: float, category_key: str) -> i
     return None
 
 
+FUSE_DEVICE_KEYS = {"nontime_delay_fuse", "dual_element_time_delay_fuse"}
+
+
 def _round_branch_device(device_key: str, raw: float | None) -> float | None:
     """430.52(C)(1) Exception No. 1 — where the value does not correspond to a
     standard rating, the next higher standard rating (240.6(A)) is permitted.
 
     Instantaneous-trip breakers are an adjustable *setting*, not a standard
-    fuse/breaker rating, so they are not rounded to the 240.6(A) list."""
+    fuse/breaker rating, so they are not rounded to the 240.6(A) list. The
+    1, 3, 6, 10 and 601 A ratings of 240.6(A) are standard for fuses only."""
     if raw is None or device_key == "instantaneous_trip_breaker":
         return None
-    return next_standard_size(raw, NEC_2406A_STANDARD, "up")
+    ratings = NEC_2406A_FUSE if device_key in FUSE_DEVICE_KEYS else NEC_2406A_STANDARD
+    return next_standard_size(raw, ratings, "up")
 
 
 def calc_branch_protection(flc: float | None, category_key: str) -> dict[str, Any]:

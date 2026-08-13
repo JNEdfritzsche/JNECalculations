@@ -12,6 +12,7 @@ from calc_common.report_helper import (
 )
 from calc_common.report_schedule import (
     Column,
+    Group,
     ReportSpec,
     render_schedule_commit,
     render_schedule_table,
@@ -73,18 +74,14 @@ def _category(result: dict[str, Any]) -> str:
     return CATEGORY_LABELS.get(str(key or ""), str(key or "—"))
 
 
-def _device(result: dict[str, Any], key: str) -> str:
+def _device_entry(result: dict[str, Any], key: str) -> dict[str, Any] | None:
     devices = (result.get("branch") or {}).get("devices") or []
-    device = next((d for d in devices if d.get("key") == key), None)
-    if device is None:
-        return "—"
+    return next((d for d in devices if d.get("key") == key), None)
 
-    value = device.get("standard") if device.get("standard") is not None else device.get("raw")
-    if value is None:
-        return "—"
 
-    pct = device.get("pct")
-    return f"{fmt(value, 'A')} ({pct}%)" if pct is not None else fmt(value, "A")
+def _device(result: dict[str, Any], key: str, field: str) -> str:
+    device = _device_entry(result, key)
+    return "—" if device is None else fmt(device.get(field), "A")
 
 
 def _overload(result: dict[str, Any], size_key: str, factor_key: str) -> str:
@@ -249,23 +246,40 @@ MP_SCHEDULE_SPEC = ReportSpec(
         Column("Motor", _hp),
         Column("Voltage (V)", lambda r: fmt(get_first(r, "voltage"), "V")),
         Column("Motor category", _category),
-        Column("I_FLC (A)", lambda r: fmt(get_first(r, "flc"), "A")),
+        Column("I_FLC (A)", lambda r: fmt(get_first(r, "flc"), "A"), result=True),
         Column("FLC source", lambda r: get_first(r, "flc_source", default="—")),
         *[
-            Column(header, lambda r, key=key: _device(r, key), color="green")
+            column
             for key, header in DEVICE_HEADERS
+            for column in (
+                Column(f"{header} max (A)", lambda r, key=key: _device(r, key, "raw"),
+                       result=True, group=key),
+                # An instantaneous-trip breaker is an adjustable setting, not a
+                # standard rating, so 240.6(A) supplies nothing to select.
+                *([] if key == "instantaneous_trip_breaker" else [
+                    Column(f"{header} selected (A)",
+                           lambda r, key=key: _device(r, key, "standard"),
+                           color="green", result=True, group=key),
+                ]),
+            )
         ],
         Column("Nameplate FLA (A)", lambda r: fmt(get_first(r, "nameplate_fla"), "A")),
         Column("SF", lambda r: get_first(r, "service_factor_label", default="—")),
-        Column("Max overload", lambda r: _overload(r, "max_overload", "factor"), color="green"),
-        Column("Start allowance", lambda r: _overload(r, "max_overload_start", "start_factor")),
-        Column("Min disconnect (A)", _disconnect, color="blue"),
-        Column("LRC, Table 430.251 (A)", lambda r: _lrc(r, "lrc_table")),
+        Column("Max overload", lambda r: _overload(r, "max_overload", "factor"), color="green", result=True),
+        Column("Start allowance", lambda r: _overload(r, "max_overload_start", "start_factor"), result=True),
+        Column("Min disconnect (A)", _disconnect, color="blue", result=True),
+        Column("LRC, Table 430.251 (A)", lambda r: _lrc(r, "lrc_table"), result=True, group="lrc"),
+        Column("LRC, code letter (A)", lambda r: _lrc(r, "lrc_code"), result=True, group="lrc"),
         Column("Code letter", lambda r: get_first(r, "code_letter", default="—")),
-        Column("LRC, code letter (A)", lambda r: _lrc(r, "lrc_code")),
         Column("Code Edition", _edition),
         Column("Source Tables", _source_tables),
     ],
+    groups={
+        "nontime_delay_fuse": Group("Non-time-delay fuse (A)", " → "),
+        "dual_element_time_delay_fuse": Group("Dual-element fuse (A)", " → "),
+        "inverse_time_breaker": Group("Inverse-time breaker (A)", " → "),
+        "lrc": Group("LRC, table / code letter (A)"),
+    },
     code_reference=_code_reference,
     notes=_footnotes,
     word_reference=_word_reference,

@@ -6,13 +6,12 @@ from html import escape
 from pathlib import Path
 
 import streamlit as st
+from calc_common.formatting import fmt
 from docx import Document
 from docx.oxml import OxmlElement, parse_xml
 from docx.oxml.ns import nsdecls, qn
 from docx.shared import Pt
 from openpyxl import Workbook
-from openpyxl.styles import Font
-from openpyxl.utils import get_column_letter
 
 
 # ============================================================
@@ -21,21 +20,11 @@ from openpyxl.utils import get_column_letter
 def cell_text(val):
     if val is None or val == "":
         return "—"
+    if isinstance(val, bool):
+        return str(val)
     if isinstance(val, (int, float)):
-        return f"{val:.6g}"
-    try:
-        return f"{float(val):.6g}"
-    except Exception:
-        return str(val)
-
-
-def safe_float_or_text(val):
-    if val is None or val == "":
-        return None
-    try:
-        return float(val)
-    except Exception:
-        return str(val)
+        return str(fmt(val))
+    return str(val)
 
 
 def get_first(data, *keys, default=None):
@@ -183,11 +172,31 @@ def _set_cell_text(cell, value, font_size, bold=False):
     run.font.size = Pt(font_size)
 
 
-def add_word_table(doc, headers, rows, font_size_header=9, font_size=9):
+def _repeat_header_row(row) -> None:
+    """Reprint the header on every page — a schedule easily runs past one."""
+    header = OxmlElement("w:tblHeader")
+    header.set(qn("w:val"), "true")
+    row._tr.get_or_add_trPr().append(header)
+
+
+def _tighten_cells(table, margin_twips: int = 36) -> None:
+    """Shrink the default cell padding so a wide schedule fits the page."""
+    margins = OxmlElement("w:tblCellMar")
+    for name in ("left", "right"):
+        element = OxmlElement(f"w:{name}")
+        element.set(qn("w:w"), str(margin_twips))
+        element.set(qn("w:type"), "dxa")
+        margins.append(element)
+    table._tbl.tblPr.append(margins)
+
+
+def add_word_table(doc, headers, rows, font_size_header=9, font_size=9, bold_columns=None):
     table = doc.add_table(rows=1, cols=len(headers))
+    bold_columns = bold_columns or set()
 
     for cell, header in zip(table.rows[0].cells, headers):
         _set_cell_text(cell, header, font_size_header, bold=True)
+    _repeat_header_row(table.rows[0])
 
     for row_data in rows:
         cells = table.add_row().cells
@@ -195,48 +204,21 @@ def add_word_table(doc, headers, rows, font_size_header=9, font_size=9):
             row_data.get(header) if isinstance(row_data, dict) else row_data[i] if i < len(row_data) else None
             for i, header in enumerate(headers)
         ]
-        for cell, value in zip(cells, values):
-            _set_cell_text(cell, value, font_size)
+        for cell, header, value in zip(cells, headers, values):
+            _set_cell_text(cell, value, font_size, bold=header in bold_columns)
 
     set_table_borders(table)
+    _tighten_cells(table)
     return table
 
 
 # ============================================================
 # Excel helpers
 # ============================================================
-def autosize_cols(ws) -> None:
-    for col in ws.columns:
-        col_letter = get_column_letter(col[0].column)
-        max_len = max((len(str(cell.value or "")) for cell in col), default=0)
-        ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
-
-
 def wb_to_bytes(wb: Workbook) -> bytes:
     bio = io.BytesIO()
     wb.save(bio)
     return bio.getvalue()
-
-
-def write_columnar_table(ws, start_row, title, rows, columns):
-    row = start_row
-    if title:
-        ws[f"A{row}"] = title
-        ws[f"A{row}"].font = Font(bold=True)
-        row += 1
-
-    for col_idx, col_name in enumerate(columns, start=1):
-        cell = ws.cell(row=row, column=col_idx)
-        cell.value = col_name
-        cell.font = Font(bold=True)
-    row += 1
-
-    for data_row in rows:
-        for col_idx, col_name in enumerate(columns, start=1):
-            ws.cell(row=row, column=col_idx).value = safe_float_or_text(data_row.get(col_name))
-        row += 1
-
-    return row + 1
 
 
 # ============================================================
@@ -307,9 +289,7 @@ __all__ = [
     "add_word_table",
 
     # Excel helpers
-    "autosize_cols",
     "wb_to_bytes",
-    "write_columnar_table",
 
     # Export button pair
     "render_export_buttons",

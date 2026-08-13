@@ -24,9 +24,7 @@ from oesc_calc.motor_feeder.calculation import DC, HP, SINGLE_PHASE, THREE_PHASE
 # Column value helpers
 # ============================================================
 def _power(result: dict[str, Any]) -> str:
-    value = get_first(result, "power_value")
-    unit = get_first(result, "power_unit", default="")
-    return "—" if value is None else f"{value:g} {unit}".strip()
+    return fmt(get_first(result, "power_value"), get_first(result, "power_unit", default=""))
 
 
 def _pf(result: dict[str, Any]) -> str:
@@ -36,13 +34,11 @@ def _pf(result: dict[str, Any]) -> str:
 
 
 def _efficiency(result: dict[str, Any]) -> str:
-    eff = get_first(result, "eff")
-    return "—" if eff is None else f"{eff:g} %"
+    return fmt(get_first(result, "eff"), "%")
 
 
 def _factor(result: dict[str, Any]) -> str:
-    factor = get_first(result, "sizing_factor")
-    return "—" if factor is None else f"{factor:g}×"
+    return fmt(get_first(result, "sizing_factor"))
 
 
 def _edition(result: dict[str, Any]) -> str:
@@ -133,9 +129,9 @@ MF_SCHEDULE_SPEC = ReportSpec(
         Column("Voltage (V)", lambda r: fmt(get_first(r, "volts"), "V")),
         Column("Power factor", _pf),
         Column("Efficiency", _efficiency),
-        Column("I_FLA (A)", lambda r: fmt(get_first(r, "ifla"), "A"), color="blue"),
-        Column("Sizing factor, k", _factor),
-        Column("Ampacity target (A)", lambda r: fmt(get_first(r, "target"), "A"), color="green"),
+        Column("I_FLA (A)", lambda r: fmt(get_first(r, "ifla"), "A"), color="blue", result=True),
+        Column("Sizing factor, k", _factor, result=True),
+        Column("Ampacity target (A)", lambda r: fmt(get_first(r, "target"), "A"), color="green", result=True),
         Column("Code Edition", _edition),
         Column("Code Reference", _reference),
     ],

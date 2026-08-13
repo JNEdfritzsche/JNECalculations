@@ -2,22 +2,36 @@ import streamlit as st
 
 from calc_common.enums import LocationTypes, ProtectionOptions, SystemTypes, TransformerSourceOptions
 from calc_common.formatting import fmt
-from calc_common.ui_helpers import enum_radio, enum_selectbox, quant_unit_input, transformer_feeder_inputs, _show_result, eq
+from calc_common.ui_helpers import enum_radio, enum_selectbox, quant_unit_input, transformer_feeder_inputs, eq
 from calc_common.units import Voltage
 from content.charts.flowcharts import get_nec_transformer_protection_flowchart
 from nec_calc.transformer_protection.calculation import calc_transformer_protection, calc_voltage_class
 from calc_common.physics import calc_flas
 from nec_calc.transformer_protection.report import render_add_to_schedule, render_schedule_section
-from lib.nec_tables import NEC_2406A_STANDARD, TABLES
+from lib.nec_tables import TABLES
+
+def _show_device(label, device):
+    raw = device.get("size")
+    std = device.get("standard")
+
+    if std is None:
+        st.success(f"{label}: Maximum = **{fmt(raw, 'A')}**")
+    else:
+        st.success(
+            f"{label}: Maximum = **{fmt(raw, 'A')}** → Selected = **{fmt(std, 'A')}**"
+        )
+    if device.get("basis"):
+        st.caption(device["basis"])
+
 
 def _show_ocpd(side, cb, fr):
     if cb.get("size") is None and fr.get("size") is None:
         st.info(f"{side} protection: **Not required**")
     elif cb == fr:
-        _show_result(label=rf"Max {side} Breaker/Fuse ({cb.get("mult")}% $\times I_{{flc}}$)", raw=cb.get("size"), std_list=NEC_2406A_STANDARD)
+        _show_device(rf"Max {side} Breaker/Fuse ({cb.get("mult")}% $\times I_{{flc}}$)", cb)
     else:
-        _show_result(label=rf"Max {side} Breaker ({cb.get("mult")}% $\times I_{{flc}}$)", raw=cb.get("size"), std_list=NEC_2406A_STANDARD)
-        _show_result(label=rf"Max {side} Fuse ({fr.get("mult")}% $\times I_{{flc}}$)", raw=fr.get("size"), std_list=NEC_2406A_STANDARD)
+        _show_device(rf"Max {side} Breaker ({cb.get("mult")}% $\times I_{{flc}}$)", cb)
+        _show_device(rf"Max {side} Fuse ({fr.get("mult")}% $\times I_{{flc}}$)", fr)
 
 @st.fragment
 def render_calc():
@@ -133,13 +147,23 @@ def render_calc():
                 st.write(f"- {key}: **{value}**")
             
             st.markdown("**Columns used:**")
+            # Cells the table marks "Not required" were never applied, so listing their
+            # column would imply a reference this calculation does not rely on.
             columns = []
             for entry in [pri_cb, pri_fr, sec_cb, sec_fr]:
-                mult = "Not required" if entry.get("mult") is None else f"{entry.get("mult")}%"
-                if (entry.get("column"), mult) not in columns:
-                    columns.append((entry.get("column"), mult))
+                if entry.get("mult") is None:
+                    continue
+                if (entry.get("column"), entry.get("mult")) not in columns:
+                    columns.append((entry.get("column"), entry.get("mult")))
             for column, mult in columns:
-                st.write(f"- {column}: **{mult}**")
+                st.write(f"- {column}: **{mult}%**")
+
+            not_required = [
+                side for side, entries in (("Primary", (pri_cb, pri_fr)), ("Secondary", (sec_cb, sec_fr)))
+                if all(e.get("mult") is None for e in entries)
+            ]
+            for side in not_required:
+                st.write(f"- {side} protection: **Not required** by this row")
                 
         with st.expander("Parameters & equations used"):
             st.markdown("### Equations used")

@@ -12,6 +12,7 @@ from calc_common.report_helper import (
 )
 from calc_common.report_schedule import (
     Column,
+    Group,
     ReportSpec,
     render_schedule_commit,
     render_schedule_table,
@@ -35,8 +36,7 @@ def _k_base(result: dict[str, Any]) -> str:
 
 
 def _k_used(result: dict[str, Any]) -> str:
-    k_used = get_first(result, "k_used")
-    return "—" if k_used is None else f"{k_used:.6g}"
+    return fmt(get_first(result, "k_used"))
 
 
 def _temperature(result: dict[str, Any]) -> str:
@@ -130,23 +130,27 @@ VD_SCHEDULE_SPEC = ReportSpec(
     tag="Tag / ID",
     cols=[
         Column("Circuit type", lambda r: get_first(r, "f_label", default="—")),
-        Column("f", lambda r: fmt(get_first(r, "f"))),
+        Column("f", lambda r: fmt(get_first(r, "f")), result=True),
         Column("I (A)", lambda r: fmt(get_first(r, "current"), "A")),
         Column("Vnom (V)", lambda r: fmt(get_first(r, "v_nom"), "V")),
         Column("Length (m)", lambda r: fmt(get_first(r, "length_m"), "m")),
         Column("Parallel", lambda r: get_first(r, "n_parallel", default="—")),
-        Column("I_eff (A)", lambda r: fmt(get_first(r, "I_eff"), "A")),
-        Column("Material", lambda r: get_first(r, "material", default="—")),
-        Column("Installation", lambda r: get_first(r, "location", default="—")),
+        Column("I_eff (A)", lambda r: fmt(get_first(r, "I_eff"), "A"), result=True),
+        Column("Material", lambda r: get_first(r, "material", default="—"), group="conductor"),
+        Column("Installation", lambda r: get_first(r, "location", default="—"), group="conductor"),
         Column("Conductor Size", _size, color="blue"),
-        Column("k base (Ω/km)", _k_base),
+        Column("k base (Ω/km)", _k_base, result=True, group="k"),
         Column("Temperature", _temperature),
-        Column("k used (Ω/km)", _k_used),
-        Column("VD (V)", lambda r: fmt(get_first(r, "voltage_drop"), "V")),
-        Column("VD (%)", lambda r: fmt(get_first(r, "percent_drop"), "%"), color="green"),
+        Column("k used (Ω/km)", _k_used, result=True, group="k"),
+        Column("VD (V)", lambda r: fmt(get_first(r, "voltage_drop"), "V"), result=True),
+        Column("VD (%)", lambda r: fmt(get_first(r, "percent_drop"), "%"), color="green", result=True),
         Column("Code Edition", _edition),
         Column("Source Tables", _source_tables),
     ],
+    groups={
+        "conductor": Group("Material / installation"),
+        "k": Group("k base → used (Ω/km)", " → "),
+    },
     code_reference=_code_reference,
     notes=_footnotes,
     word_reference=_word_reference,

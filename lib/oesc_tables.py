@@ -2168,6 +2168,89 @@ TABLE_8 = {
     ],
 }
 
+# Rule 26-250. "Any" matches every value of that column.
+TABLE_50_ANY = "Any"
+TABLE_50_Z_LOW = "Not more than 7.5%"
+TABLE_50_Z_HIGH = "More than 7.5% and not more than 10%"
+TABLE_50_SEC_OVER_750 = "Over 750 V"
+TABLE_50_SEC_UPTO_750 = "750 V or less"
+
+TABLE_50 = {
+    "title": (
+        "Table 50 — Maximum rating or setting of overcurrent devices protecting "
+        "transformers rated over 750 V (as a percentage of transformer-rated current)"
+    ),
+    "units": "Rated current, %",
+    "columns": [
+        "Protection configuration",
+        "Transformer rated impedance",
+        "Secondary voltage",
+        "Maximum primary fuse rating",
+        "Maximum primary breaker setting",
+        "Maximum secondary fuse rating",
+        "Maximum secondary breaker setting",
+    ],
+    "rows": [
+        {
+            "Protection configuration": "Primary only",
+            "Transformer rated impedance": TABLE_50_ANY,
+            "Secondary voltage": TABLE_50_ANY,
+            "Maximum primary fuse rating": 150,
+            "Maximum primary breaker setting": 300,
+            "Maximum secondary fuse rating": None,
+            "Maximum secondary breaker setting": None,
+        },
+        {
+            "Protection configuration": "Primary & Secondary (P&S)",
+            "Transformer rated impedance": TABLE_50_Z_LOW,
+            "Secondary voltage": TABLE_50_SEC_OVER_750,
+            "Maximum primary fuse rating": 300,
+            "Maximum primary breaker setting": 600,
+            "Maximum secondary fuse rating": 150,
+            "Maximum secondary breaker setting": 300,
+        },
+        {
+            "Protection configuration": "Primary & Secondary (P&S)",
+            "Transformer rated impedance": TABLE_50_Z_LOW,
+            "Secondary voltage": TABLE_50_SEC_UPTO_750,
+            "Maximum primary fuse rating": 300,
+            "Maximum primary breaker setting": 600,
+            "Maximum secondary fuse rating": 250,
+            "Maximum secondary breaker setting": 250,
+        },
+        {
+            "Protection configuration": "Primary & Secondary (P&S)",
+            "Transformer rated impedance": TABLE_50_Z_HIGH,
+            "Secondary voltage": TABLE_50_SEC_OVER_750,
+            "Maximum primary fuse rating": 200,
+            "Maximum primary breaker setting": 400,
+            "Maximum secondary fuse rating": 125,
+            "Maximum secondary breaker setting": 250,
+        },
+        {
+            "Protection configuration": "Primary & Secondary (P&S)",
+            "Transformer rated impedance": TABLE_50_Z_HIGH,
+            "Secondary voltage": TABLE_50_SEC_UPTO_750,
+            "Maximum primary fuse rating": 200,
+            "Maximum primary breaker setting": 400,
+            "Maximum secondary fuse rating": 250,
+            "Maximum secondary breaker setting": 250,
+        },
+    ],
+}
+
+
+def get_table_50_row(prot_config: str, impedance_band: str, secondary_class: str) -> Optional[Dict[str, Any]]:
+    for row in TABLE_50["rows"]:
+        if row["Protection configuration"] != prot_config:
+            continue
+        if row["Transformer rated impedance"] not in (impedance_band, TABLE_50_ANY):
+            continue
+        if row["Secondary voltage"] in (secondary_class, TABLE_50_ANY):
+            return row
+    return None
+
+
 TABLE_37 = {
     "title": "Table 37 — Motor supply conductor insulation minimum temperature rating, °C (based on an ambient temperature of 30 °C)",
     "units": "°C",

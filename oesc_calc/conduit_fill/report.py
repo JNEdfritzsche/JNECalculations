@@ -13,6 +13,7 @@ from calc_common.report_helper import (
 )
 from calc_common.report_schedule import (
     Column,
+    Group,
     ReportSpec,
     render_schedule_commit,
     render_schedule_table,
@@ -34,13 +35,11 @@ def _area(result: dict[str, Any], key: str) -> str:
 
 
 def _trade_size(result: dict[str, Any]) -> str:
-    size = get_first(result, "trade_size_mm")
-    return "—" if size is None else f"{size} mm"
+    return fmt(get_first(result, "trade_size_mm"), "mm")
 
 
 def _min_size(result: dict[str, Any]) -> str:
-    size = get_first(result, "min_trade_size_mm")
-    return "—" if size is None else f"{size} mm"
+    return fmt(get_first(result, "min_trade_size_mm"), "mm")
 
 
 def _fits(result: dict[str, Any]) -> str:
@@ -121,21 +120,24 @@ CF_SCHEDULE_SPEC = ReportSpec(
     sheet_name="Conduit Fill Schedule",
     tag="Tag / ID",
     cols=[
-        Column("Conduit / tubing", lambda r: get_first(r, "conduit_label", default="—")),
-        Column("Trade size", _trade_size),
-        Column("Cables", lambda r: get_first(r, "n_cables", default="—")),
-        Column("Total cable area", lambda r: _area(r, "total_cable_area_mm2")),
-        Column("Internal area (100%)", lambda r: _area(r, "internal_area_mm2")),
-        Column("Allowable area", lambda r: _area(r, "allowed_area_mm2")),
-        Column("Allowable fill (%)", lambda r: fmt(get_first(r, "allowed_percent"), "%")),
-        Column("Remaining area", lambda r: _area(r, "remaining_area_mm2")),
-        Column("Actual fill (%)", lambda r: fmt(get_first(r, "fill_percent"), "%"), color="green"),
-        Column("Fits?", _fits),
-        Column("Min trade size", _min_size, color="blue"),
+        Column("Conduit / tubing", lambda r: get_first(r, "conduit_label", default="—"), group="conduit"),
+        Column("Trade size", _trade_size, group="conduit"),
+        Column("Cables", lambda r: get_first(r, "n_cables", default="—"), result=True),
+        Column("Total cable area", lambda r: _area(r, "total_cable_area_mm2"), result=True),
+        Column("Internal area (100%)", lambda r: _area(r, "internal_area_mm2"), result=True),
+        Column("Allowable area", lambda r: _area(r, "allowed_area_mm2"), result=True, group="allowable"),
+        Column("Allowable fill (%)", lambda r: fmt(get_first(r, "allowed_percent"), "%"), result=True, group="allowable"),
+        Column("Actual fill (%)", lambda r: fmt(get_first(r, "fill_percent"), "%"), color="green", result=True),
+        Column("Fits?", _fits, result=True, always=True),
+        Column("Min trade size", _min_size, color="blue", result=True),
         Column("Low voltage", lambda r: yes_no(r.get("is_low_voltage"))),
         Column("Code Edition", _edition),
         Column("Source Tables", _source_tables),
     ],
+    groups={
+        "conduit": Group("Conduit"),
+        "allowable": Group("Allowable (area / %)"),
+    },
     code_reference=_code_reference,
     notes=_footnotes,
     word_reference=_word_reference,

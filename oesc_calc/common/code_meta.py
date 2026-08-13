@@ -16,4 +16,6 @@ def cite(table_ids) -> str:
     for table_id in table_ids or []:
         if table_id and table_id not in seen:
             seen.append(table_id)
-    return ", ".join(seen) if seen else "—"
+    if not seen:
+        return "—"
+    return f"{'Tables' if len(seen) > 1 else 'Table'} {', '.join(seen)}"

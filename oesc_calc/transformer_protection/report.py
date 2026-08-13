@@ -13,6 +13,7 @@ from calc_common.report_helper import (
 )
 from calc_common.report_schedule import (
     Column,
+    Group,
     ReportSpec,
     render_schedule_commit,
     render_schedule_table,
@@ -29,18 +30,50 @@ from oesc_calc.transformer_protection.calculation import (
 # ============================================================
 # Column value helpers
 # ============================================================
-def _devices(result: dict[str, Any], keyword: str) -> str:
-    entries = [d for d in (result.get("devices") or []) if keyword in d.get("label", "").lower()]
-    if not entries:
-        return "—"
+def _entries(result: dict[str, Any], keyword: str) -> list[dict[str, Any]]:
+    # Reference figures are informational — under primary-only protection the rule
+    # requires no secondary device, so they must not fill the secondary columns.
+    return [
+        d for d in (result.get("devices") or [])
+        if keyword in (d.get("label") or "").lower() and not d.get("reference")
+    ]
 
+
+def _kind(entry: dict[str, Any]) -> str:
+    label = (entry.get("label") or "").lower()
+    return "fuse" if "fuse" in label else ("breaker" if "breaker" in label else "either")
+
+
+def _device(result: dict[str, Any], side: str, kind: str) -> dict[str, Any] | None:
+    """The entry for one device slot.
+
+    Rules 26-252 and 26-254 give a single maximum that applies whether a fuse or a
+    breaker is used, so those rows fill both columns from the same entry; Rule
+    26-250 rates fuses and breakers separately.
+    """
+    entries = _entries(result, side)
+    return next(
+        (e for e in entries if _kind(e) == kind),
+        next((e for e in entries if _kind(e) == "either"), None),
+    )
+
+
+def _ocpd(result: dict[str, Any], side: str, kind: str, key: str) -> str:
+    # The unit lives in the column header, so it is not repeated per device here.
+    entry = _device(result, side, kind)
+    if entry is not None:
+        return fmt(entry.get(key))
+    return "Not required" if result.get("devices") else "—"
+
+
+def _mults(result: dict[str, Any]) -> str:
     parts = []
-    for entry in entries:
-        value = entry.get("selected") if entry.get("selected") is not None else entry.get("raw")
-        label = entry.get("label", "")
-        pct = label[label.find("(") + 1:label.find(")")] if "(" in label else ""
-        parts.append(f"{fmt(value, 'A')} ({pct})" if pct else fmt(value, "A"))
-    return " / ".join(parts)
+    for entry in (result.get("devices") or []):
+        if entry.get("reference"):
+            continue
+        label = entry.get("label") or ""
+        parts.append(label[label.find("(") + 1:label.find(")")] if "(" in label else label)
+    return " / ".join(dict.fromkeys(parts)) if parts else "—"
 
 
 def _rating_kva(result: dict[str, Any]) -> str:
@@ -49,16 +82,20 @@ def _rating_kva(result: dict[str, Any]) -> str:
 
 
 def _impedance(result: dict[str, Any]) -> str:
-    z_pct = get_first(result, "z_pct")
-    return "—" if z_pct is None else f"{z_pct:g} %"
+    return fmt(get_first(result, "z_pct"), "%")
 
 
 def _edition(result: dict[str, Any]) -> str:
     return oesc_edition(get_first(result, "primary_table"))
 
 
-def _source_tables(result: dict[str, Any]) -> str:
-    return cite(get_first(result, "source_tables", default=[]))
+def _source(result: dict[str, Any]) -> str:
+    """Rules 26-252 and 26-254 carry their multipliers in the rule text, not a table."""
+    tables = get_first(result, "source_tables", default=[])
+    if tables:
+        return cite(tables)
+    rule = get_first(result, "rule_ref")
+    return f"Rule {rule}" if rule else "—"
 
 
 # ============================================================
@@ -132,11 +169,17 @@ def _footnotes(results: list[dict[str, Any]]) -> list[str]:
         )
 
     notes += [
-        "Values are the code-based maximums. Where rounding to a standard rating is enabled, "
-        "the next higher standard rating is shown; the raw calculated value is what the rule "
-        "limits.",
-        "Secondary reference values on primary-only rows are shown for the worksheet format "
-        "only; they are not a required device.",
+        "The max columns are the code-based maximums, mult% × FLC, and are what the rule "
+        "limits. The selected columns are the next higher standard rating, shown where "
+        "rounding to a standard rating is enabled.",
+        "Rules 26-252 and 26-254 give a single maximum that applies whether a fuse or a "
+        "breaker is used, so both device columns carry the same value on those rows; Rule "
+        "26-250 rates fuses and breakers separately.",
+        "Primary-only rows require no secondary device, so their secondary columns read Not "
+        "required. The secondary figure the worksheet format shows for those rows is for "
+        "information only and is not carried into this schedule.",
+        "Rows at 750 V and under are sized by rule alone and cite no table, so their Source "
+        "Tables entry is a dash; the Rule path column gives the rule applied.",
     ]
 
     if any(r.get("inrush_12x") is not None for r in results):
@@ -165,23 +208,41 @@ TP_SCHEDULE_SPEC = ReportSpec(
     sheet_name="Transformer Protection Schedule",
     tag="Tag / ID",
     cols=[
+        # Inputs and the references the row was resolved against.
         Column("System", lambda r: get_first(r, "phase", default="—")),
         Column("Rating", _rating_kva),
-        Column("V1 (V)", lambda r: fmt(get_first(r, "vpri"), "V")),
-        Column("V2 (V)", lambda r: fmt(get_first(r, "vsec"), "V")),
-        Column("Voltage class", lambda r: get_first(r, "voltage_class", default="—")),
-        Column("Transformer type", lambda r: get_first(r, "xfmr_type", default="—")),
-        Column("Protection", lambda r: get_first(r, "prot_config", default="—")),
+        Column("V1 (V)", lambda r: fmt(get_first(r, "vpri"), "V"), group="volts"),
+        Column("V2 (V)", lambda r: fmt(get_first(r, "vsec"), "V"), group="volts"),
+        Column("Voltage class", lambda r: get_first(r, "voltage_class", default="—"), group="config"),
+        Column("Transformer type", lambda r: get_first(r, "xfmr_type", default="—"), group="config"),
+        Column("Protection", lambda r: get_first(r, "prot_config", default="—"), group="config"),
         Column("%Z", _impedance),
         Column("Nameplate FLA", lambda r: yes_no(r.get("use_nameplate"))),
-        Column("I1 (A)", lambda r: fmt(get_first(r, "Ip"), "A")),
-        Column("I2 (A)", lambda r: fmt(get_first(r, "Is"), "A")),
-        Column("Primary OCPD", lambda r: _devices(r, "primary"), color="green"),
-        Column("Secondary OCPD", lambda r: _devices(r, "secondary"), color="green"),
         Column("Rule path", lambda r: get_first(r, "rule_path", default="—")),
+        Column("Multipliers", _mults),
         Column("Code Edition", _edition),
-        Column("Source Tables", _source_tables),
+        Column("Source", _source),
+
+        # Calculated values.
+        Column("I1 (A)", lambda r: fmt(get_first(r, "Ip"), "A"), result=True),
+        Column("I2 (A)", lambda r: fmt(get_first(r, "Is"), "A"), result=True),
+        Column("Pri. breaker max (A)", lambda r: _ocpd(r, "primary", "breaker", "raw"), result=True, group="pri_cb"),
+        Column("Pri. breaker selected (A)", lambda r: _ocpd(r, "primary", "breaker", "selected"), color="green", result=True, group="pri_cb"),
+        Column("Pri. fuse max (A)", lambda r: _ocpd(r, "primary", "fuse", "raw"), result=True, group="pri_fr"),
+        Column("Pri. fuse selected (A)", lambda r: _ocpd(r, "primary", "fuse", "selected"), color="green", result=True, group="pri_fr"),
+        Column("Sec. breaker max (A)", lambda r: _ocpd(r, "secondary", "breaker", "raw"), result=True, group="sec_cb"),
+        Column("Sec. breaker selected (A)", lambda r: _ocpd(r, "secondary", "breaker", "selected"), color="green", result=True, group="sec_cb"),
+        Column("Sec. fuse max (A)", lambda r: _ocpd(r, "secondary", "fuse", "raw"), result=True, group="sec_fr"),
+        Column("Sec. fuse selected (A)", lambda r: _ocpd(r, "secondary", "fuse", "selected"), color="green", result=True, group="sec_fr"),
     ],
+    groups={
+        "volts": Group("V1 / V2 (V)"),
+        "config": Group("Configuration"),
+        "pri_cb": Group("Pri. breaker (A)", " → "),
+        "pri_fr": Group("Pri. fuse (A)", " → "),
+        "sec_cb": Group("Sec. breaker (A)", " → "),
+        "sec_fr": Group("Sec. fuse (A)", " → "),
+    },
     code_reference=_code_reference,
     notes=_footnotes,
     word_reference=_word_reference,

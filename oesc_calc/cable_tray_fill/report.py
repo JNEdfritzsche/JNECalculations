@@ -43,9 +43,9 @@ def _tray_size(result: dict[str, Any]) -> str:
     return f"{_display_length(result, 'tray_width_mm')} × {_display_length(result, 'tray_depth_mm')}"
 
 
-def _groups(result: dict[str, Any]) -> str:
+def _groups(result: dict[str, Any]) -> int | str:
     groups = result.get("groups") or []
-    return str(len(groups)) if groups else "—"
+    return len(groups) if groups else "—"
 
 
 def _largest_group(result: dict[str, Any]) -> str:
@@ -123,12 +123,12 @@ CT_SCHEDULE_SPEC = ReportSpec(
         Column("Tray name", lambda r: get_first(r, "tray_name", default="—")),
         Column("Units", lambda r: get_first(r, "tray_unit", default="—")),
         Column("Tray size (w × d)", _tray_size),
-        Column("Usable area", lambda r: _display_area(r, "tray_area_mm2")),
-        Column("Cable groups", _groups),
-        Column("No. of cables", lambda r: get_first(r, "n_cables", default="—")),
-        Column("Area used", lambda r: _display_area(r, "total_cable_area_mm2")),
+        Column("Usable area", lambda r: _display_area(r, "tray_area_mm2"), result=True),
+        Column("Cable groups", _groups, result=True),
+        Column("No. of cables", lambda r: get_first(r, "n_cables", default="—"), result=True),
+        Column("Area used", lambda r: _display_area(r, "total_cable_area_mm2"), result=True),
         Column("Largest group", _largest_group),
-        Column("Fill (%)", lambda r: fmt(get_first(r, "fill_percentage"), "%"), color="green"),
+        Column("Fill (%)", lambda r: fmt(get_first(r, "fill_percentage"), "%"), color="green", result=True),
         Column("Code Edition", _edition),
     ],
     code_reference=_code_reference,
