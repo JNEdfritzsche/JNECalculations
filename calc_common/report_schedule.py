@@ -261,13 +261,22 @@ def _excel_value(value: Any, numeric: bool, has_numbers: bool) -> Any:
         return None if has_numbers else "—"
     return str(value)
 
+WHOLE_FORMAT = "#,##0"
+
+
 def _number_format(values: list[Any]) -> str | None:
     """One format per column, sized to its smallest value so nothing renders as an exponent."""
     magnitudes = [abs(n) for n in _numbers(values) if n]
     if not magnitudes:
         return None
     decimals = min(8, max(0, 3 - math.floor(math.log10(min(magnitudes)))))
-    return "#,##0" + ("." + "#" * decimals if decimals else "")
+    return WHOLE_FORMAT + ("." + "#" * decimals if decimals else "")
+
+
+def _cell_format(value: float, column_format: str) -> str:
+    """Excel prints the decimal separator whenever the format carries one, so 30 under
+    #,##0.### reads '30.'. A whole value takes the plain integer format instead."""
+    return WHOLE_FORMAT if float(value).is_integer() else column_format
 
 MIN_COL_WIDTH = 9
 MAX_COL_WIDTH = 34
@@ -321,7 +330,7 @@ def _write_schedule_table(ws, header_row: int, tag: str, cols: list[Column],
             if font is not None:
                 data.font = font
             if number_format and isinstance(data.value, (int, float)):
-                data.number_format = number_format
+                data.number_format = _cell_format(data.value, number_format)
 
         width = _column_width(label, written)
         ws.column_dimensions[get_column_letter(col_idx)].width = width
