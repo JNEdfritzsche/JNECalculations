@@ -150,7 +150,10 @@ $$\text{Fill\%} = \frac{3.9928 \text{ in}^2}{20.212 \text{ in}^2} \times 100\% =
 ### Related NEC Articles
 
 Section 310.15 — Ampacity Correction and Adjustment Factors<br/>
-Section 310.16 — Allowable Ampacities of Conductors<br/>
+Section 310.16 — Allowable Ampacities of Conductors
+
+### Related NEC Tables
+
 Chapter 9, Table 1 — Percent of Cross Section of Conduit and Tubing for Conductors<br/>
 Chapter 9, Table 4 — Dimensions and Percent Area of Conduit and Tubing<br/>
 Chapter 9, Table 5 — Dimensions of Insulated Conductors and Fixture Wires

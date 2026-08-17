@@ -232,6 +232,14 @@ digraph G {
         st.graphviz_chart(dot, width=600)
 
 
+def render_md_text(md: str, base_dir: str | Path, *, wrap: bool = True):
+    # Same pipeline as render_md, for callers that already hold the text
+    _inject_css()
+
+    md = _normalize_latex(md)
+    _render_markdown_with_images(md, Path(base_dir), wrap=wrap)
+
+
 def render_md(md_path: str | Path, *, wrap: bool = True):
     """
     Render a markdown file into Streamlit with light CSS + LaTeX normalization.
@@ -245,8 +253,4 @@ def render_md(md_path: str | Path, *, wrap: bool = True):
         st.error(f"Markdown file not found: {p}")
         return
 
-    _inject_css()
-
-    md = p.read_text(encoding="utf-8")
-    md = _normalize_latex(md)
-    _render_markdown_with_images(md, p.parent, wrap=wrap)
+    render_md_text(p.read_text(encoding="utf-8"), p.parent, wrap=wrap)

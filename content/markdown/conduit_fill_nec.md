@@ -94,12 +94,11 @@ To prevent physical stress on the conductor insulation during installation, the 
 
 Section 300.3 — Conductors of Different Systems<br/>
 Section 310.15 — Ampacity Correction and Adjustment Factors<br/>
-Section 310.16 — Allowable Ampacities of Conductors<br/>
-Chapter 9, Table 1 — Percent of Cross Section of Conduit and Tubing for Conductors
+Section 310.16 — Allowable Ampacities of Conductors
 
 ### Related NEC Tables
 
-Chapter 9, Table 1 — Conduit Fill Percent Limits<br/>
+Chapter 9, Table 1 — Percent of Cross Section of Conduit and Tubing for Conductors<br/>
 Chapter 9, Table 2 — Radius of Conduit Bends<br/>
 Chapter 9, Table 4 — Dimensions and Percent Area of Conduit and Tubing<br/>
 Chapter 9, Table 5 — Dimensions of Insulated Conductors and Fixture Wires

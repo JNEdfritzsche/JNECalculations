@@ -1,6 +1,7 @@
 # Standard library
 import io
 import math
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -18,10 +19,11 @@ except ImportError:
 
 # Local application imports
 try:
-    from lib.theory import render_md  # type: ignore
+    from lib.theory import render_md, render_md_text  # type: ignore
     _THEORY_IMPORT_ERROR = None
 except Exception as e:
     render_md = None  # type: ignore
+    render_md_text = None  # type: ignore
     _THEORY_IMPORT_ERROR = str(e)
 
 try:
@@ -121,6 +123,15 @@ img { display: block; margin-left: auto; margin-right: auto; }
 /* Hide horizontal scrollbars on LaTeX blocks (keeps content scrollable if needed) */
 .katex-display { scrollbar-width: none; -ms-overflow-style: none; }
 .katex-display::-webkit-scrollbar { display: none; }
+/* Compact expanders fade and shrink their label; match the lists around them */
+[class*="st-key-appendix-tables"] .stExpander summary {
+  opacity: 1 !important;
+}
+[class*="st-key-appendix-tables"] .stExpander summary [data-testid="stMarkdownContainer"],
+[class*="st-key-appendix-tables"] .stExpander summary [data-testid="stMarkdownContainer"] p {
+  font-size: 1rem !important;
+  color: inherit !important;
+}
 </style>
 """,
     unsafe_allow_html=True,
@@ -244,6 +255,164 @@ APP_DIR = Path(__file__).parent
 CONTENT_DIR = APP_DIR / "content"
 
 
+APPENDIX_SECTION_ORDER = (
+    "Related Knowledge Files",
+    "Related NEC Articles",
+    "Related OESC Rules",
+    "Related NEC Tables",
+    "Related OESC Tables",
+)
+
+APPENDIX_TABLE_SECTIONS = {
+    "Related NEC Tables": "NEC",
+    "Related OESC Tables": "OESC",
+}
+
+_HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.S)
+_APPENDIX_HEADING_RE = re.compile(r"^##\s+Appendix\s*$", re.M)
+_APPENDIX_SECTION_RE = re.compile(r"^###\s+(.+?)\s*$(.*?)(?=^###\s|\Z)", re.M | re.S)
+_APPENDIX_ENTRY_SPLIT_RE = re.compile(r"<br\s*/?>|\n")
+_APPENDIX_REFERENCE_PREFIX_RE = re.compile(r"^Tables?\s+")
+
+
+def split_appendix(md: str) -> tuple[str, dict[str, str]]:
+    # Split a theory/examples document into its body and its appendix sections.
+    
+    match = _APPENDIX_HEADING_RE.search(md)
+    if match is None:
+        return md, {}
+
+    body = md[: match.start()].rstrip()
+    while body.endswith("---"):
+        body = body[: -len("---")].rstrip()
+
+    tail = _HTML_COMMENT_RE.sub("", md[match.end():])
+    sections = {}
+    for heading, content in _APPENDIX_SECTION_RE.findall(tail):
+        content = content.strip()
+        if content:
+            sections[heading] = content
+    return body, sections
+
+
+def appendix_entries(content: str) -> list[tuple[str, str]]:
+    entries = []
+    for raw in _APPENDIX_ENTRY_SPLIT_RE.split(content):
+        line = raw.strip()
+        if line:
+            reference, _, name = line.partition("—")
+            entries.append((reference.strip(), name.strip()))
+    return entries
+
+
+def tables_module(code: str):
+    if code == "OESC":
+        return oesc_tables
+    try:
+        from lib import nec_tables  # type: ignore
+        return nec_tables
+    except Exception:
+        return None
+
+
+def _table_id(token: str, code: str) -> str:
+    if code == "NEC":
+        return "table_" + re.sub(r"[^a-z0-9]+", "_", token.lower()).strip("_")
+    return re.sub(r"[^A-Z0-9]", "", token.upper())
+
+
+def resolve_table_ids(reference: str, code: str, known_ids: set[str]) -> list[str]:
+    # Handles "Table 1/2" and "Tables 9A-9G"
+    body = _APPENDIX_REFERENCE_PREFIX_RE.sub("", reference.replace("Chapter 9,", "").strip())
+    found = []
+    for part in body.split("/"):
+        start, dash, end = part.strip().partition("-")
+        if dash:
+            low, high = _table_id(start, code), _table_id(end, code)
+            found += sorted(i for i in known_ids if low <= i <= high and len(i) == len(low))
+            continue
+
+        table_id = _table_id(start, code)
+        if table_id in known_ids:
+            found.append(table_id)
+        elif code == "NEC":
+            # 310.15(B)(1) is stored as table_310_15_b_1_1 and _1_2
+            found += sorted(i for i in known_ids if i.startswith(f"{table_id}_"))
+    return found
+
+
+def _table_label(tables, table_id: str) -> str:
+    meta = tables.get_table_meta(table_id) or {}
+    return meta.get("title") or table_id.replace("table_", "Table ").replace("_", " ")
+
+
+def render_table_entry(reference: str, name: str, code: str, tables, known_ids: set[str], scope: str):
+    label = f"{reference} — {name}" if name else reference
+    with st.expander(label, type="compact"):
+        with st.container(border=True):
+            table_ids = resolve_table_ids(reference, code, known_ids) if tables else []
+            if not table_ids:
+                st.caption("This table is not in the table library yet.")
+                return
+
+            for table_id in table_ids:
+                meta = tables.get_table_meta(table_id) or {}
+
+                # Parent tables hold no rows of their own
+                parts = (meta.get("raw") or {}).get("tables") if meta.get("rows") is None else None
+                if parts:
+                    table_id = st.selectbox(
+                        "Select a sub-table",
+                        [f"{table_id}_{part}" for part in parts],
+                        format_func=lambda tid: _table_label(tables, tid),
+                        key=f"appendix_{scope}_{table_id}",
+                    )
+                    meta = tables.get_table_meta(table_id) or {}
+
+                st.markdown(f"**{meta.get('title') or label}**")
+                if meta.get("units"):
+                    st.caption(f"Units: {meta['units']}")
+
+                frame = tables.get_table_dataframe(table_id)
+                if frame is None:
+                    st.json(meta.get("raw", {}))
+                else:
+                    st.dataframe(frame, hide_index=True)
+                
+                st.divider()
+
+
+def render_appendix(sections: dict[str, str], scope: str):
+    ordered = [(t, sections[t]) for t in APPENDIX_SECTION_ORDER if t in sections]
+    ordered += [(t, c) for t, c in sections.items() if t not in APPENDIX_SECTION_ORDER]
+    if not ordered:
+        return
+
+    # Every element carries its own vertical gap, so batch the markdown
+    pending = ["---", "## Appendix"]
+
+    def flush():
+        if pending:
+            st.markdown("\n\n".join(pending), unsafe_allow_html=True)
+            pending.clear()
+
+    for title, content in ordered:
+        pending.append(f"### {title}")
+        code = APPENDIX_TABLE_SECTIONS.get(title)
+        if code is None:
+            pending.append(content)
+            continue
+
+        flush()
+        tables = tables_module(code)
+        known_ids = set(tables.search_tables("")) if tables else set()
+        with st.container(gap=None, key=f"appendix-tables-{scope}"):
+            for reference, name in appendix_entries(content):
+                render_table_entry(reference, name, code, tables, known_ids, scope)
+
+    flush()
+
+
 def render_md_safe(rel_path: str):
     """
     Render markdown from /content safely.
@@ -252,7 +421,7 @@ def render_md_safe(rel_path: str):
     """
     md_path = CONTENT_DIR / rel_path
 
-    if render_md is None:
+    if render_md is None or render_md_text is None:
         st.error(
             "Theory renderer failed to import. This usually means the `lib/` package is missing in your repo. "
             "Make sure you have:\n\n"
@@ -269,8 +438,13 @@ def render_md_safe(rel_path: str):
             st.warning("Markdown file not found at the expected path.")
         return
 
-    # renderer exists
-    render_md(str(md_path))
+    if not md_path.exists():
+        st.error(f"Markdown file not found: {md_path}")
+        return
+
+    body, sections = split_appendix(md_path.read_text(encoding="utf-8"))
+    render_md_text(body, md_path.parent)
+    render_appendix(sections, md_path.stem)
 
 
 def render_md_for_code(topic: str, code_mode: str):
@@ -1011,89 +1185,6 @@ elif page == "Voltage Drop":
         header("Voltage Drop — Theory")
         show_code_note(code_mode)
         render_md_for_code("voltage_drop", code_mode)
-
-        # -------------------------------------------------
-        # Display Table D3 reference tables
-        # -------------------------------------------------
-        with st.expander("📋 Show Table D3 reference values", expanded=False):
-            st.markdown("### Copper Conductors — Table D3 (Ω/km)")
-
-            display_cols = [
-                "Size",
-                "DC",
-                "Cable 100%",
-                "Cable 90%",
-                "Cable 80%",
-                "Raceway 100%",
-                "Raceway 90%",
-                "Raceway 80%",
-            ]
-
-            # Import from lib.oesc_tables
-            from lib.oesc_tables import get_table_meta
-            table_d3_meta = get_table_meta("D3")
-            
-            cu_rows_display = []
-            al_rows_display = []
-            
-            if table_d3_meta:
-                for row in table_d3_meta.get("rows", []):
-                    size = row.get("size_awg_kcmil")
-                    if size and size not in ["14"]:  # Skip non-copper sizes initially
-                        cu_row = {
-                            "Size": size,
-                            "DC": row.get("copper_dc"),
-                            "Cable 100%": row.get("copper_cable_100pf"),
-                            "Cable 90%": row.get("copper_cable_90pf"),
-                            "Cable 80%": row.get("copper_cable_80pf"),
-                            "Raceway 100%": row.get("copper_raceway_100pf"),
-                            "Raceway 90%": row.get("copper_raceway_90pf"),
-                            "Raceway 80%": row.get("copper_raceway_80pf"),
-                        }
-                        cu_rows_display.append(cu_row)
-                        
-                        al_row = {
-                            "Size": size,
-                            "DC": row.get("aluminum_dc"),
-                            "Cable 100%": row.get("aluminum_cable_100pf"),
-                            "Cable 90%": row.get("aluminum_cable_90pf"),
-                            "Cable 80%": row.get("aluminum_cable_80pf"),
-                            "Raceway 100%": row.get("aluminum_raceway_100pf"),
-                            "Raceway 90%": row.get("aluminum_raceway_90pf"),
-                            "Raceway 80%": row.get("aluminum_raceway_80pf"),
-                        }
-                        al_rows_display.append(al_row)
-                    elif size == "14":  # Don't add non-aluminum row
-                        cu_row = {
-                            "Size": size,
-                            "DC": row.get("copper_dc"),
-                            "Cable 100%": row.get("copper_cable_100pf"),
-                            "Cable 90%": row.get("copper_cable_90pf"),
-                            "Cable 80%": row.get("copper_cable_80pf"),
-                            "Raceway 100%": row.get("copper_raceway_100pf"),
-                            "Raceway 90%": row.get("copper_raceway_90pf"),
-                            "Raceway 80%": row.get("copper_raceway_80pf"),
-                        }
-                        cu_rows_display.append(cu_row)
-
-            if pd is not None:
-                df_cu = pd.DataFrame(cu_rows_display, columns=display_cols)
-                st.dataframe(df_cu, width="stretch", hide_index=True)
-            else:
-                st.dataframe(cu_rows_display, width="stretch", hide_index=True)
-
-            st.markdown("### Aluminum Conductors — Table D3 (Ω/km)")
-            
-            if pd is not None:
-                df_al = pd.DataFrame(al_rows_display, columns=display_cols)
-                st.dataframe(df_al, width="stretch", hide_index=True)
-            else:
-                st.dataframe(al_rows_display, width="stretch", hide_index=True)
-
-            st.caption(
-                "These tables are from OESC Appendix D – Table D3 "
-                "(75 °C conductors). Values are in Ω per circuit kilometre."
-            )
 
         # -------------------------------------------------
         # Display the System Factor (f) lookup table
