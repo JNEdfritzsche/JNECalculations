@@ -2,10 +2,12 @@
 
 Voltage drop must be accounted for in circuit design, especially for long conductor runs. Under the National Electrical Code (NEC) 2026, voltage drop parameters are defined by advisory guidelines rather than rigid branch-circuit rules. 
 
-Specifically, **NEC 210.19(A) Informational Note** and **NEC Article 120 Notes** recommend limiting voltage drop to:
+Specifically, the **Informational Notes to NEC 210.19(A)** (branch circuits) and **NEC 215.2(A)(1)** (feeders) recommend limiting voltage drop to:
 
 - A maximum of **3%** on the branch circuit or the feeder individually.
-- A maximum of **5%** combined total from the service point of utilization to the final outlet.
+- A maximum of **5%** combined total from the service point to the final outlet.
+
+These are Informational Notes, which under NEC 90.5(C) are explanatory and **not enforceable as Code requirements**. They are routinely written into project specifications as hard limits, so in practice they are usually treated as such.
 
 To accommodate this, conductors must be upsized when necessary to lower overall circuit impedance.
 
@@ -31,7 +33,7 @@ $$\text{Three-phase:} \quad V_D = \frac{\sqrt{3} \cdot K \cdot I \cdot L}{CM}$$
 
 **Where**
 
-- **$K$** = Direct current resistance factor of a circular mil-foot conductor (approx. 12.9 Ω-cmil/ft for Copper, and 21.2 Ω-cmil/ft for Aluminum at 75°C, per Chapter 9, Table 8).
+- **$K$** = Direct current resistance factor of a circular mil-foot conductor: approximately 12.9 Ω-cmil/ft for Copper and 21.2 Ω-cmil/ft for Aluminum at 75°C. These constants are not tabulated in the NEC. They are derived from Chapter 9, Table 8 as $K = R \times CM / 1000$.
 - **$I$** = Load current, A.
 - **$L$** = One‑way length of the circuit, ft.
 - **$CM$** = Cross-sectional area of the conductor in circular mils (from Chapter 9, Table 8).
@@ -91,10 +93,9 @@ $$
 
 ### Related NEC Articles
 
+Section 90.5(C) — Explanatory Material (status of Informational Notes)<br/>
 Section 210.19(A) — Branch Circuit Voltage Drop Informational Note<br/>
-Article 120 Notes —<br/>
-Chapter 9, Table 8 — Conductor Properties (CM and K-values)<br/>
-Chapter 9, Table 9 — Alternating-Current Resistance and Reactance
+Section 215.2(A)(1) — Feeder Voltage Drop Informational Note
 
 ### Related NEC Tables
 

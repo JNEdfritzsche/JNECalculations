@@ -57,7 +57,9 @@ NEC 210.19(A) Informational Note recommends sizing branch circuit conductors to 
 
 ## Duty Cycle and Service Ratings
 
-Not all motors are rated for continuous duty. Under NEC Table 430.22(E), conductors for non-continuous or short-time duty motors must be sized based on the percentages of the nameplate current rating specified for the specific motor operating duration and classification.
+Not all motors are rated for continuous duty. Under NEC Table 430.22(E), branch-circuit conductors for short-time, intermittent, periodic or varying duty motors are sized on a percentage of the **nameplate current rating** rather than the table FLC. The percentage is selected using both the classification of service and the motor's time rating, and it can land above or below 100%. A 15-minute rated motor takes 120% under short-time duty and 85% under intermittent duty, so the classification has to be settled first.
+
+This applies to the branch circuit. On the feeder side, NEC 430.24 Exception No. 1 permits smaller conductors where the maximum load determined from the sizes, number and duty of the motors supplied works out lower, which is an engineering determination rather than a table lookup.
 
 ---
 
@@ -67,23 +69,23 @@ Sizing conductors for multiple motors on a single feeder is common. Apply the NE
 
 Assume the following three motors are fed from a single 460V, 3-phase feeder:
 
-| Motor No. | Service Duty | FLC (from NEC Table 430.250) |
-|-----------|--------------|------------------------------|
-| $M_1$     | Continuous   | 9 A                          |
-| $M_2$     | Continuous   | 12 A                         |
-| $M_3$     | Intermittent (15-min rating) | 5 A                          |
+| Motor No. | Size | Service Duty | FLC (from NEC Table 430.250, 460 V column) |
+|-----------|------|--------------|------------------------------|
+| $M_1$     | 5 HP  | Continuous   | 7.6 A                        |
+| $M_2$     | 7½ HP | Continuous   | 11 A                         |
+| $M_3$     | 3 HP  | Continuous   | 4.8 A                        |
 
-Under NEC 430.24 and Table 430.22(E), we apply the continuous 125% multiplier to the highest-rated continuous motor ($M_2$), and we look up the intermittent duty factor for a 15-minute rated motor (which is typically 120% per Table 430.22(E)).
+The 125% is applied once, to the largest motor only; the remaining motors are counted at 100%.
 
-| Motor No. | Adjusted FLC Calculation | Minimum Ampacity Target |
+| Term | Calculation | Contribution |
 |-----------|--------------------------|-------------------------|
-| $M_1$     | Continuous load (at 100%)| 9.0 A                   |
-| $M_2$     | Largest Continuous (125%)| 12 A × 1.25 = 15.0 A    |
-| $M_3$     | Intermittent load (120%) | 5 A × 1.20 = 6.0 A      |
-| **Feeder Total**| **9.0 A + 15.0 A + 6.0 A** | **30.0 A**            |
+| $M_2$ (largest, at 125%) | 11 A × 1.25 | 13.75 A    |
+| $M_1$ (at 100%)  | 7.6 A            | 7.60 A                  |
+| $M_3$ (at 100%)  | 4.8 A            | 4.80 A                  |
+| **Feeder Total**| **13.75 + 7.60 + 4.80** | **26.15 A**            |
 
 ### Feeder Conductor Selection:
-Checking NEC Table 310.16 (under 60°C termination limits per NEC 110.14(C)(1) since target load is ≤100A), we select **#10 AWG Copper** (rated for 30 A).
+Checking NEC Table 310.16 (under 60°C termination limits per NEC 110.14(C)(1) since target load is ≤100 A), we select **#10 AWG Copper** (rated for 30 A). #12 AWG is rated 20 A in the 60°C column, which is insufficient.
 
 ---
 

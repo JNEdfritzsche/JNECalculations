@@ -48,7 +48,7 @@ Run 1 contains control signals (40% fill limit applies). Run 2 contains a single
 | Total Area Used | 98 × 0.0097 = 0.9506 in² | 1.8058 in² |
 | Conduit 100% Area | 3.408 in² (2199 mm²) | 3.408 in² (2199 mm²) |
 | Allowable Fill Limit | 40% (1.363 in²) | 53% (1.806 in²) |
-| **Conduit Fill %** | **27.89%** $\leq$ 40% $\quad \checkmark$ | **53.00%** $\leq$ 53% $\quad \checkmark$ |
+| **Conduit Fill %** | **27.89%** $\leq$ 40% $\quad \checkmark$ | **52.99%** $\leq$ 53% $\quad \checkmark$ |
 
 Both conduit runs comply with Chapter 9, Table 1.
 
@@ -66,7 +66,7 @@ $$ \text{Total Area} = 150 \times 0.0211 \text{ in}^2 = 3.165 \text{ in}^2 $$
 
 At 40% fill, a 3" RMC can only carry 3.000 in². Thus, the #10 AWG run will overfill a single 3" conduit. We can resolve this by redistributing some of the #10 AWG conductors into Conduit 1 with the #14 AWG conductors.
 
-**Revised Redistribution across three 3" RMC conduits:**
+**Revised Redistribution across two 3" RMC conduits:**
 
 - **Conduit 1**: 75 × #14 AWG THHN + 27 × #10 AWG THHN:
   - Total Conductor Area = $(75 × 0.0097) + (27 × 0.0211) = 0.7275 + 0.5697 = 1.2972 \text{ in}^2$

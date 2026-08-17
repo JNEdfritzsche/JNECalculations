@@ -2,9 +2,16 @@
 
 Sizing cable trays under the NEC requires evaluating the type of cables, quantities, and cross-sectional dimensions. Cable tray fill evaluation is based on **NEC 392.22** to ensure proper heat dissipation and mechanical safety.
 
-The general fill calculation is:
+Depending on the cable sizes present, 392.22 applies one of two tests:
 
-$$ \text{Tray Fill (\%)} = \frac{\text{Total Cable Area}}{\text{Usable Tray Area}} \times 100 $$
+$$ \text{Area test:} \quad \sum A_{\text{cable}} \leq A_{\text{allowable}} \text{ from Table 392.22(A)(1) or 392.22(B)(1)} $$
+
+$$ \text{Width test:} \quad \sum \text{OD}_{\text{cable}} \leq \text{inside width of tray} $$
+<br/><br/>
+
+Where the area test applies, utilization is expressed against the *allowable fill area*:
+
+$$ \text{Utilization} = \frac{\sum A_{\text{cable}}}{A_{\text{allowable}}} \times 100\% $$
 
 ---
 
@@ -16,65 +23,60 @@ We are running single-conductor 600V power cables in a horizontal layer in a lad
 | ------- | -------- | ------- | ---------- | --------------------- |
 | 600 V   | 9        | 1/0 AWG | 1/C THHN   | 0.521 in (13.23 mm)   |
 
-Under **NEC 392.22(B)(1)(c)**, where single-conductor cables are installed in a ladder tray, and all cables are smaller than 1/0 AWG, the sum of the cable diameters must not exceed the cable tray width. (For #1/0 AWG and larger single-conductor cables, they are typically installed in a single layer, and spacing must be maintained to prevent derating per 392.80).
+These are 1/0 AWG single conductors, so the governing rule is **NEC 392.22(B)(1)(d)**: where any of the cables installed are 1/0 AWG through 4/0 AWG, the sum of the diameters must not exceed the cable tray width.
 
-Let's evaluate the required physical width using a single-layer spaced configuration:
+$$ \sum \text{OD} = 9 \times 0.521 \text{ in} = 4.689 \text{ in} \quad (119.1 \text{ mm}) $$
 
-$$ \text{Total Width Space} = (\text{Sum of Cable Diameters}) + (\text{Sum of Cable Spacings}) $$
+$$ 4.689 \text{ in} \leq 6.0 \text{ in} \quad \checkmark $$
 
-Assuming we maintain a space of one cable diameter ($0.521\text{ in}$) between each cable to maintain free air ampacity rating (per NEC 392.80(B)(2)(b)):
+**The code minimum is a 6" wide ladder tray.**
 
-$$ \text{Width Required} = (9 \times 0.521 \text{ in}) + (8 \times 0.521 \text{ in}) = 8.857 \text{ in} \quad (225.0 \text{ mm}) $$
+### Spacing for Free-Air Ampacity
 
-**A 9" wide cable tray is selected.**
+To rate the conductors on free-air ampacity, **NEC 392.80(A)(2)** requires a single layer with a maintained spacing of not less than one cable diameter:
 
-The total conductor area calculation:
+$$ \text{Width Required} = (9 \times 0.521) + (8 \times 0.521) = 17 \times 0.521 = 8.857 \text{ in} \quad (225.0 \text{ mm}) $$
 
-$$ A_{\text{conductor}} = \pi \times \left(\frac{0.521}{2}\right)^2 \approx 0.213 \text{ in}^2 \quad (137.4 \text{ mm}^2) $$
-
-$$\text{Total Cable Area} = 9 \times 0.213 = 1.917 \text{ in}^2$$
-
-Usable area of a 4" deep, 9" wide ladder tray (assuming nominal inside depth of 3 inches):
-
-$$ A_{\text{usable}} = 3.0 \text{ in} \times 9.0 \text{ in} = 27.0 \text{ in}^2 $$
-
-$$ \text{Tray Fill \%} = \frac{1.917}{27.0} \times 100\% = 7.10\% $$
-
-**Result: Selected 9" wide ladder tray at 7.1% fill.**
+**Result: a 6" ladder tray meets 392.22(B)(1)(d), and a 9" tray is selected to hold one-diameter spacing per 392.80(A)(2).**
 
 ---
 
 ## Example 2 — Sectioned Runs (Multi-conductor Power and Control)
 
-We are running multi-conductor power and control cables in a 4" × 12" ladder-type cable tray divided into two equal sections using a barrier strip (NEC 392.20(D)).
+We are running multi-conductor power and control cables in a 12" wide ladder-type cable tray divided into two equal sections using a solid fixed barrier.
 
 - **Section 1**: 9 × #2 AWG 3/C power cables (600 V) $\Rightarrow$ Nominal OD = 1.042 in (26.46 mm)
 - **Section 2**: 9 × #14 AWG 12/C control cables (24 VDC) $\Rightarrow$ Nominal OD = 1.216 in (30.88 mm)
 
-Each section width is approximately **6 inches** (usable area = 3.0" × 6.0" = 18.0 in²).
+All cables are smaller than 4/0 AWG, so **392.22(A)(1)(b)** applies to both sections: the sum of the cross-sectional areas must not exceed **Column 1** of Table 392.22(A)(1) for the applicable width.
 
-**Section 1 Fill (Multi-conductor power cables):**
+Each section is evaluated as a tray of its own inside width.
 
-- Area of one 3/C cable = $\pi \times (1.042 / 2)^2 = 0.8527 \text{ in}^2$
-- Total Area (Section 1) = $9 \times 0.8527 = 7.674 \text{ in}^2$
-- Usable tray area = $18.0 \text{ in}^2$
-- Fill% = $(7.674 / 18.0) \times 100\% = 42.63\%$
+**Cable areas:**
 
-Under NEC Table 392.22(A) Column 1, the maximum allowable fill area for multi-conductor cables in a 6" wide tray is **7.0 in²**. Since our calculated area is **7.674 in²**, Section 1 is overfilled. We must adjust the barrier strip to provide **9 inches** for Section 1 (allowable limit = 10.5 in²) and **3 inches** for Section 2.
+$$ A_{\text{power}} = \pi \times (1.042 / 2)^2 = 0.8528 \text{ in}^2 \quad \Rightarrow \quad 9 \times 0.8528 = 7.675 \text{ in}^2 $$
 
-**Revised Layout (9" Power Section, 3" Control Section):**
+$$ A_{\text{control}} = \pi \times (1.216 / 2)^2 = 1.1613 \text{ in}^2 \quad \Rightarrow \quad 9 \times 1.1613 = 10.452 \text{ in}^2 $$
 
-- **Section 1 (9" Power Section, Usable Area = 27.0 in²):**
-  
-  - Allowable fill area per Table 392.22(A) = **10.5 in²**
-  - Actual Area = **7.674 in²**
-  - Fill% = $(7.674 / 27.0) \times 100\% = 28.42\% \leq 10.5 \text{ in}^2 \text{ limit} \quad \checkmark \text{ PASS}$
+**First attempt — 12" tray, two 6" sections (Column 1 allowable = 7.0 in² each):**
 
-- **Section 2 (3" Control Section, Usable Area = 9.0 in²):**
-  
-  - Area of one 12/C control cable = $\pi \times (1.216 / 2)^2 = 1.161 \text{ in}^2$
-  - Total Area (Section 2) = $9 \times 1.161 = 10.45 \text{ in}^2$ (Control cables smaller than 4/0 AWG must not exceed fill limits. A 3" section has an allowable limit of 3.5 in² per Table 392.22(A)).
-  - Since Section 2 is overfilled, we must use a larger overall cable tray (such as a 4" × 18" tray) to accommodate both sections safely.
+| Section | Cable area | Allowable (6") | Utilization | Result |
+|---|---|---|---|---|
+| 1 — Power | 7.675 in² | 7.0 in² | 109.6% | ✗ FAIL |
+| 2 — Control | 10.452 in² | 7.0 in² | 149.3% | ✗ FAIL |
+
+Both sections are overfilled. An 18" tray (8" power, 9" control) would comply, but the control section lands at 99.5% of its 10.5 in² allowable.
+
+**Selected — 24" tray, two 12" sections (Column 1 allowable = 14.0 in² each):**
+
+| Section | Cable area | Allowable (12") | Utilization | Result |
+|---|---|---|---|---|
+| 1 — Power | 7.675 in² | 14.0 in² | 54.8% | ✓ PASS |
+| 2 — Control | 10.452 in² | 14.0 in² | 74.7% | ✓ PASS |
+
+**Result: 24" ladder tray with a centre barrier, power section at 54.8% and control section at 74.7% of their allowable fill areas.**
+
+Table 392.22(A)(1) is tabulated at discrete widths (2, 4, 6, 8, 9, 12, 16, 18, 20, 24, 30 and 36 in.) and is not interpolated.
 
 ---
 
@@ -93,7 +95,7 @@ Section 392.80 — Ampacity of Conductors in Cable Trays
 
 ### Related NEC Tables
 
-Table 392.22(A) — Allowable Fill Area for Multi-conductor Cables in Ladder/Ventilated Trays<br/>
-Table 392.22(B)(1) — Allowable Fill Area for Single-conductor Cables in Ladder/Ventilated Trays 
+Table 392.22(A)(1) — Allowable Cable Fill Area for Multiconductor Cables in Ladder, Ventilated Trough, or Solid Bottom Cable Trays<br/>
+Table 392.22(B)(1) — Allowable Cable Fill Area for Single-Conductor Cables in Ladder, Ventilated Trough, or Wire Mesh Cable Trays
 
 

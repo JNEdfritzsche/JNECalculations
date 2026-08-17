@@ -39,19 +39,31 @@ Unlike other standards that rely on arbitrary fill margins, the **NEC mandates s
 
 ### Multi-conductor Cables Rated 2000V or Less:
 
-- **Ladder or Ventilated Trough (NEC 392.22(A)(1))**: The sum of the cross-sectional areas of all cables 4/0 AWG and larger must not exceed the allowable area calculated based on the tray width. For mixed cable sizes (smaller than 4/0 AWG combined with larger), specific formulas or Table 392.22(A) columns must be used.
-- **Solid Bottom (NEC 392.22(A)(3))**: Stricter limits apply (roughly 70% to 75% of the ventilated tray limits) due to trapped heat.
+**Ladder, Ventilated Trough or Wire Mesh (NEC 392.22(A)(1))**: which test applies depends on the cable sizes present.
+
+- **392.22(A)(1)(a)** — **all** cables 4/0 AWG or larger: the sum of the cable **diameters** must not exceed the tray width, installed in a single layer. No area limit applies.
+- **392.22(A)(1)(b)** — **all** cables smaller than 4/0 AWG: the sum of the cross-sectional **areas** must not exceed **Column 1** of Table 392.22(A)(1) for that tray width.
+- **392.22(A)(1)(c)** — 4/0 AWG and larger sharing the tray with smaller cables: the areas of the **smaller** cables are limited by the **Column 2** computation, *(Column 1 value) − (1.2 × Sd)*.
+
+**Solid Bottom (NEC 392.22(A)(3))**: the same three-way structure, using Columns 3 and 4 of the same table. Solid-bottom allowances run about **75% to 80%** of the ladder/ventilated values because of trapped heat.
 
 ### Single-conductor Cables Rated 2000V or Less:
 
-- Single-conductor power cables must be #1/0 AWG or larger and are sized per **NEC 392.22(B)** based on diameter and area summation columns.
+Single-conductor cables in tray must be 1/0 AWG or larger, and are sized per **NEC 392.22(B)(1)**, which splits four ways by conductor size:
+
+- **(B)(1)(a)** — all cables 1000 kcmil or larger: sum of **diameters** must not exceed the tray width.
+- **(B)(1)(b)** — all cables 250 kcmil through 900 kcmil: sum of **areas** must not exceed Column 1 of Table 392.22(B)(1).
+- **(B)(1)(c)** — 1000 kcmil and larger installed with smaller cables: the smaller cables are limited by the Column 2 computation, *(Column 1 value) − (1.1 × Sd)*.
+- **(B)(1)(d)** — where any cables **1/0 through 4/0** are installed: sum of **diameters** must not exceed the tray width. This is the common industrial case, and it is a width check.
 
 ### Voltage Segregation (Barrier Strips)
 
-Under **NEC 392.20(D)**, cables operating at different voltages can occupy the same cable tray, provided that:
+Under **NEC 392.20(B)**, cables rated **over 2000 volts** shall not be installed in the same cable tray with cables rated 2000 volts or less unless one of the following applies:
 
-- Conductors operating over 600V are insulated for the maximum system voltage, or
-- A solid, noncombustible barrier compatible with the cable tray is installed to separate the circuits.
+- The cables rated over 2000 volts are Type MC, or
+- The two groups are separated by a solid fixed barrier of material compatible with the cable tray.
+
+Note that the threshold here is 2000 V rather than the 600 V often assumed. Below 2000 V no barrier is required between voltage levels, though separating power from instrumentation and control remains good practice for electromagnetic interference.
 
 ---
 
@@ -73,5 +85,7 @@ Section 392.80 — Ampacity of Conductors in Cable Trays
 
 ### Related NEC Tables
 
-Table 392.22(A) — Allowable Fill Area for Multi-conductor Cables in Ladder/Ventilated Trays<br/>
-Table 392.22(B)(1) — Allowable Fill Area for Single-conductor Cables in Ladder/Ventilated Trays 
+Table 392.22(A)(1) — Allowable Cable Fill Area for Multiconductor Cables in Ladder, Ventilated Trough, or Solid Bottom Cable Trays<br/>
+Table 392.22(A)(5) — Allowable Cable Fill Area for Multiconductor Cables in Ventilated Channel Cable Trays<br/>
+Table 392.22(A)(6) — Allowable Cable Fill Area for Multiconductor Cables in Solid Channel Cable Trays<br/>
+Table 392.22(B)(1) — Allowable Cable Fill Area for Single-Conductor Cables in Ladder, Ventilated Trough, or Wire Mesh Cable Trays

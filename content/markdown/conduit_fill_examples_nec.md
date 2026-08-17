@@ -30,23 +30,23 @@ This example demonstrates that conduit selection can offer different routing lay
 | Number of conductors | 3 |
 | Total conductor area | 3 × 0.3970 in² = **1.191 in²** (768.39 mm²) |
 
-**Option A — One 2½" trade size RMC conduit, all 3 conductors**
+**Option A — One 2" trade size RMC conduit, all 3 conductors**
 
 With 3 conductors, the 40% fill limit applies (Chapter 9, Table 1).
 
-$$A_{\text{conduit, min}} = \frac{1.191 \text{ in}^2}{0.40} = 2.978 \text{ in}^2 \quad \Rightarrow \text{Select 2½" RMC} \quad (100\% \text{ Area} = 4.790 \text{ in}^2)$$
+$$A_{\text{conduit, min}} = \frac{1.191 \text{ in}^2}{0.40} = 2.978 \text{ in}^2 \quad \Rightarrow \text{Select 2" RMC} \quad (100\% \text{ Area} = 3.408 \text{ in}^2)$$
 
-$$\text{Fill\%} = \frac{1.191}{4.790} \times 100\% = 24.86\% \leq 40\% \quad \checkmark \text{ PASS}$$
+$$\text{Fill\%} = \frac{1.191}{3.408} \times 100\% = 34.95\% \leq 40\% \quad \checkmark \text{ PASS}$$
 
-**Option B — Three 1¼" trade size RMC conduits, one conductor each**
+**Option B — Three 1" trade size RMC conduits, one conductor each**
 
 With 1 conductor per conduit, the 53% fill limit applies (Chapter 9, Table 1).
 
-$$A_{\text{conduit, min}} = \frac{0.3970 \text{ in}^2}{0.53} = 0.749 \text{ in}^2 \quad \Rightarrow \text{Select 1¼" RMC} \quad (100\% \text{ Area} = 1.496 \text{ in}^2)$$
+$$A_{\text{conduit, min}} = \frac{0.3970 \text{ in}^2}{0.53} = 0.749 \text{ in}^2 \quad \Rightarrow \text{Select 1" RMC} \quad (100\% \text{ Area} = 0.887 \text{ in}^2)$$
 
-$$\text{Fill\%} = \frac{0.3970}{1.496} \times 100\% = 26.54\% \leq 53\% \quad \checkmark \text{ PASS (per conduit)}$$
+$$\text{Fill\%} = \frac{0.3970}{0.887} \times 100\% = 44.76\% \leq 53\% \quad \checkmark \text{ PASS (per conduit)}$$
 
-**Result: Fill one 2½" RMC at 24.9% — or — three 1¼" RMC conduits at 26.5% each**
+**Result: Fill one 2" RMC at 35.0% — or — three 1" RMC conduits at 44.8% each**
 
 ---
 
@@ -64,11 +64,11 @@ Two separate 3-conductor runs are required. Each run is sized independently. Wit
 
 Sizing for 40% fill:
 
-$$A_{\text{conduit, min}} = \frac{0.5565 \text{ in}^2}{0.40} = 1.391 \text{ in}^2 \quad \Rightarrow \text{Select 1¼" RMC} \quad (100\% \text{ Area} = 1.496 \text{ in}^2)$$
+$$A_{\text{conduit, min}} = \frac{0.5565 \text{ in}^2}{0.40} = 1.391 \text{ in}^2 \quad \Rightarrow \text{Select 1¼" RMC} \quad (100\% \text{ Area} = 1.526 \text{ in}^2)$$
 
-$$\text{Fill\%} = \frac{0.5565}{1.496} \times 100\% = 37.20\% \leq 40\% \quad \checkmark \text{ PASS}$$
+$$\text{Fill\%} = \frac{0.5565}{1.526} \times 100\% = 36.47\% \leq 40\% \quad \checkmark \text{ PASS}$$
 
-**Result: Fill two 1¼" RMC conduits, one run per conduit, at 37.2% each**
+**Result: Fill two 1¼" RMC conduits, one run per conduit, at 36.5% each**
 
 ---
 
@@ -86,19 +86,19 @@ Three cable groups are present. To prevent signal noise, the 24VDC control cable
 
 **Conduit 1 — 24VDC control cables (80 conductors, 40% limit):**
 
-$$A_{\text{conduit, min}} = \frac{0.7760 \text{ in}^2}{0.40} = 1.940 \text{ in}^2 \quad \Rightarrow \text{Select 2½" RMC} \quad (100\% \text{ Area} = 4.790 \text{ in}^2)$$
+$$A_{\text{conduit, min}} = \frac{0.7760 \text{ in}^2}{0.40} = 1.940 \text{ in}^2 \quad \Rightarrow \text{Select 1½" RMC} \quad (100\% \text{ Area} = 2.071 \text{ in}^2)$$
 
-$$\text{Fill\%} = \frac{0.7760}{4.790} \times 100\% = 16.20\% \leq 40\% \quad \checkmark \text{ PASS}$$
+$$\text{Fill\%} = \frac{0.7760}{2.071} \times 100\% = 37.47\% \leq 40\% \quad \checkmark \text{ PASS}$$
 
 **Conduit 2 — 480V power cables (5 conductors/cables, 40% limit):**
 
 $$\text{Total Area} = 0.7735 \text{ in}^2 + 0.7420 \text{ in}^2 = 1.5155 \text{ in}^2$$
 
-$$A_{\text{conduit, min}} = \frac{1.5155 \text{ in}^2}{0.40} = 3.789 \text{ in}^2 \quad \Rightarrow \text{Select 2½" RMC} \quad (100\% \text{ Area} = 4.790 \text{ in}^2)$$
+$$A_{\text{conduit, min}} = \frac{1.5155 \text{ in}^2}{0.40} = 3.789 \text{ in}^2 \quad \Rightarrow \text{Select 2½" RMC} \quad (100\% \text{ Area} = 4.866 \text{ in}^2)$$
 
-$$\text{Fill\%} = \frac{1.5155}{4.790} \times 100\% = 31.64\% \leq 40\% \quad \checkmark \text{ PASS}$$
+$$\text{Fill\%} = \frac{1.5155}{4.866} \times 100\% = 31.14\% \leq 40\% \quad \checkmark \text{ PASS}$$
 
-**Result: Fill two 2½" RMC conduits — Conduit 1 (24VDC control) at 16.2%, Conduit 2 (480V power) at 31.6%**
+**Result: Fill one 1½" RMC conduit (24VDC control) at 37.5% and one 2½" RMC conduit (480V power) at 31.1%**
 
 ---
 
@@ -115,25 +115,27 @@ Four cable groups must be distributed. The 600V feeder cable must be isolated fr
 | 120V — #4/0 AWG THHN (4/C) | Mfg Spec| 1.2803 in² (826.0 mm²) | 1 | 1.2803 in² (826.0 mm²) |
 | 600V — 500 kcmil (3/C) | Mfg Spec| 2.7125 in² (1,750.0 mm²) | 1 | 2.7125 in² (1,750.0 mm²) |
 
-For a 4" trade size RMC conduit, total internal area is **12.720 in²** (8,206.4 mm²). 
-- Allowable at 40% (3+ conductors, Chapter 9, Table 1) = **5.088 in²** (3,282.6 mm²).
-- Allowable at 31% (2 conductors, Chapter 9, Table 1) = **3.943 in²** (2,544.0 mm²).
+For a 4" trade size RMC conduit, total internal area is **12.882 in²** (8,316 mm²). Chapter 9, Table 4 publishes the fill columns directly:
+- Allowable at 40% (3+ conductors, Chapter 9, Table 1) = **5.153 in²** (3,326 mm²).
+- Allowable at 31% (2 conductors, Chapter 9, Table 1) = **3.994 in²** (2,578 mm²).
 
 **Conduit 1 — 24VDC #10 AWG (175 conductors, 40% limit):**
 
-$$\text{Fill\%} = \frac{3.6925 \text{ in}^2}{12.720 \text{ in}^2} \times 100\% = 29.03\% \leq 40\% \quad \checkmark \text{ PASS}$$
+$$\text{Fill\%} = \frac{3.6925 \text{ in}^2}{12.882 \text{ in}^2} \times 100\% = 28.66\% \leq 40\% \quad \checkmark \text{ PASS}$$
 
 **Conduit 2 — 24VDC #14 AWG (64 conductors, 40% limit):**
 
-$$\text{Fill\%} = \frac{0.6208 \text{ in}^2}{12.720 \text{ in}^2} \times 100\% = 4.88\% \leq 40\% \quad \checkmark \text{ PASS}$$
+$$\text{Fill\%} = \frac{0.6208 \text{ in}^2}{12.882 \text{ in}^2} \times 100\% = 4.82\% \leq 40\% \quad \checkmark \text{ PASS}$$
 
 **Conduit 3 — 120V + 600V power (2 cables → 31% limit applies, Chapter 9, Table 1):**
 
 $$\text{Total Area} = 1.2803 \text{ in}^2 + 2.7125 \text{ in}^2 = 3.9928 \text{ in}^2$$
 
-With 2 cables, our 31% limit of 3.943 in² is exceeded. Therefore, we must upsize Conduit 3 to **5" trade size RMC** (100% Area = 19.990 in², 31% Fill Limit = 6.197 in²).
+$$\text{Fill\%} = \frac{3.9928 \text{ in}^2}{12.882 \text{ in}^2} \times 100\% = 31.00\% \leq 31\% \quad \text{(nominally compliant)}$$
 
-$$\text{Fill\%} = \frac{3.9928 \text{ in}^2}{19.990 \text{ in}^2} \times 100\% = 19.97\% \leq 31\% \quad \checkmark \text{ PASS}$$
+With 2 cables, the 31% limit of 3.994 in² leaves only 0.0006 in² of margin, so we upsize Conduit 3 to **5" trade size RMC** (100% Area = 20.212 in², 31% Fill Limit = 6.266 in²).
+
+$$\text{Fill\%} = \frac{3.9928 \text{ in}^2}{20.212 \text{ in}^2} \times 100\% = 19.75\% \leq 31\% \quad \checkmark \text{ PASS}$$
 
 **Result: Fill two 4" RMC conduits (Conduits 1 & 2) for LV control, and one 5" RMC conduit (Conduit 3) for mixed power**
 

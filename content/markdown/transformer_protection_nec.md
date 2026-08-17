@@ -1,6 +1,6 @@
 ## Overview
 
-The Transformer Protection section outlines the NEC design requirements and overcurrent protection limitations to safeguard transformers and their supply conductors. The NEC classifies transformers into two main voltage levels, each with its own overcurrent protective device (OCPD) sizing limits under **NEC Article 450.3**:
+The Transformer Protection section outlines the NEC design requirements and overcurrent protection limitations to safeguard transformers and their supply conductors. The NEC classifies transformers into two main voltage levels, each with its own overcurrent protective device (OCPD) sizing limits under **NEC 450.5**:
 
 - Circuits rated over 1000 Volts
 - Circuits rated 1000 Volts or Less
@@ -13,19 +13,22 @@ This section focuses on sizing fuses and circuit breakers to protect the transfo
 
 ### 1. Transformer Circuits Rated Over 1000 V
 
-Each ungrounded conductor of a transformer feeder supplying a transformer rated over 1000V must be provided with overcurrent protection. Under **NEC Table 450.3(A)**, the maximum OCPD setting depends on whether the installation is supervised and whether both primary and secondary protection are used:
+Each ungrounded conductor of a transformer feeder supplying a transformer rated over 1000V must be provided with overcurrent protection. Under **NEC Table 450.5(A)**, the maximum OCPD rating depends on three things: whether the installation is supervised, whether both primary and secondary protection are used, and the **transformer rated impedance**.
 
-**Supervised Installations (Primary-Only Protection):**
+| Location | Rated impedance | Primary >1000 V CB | Primary >1000 V Fuse | Secondary >1000 V CB | Secondary >1000 V Fuse | Secondary ≤1000 V CB or Fuse |
+|---|---|---|---|---|---|---|
+| Any location | Not more than 6% | 600% | 300% | 300% | 250% | 125% |
+| Any location | More than 6%, not more than 10% | 400% | 300% | 250% | 225% | 125% |
+| Supervised only | Any (primary only) | 300% | 250% | Not required | Not required | Not required |
+| Supervised only | Not more than 6% | 600% | 300% | 300% | 250% | 250% |
+| Supervised only | More than 6%, not more than 10% | 400% | 300% | 250% | 225% | 250% |
 
-- Primary Fuses: Maximum **250%** of primary FLC.
-- Primary Circuit Breakers: Maximum **300%** of primary FLC.
+Two points are easy to miss:
 
-**Supervised Installations (Primary & Secondary Protection):**
+- **The secondary column is chosen by the secondary voltage.** A transformer with a 27.6 kV primary and a 600 V secondary is sized from the *Secondary 1000 Volts or Less* column, even though the primary side sits well above 1000 V.
+- **A supervised location** is one where conditions of maintenance and supervision ensure that only qualified persons monitor and service the installation (Table 450.5(A), Note 3).
 
-- Primary Fuses: Maximum **300%** of primary FLC.
-- Primary Circuit Breakers: Maximum **600%** of primary FLC.
-- Secondary Fuses: Maximum **250%** of secondary FLC.
-- Secondary Circuit Breakers: Maximum **300%** of secondary FLC.
+Note 1 permits a higher rating where the calculated value does not correspond to a standard one, and the device voltage decides which. At **1000 V and below** it is the next higher standard rating per 240.6. **Above 1000 V** it is the next higher *commercially available* rating or setting, since there is no 240.6 list to work from.
 
 <div align="center">
 
@@ -35,7 +38,7 @@ Each ungrounded conductor of a transformer feeder supplying a transformer rated 
 
 ### 2. Transformer Circuits Rated 1000 V or Less
 
-Under **NEC Table 450.3(B)**, overcurrent protection requirements for low-voltage transformers are based on the nominal full-load current (FLC):
+Under **NEC Table 450.5(B)**, overcurrent protection requirements for low-voltage transformers are based on the nominal full-load current (FLC):
 
 **Primary-Only Protection (No Secondary OCPD):**
 
@@ -45,9 +48,11 @@ Under **NEC Table 450.3(B)**, overcurrent protection requirements for low-voltag
 
 **Primary & Secondary Protection:**
 
-- Primary FLC of 9 A or more: Maximum **250%** of FLC. (Rounding up is **not** permitted).
+- Primary FLC, any value: Maximum **250%** of FLC. (Rounding up is **not** permitted).
 - Secondary FLC of 9 A or more: Maximum **125%** of FLC. (Note 1 permits rounding up to the next standard rating).
 - Secondary FLC less than 9 A: Maximum **167%** of FLC (No rounding up permitted).
+
+Note 1 of Table 450.5(B) is written against "125 percent of this current" only, so the round-up permission applies to the **125% cells alone**. Every other cell is a hard ceiling, and a calculated value falling between standard ratings has to be taken down to the next **lower** one.
 
 <div align="center">
 
@@ -94,11 +99,13 @@ $$ I_P = \frac{2{,}000 \times 10^3 \text{ VA}}{\sqrt{3} \times 27.6 \times 10^3 
 
 $$ I_S = \frac{2{,}000 \times 10^3 \text{ VA}}{\sqrt{3} \times 600 \text{ V}} \approx 1924.50 \text{ A} $$
 
-**OCPD Sizing (Supervised, Primary & Secondary Protection, Table 450.3(A)):**
+**OCPD Sizing (Supervised, Primary & Secondary Protection, Table 450.5(A)):**
 
-- **Primary Fuses (300% max limit)**: $41.84\text{ A} \times 3.00 = 125.52\text{ A}$. Using Note 1 (rounding up to next standard rating): **Select standard 150 A fuses**.
-- **Primary Circuit Breaker (600% max limit)**: $41.84\text{ A} \times 6.00 = 251.04\text{ A}$. Using Note 1 (rounding up): **Select standard 300 A circuit breaker**.
-- **Secondary Circuit Breaker (300% max limit)**: $1924.50\text{ A} \times 3.00 = 5773.50\text{ A}$. Using Note 1 (rounding up): **Select standard 6000 A circuit breaker**.
+The rated impedance of 6% falls in the *Not more than 6%* row. The 27.6 kV primary uses the *over 1000 V* columns, while the 600 V secondary uses the *Secondary 1000 Volts or Less* column at **250%**. Watch this one, since the 300% figure alongside it applies only to secondaries above 1000 V.
+
+- **Primary Fuses (300% max limit)**: $41.84\text{ A} \times 3.00 = 125.52\text{ A}$ $\Rightarrow$ next higher commercially available: **Select 150 A fuses**.
+- **Primary Circuit Breaker (600% max limit)**: $41.84\text{ A} \times 6.00 = 251.04\text{ A}$ $\Rightarrow$ next higher commercially available: **Select a 300 A circuit breaker**.
+- **Secondary Circuit Breaker (250% max limit)**: $1924.50\text{ A} \times 2.50 = 4811.25\text{ A}$ $\Rightarrow$ next higher standard rating per 240.6(A): **Select a 5000 A circuit breaker**.
 
 ---
 
@@ -118,11 +125,11 @@ Consider a transformer with the following nameplate parameters:
 
 $$ I_P = \frac{75{,}000 \text{ VA}}{\sqrt{3} \times 600 \text{ V}} \approx 72.17 \text{ A} $$
 
-**Primary OCPD Sizing (Table 450.3(B) — Primary-Only, 125%):**
+**Primary OCPD Sizing (Table 450.5(B) — Primary-Only, 125%):**
 
 $$ I_{\text{target}} = 72.17 \text{ A} \times 1.25 = 90.21 \text{ A} $$
 
-Under Table 450.3(B) Note 1, we round up to the next standard OCPD rating:
+Under Table 450.5(B) Note 1, we round up to the next standard OCPD rating:
 
 - **Select standard 100 A fuse or circuit breaker**
 
@@ -145,7 +152,7 @@ Consider a dry-type transformer with the following nameplate parameters:
 
 $$ I_S = \frac{75{,}000 \text{ VA}}{\sqrt{3} \times 208 \text{ V}} \approx 208.18 \text{ A} $$
 
-**OCPD Sizing (Table 450.3(B) — Primary and Secondary Protection):**
+**OCPD Sizing (Table 450.5(B) — Primary and Secondary Protection):**
 
 - **Primary OCPD (250% limit - Rounding Up NOT Permitted)**: 
 
@@ -172,7 +179,7 @@ Based on the calculated nominal FLCs and standard NEC rules, the required overcu
 **2 MVA, 27.6 kV / 600 V, Supervised, Both Sides Protected Transformer**
 
 - Primary: 150 A fuses or 300 A circuit breaker
-- Secondary: 6000 A circuit breaker
+- Secondary: 5000 A circuit breaker
 
 **75 kVA, 600 V / 208 V, Low-Voltage Primary-Only Protected Transformer**
 
@@ -195,10 +202,9 @@ Based on the calculated nominal FLCs and standard NEC rules, the required overcu
 ### Related NEC Articles
 
 Section 240.6 — Standard Overcurrent Device Ratings<br/>
-Section 450.3 — Overcurrent Protection of Transformers
+Section 450.5 — Overcurrent Protection of Transformers
 
 ### Related NEC Tables
 
-Table 240.6(A) — Standard Ampere Ratings for Fuses and Circuit Breakers<br/>
-Table 450.3(A) — Overcurrent Protection for Transformers Over 1000 Volts<br/>
-Table 450.3(B) — Overcurrent Protection for Transformers 1000 Volts and Less
+Table 450.5(A) — Overcurrent Protection for Transformers Over 1000 Volts<br/>
+Table 450.5(B) — Overcurrent Protection for Transformers 1000 Volts and Less

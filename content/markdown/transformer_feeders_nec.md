@@ -9,7 +9,7 @@ Transformers differ fundamentally from utilization equipment such as motors, hea
 - It has no inherent current-limiting capability.
 - Overloads occur primarily as thermal stress, not immediate functional failure.
 - Because of this, the NEC treats the transformer feeder as a supply circuit that must be sized assuming the transformer can and may operate at its nameplate rating continuously.
-- Under NEC 215.4(A)(1) (for feeders) and NEC 210.19(A)(1)(a) (for branch circuits), the allowable ampacity of the conductors must not be less than 125% of the continuous load.
+- Under NEC 215.2(A)(1) (for feeders) and NEC 210.19(A)(1) (for branch circuits), the allowable ampacity of the conductors must not be less than 125% of the continuous load.
 
 ---
 
@@ -84,10 +84,10 @@ With our ampacity target of 102.5 A, we check NEC Table 310.17 (Ampacities of Si
 
 ### Related NEC Articles
 
-Section 215.4 — Feeder Minimum Rating and Size<br/>
+Section 215.2 — Feeder Minimum Rating and Size<br/>
 Section 240.4 — Protection of Conductors<br/>
 Section 310.15 — Ampacity Correction and Adjustment Factors<br/>
-Section 450.3 — Overcurrent Protection of Transformers
+Section 450.5 — Overcurrent Protection of Transformers
 
 ### Related NEC Tables
 

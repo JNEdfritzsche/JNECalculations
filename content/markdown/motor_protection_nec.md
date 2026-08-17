@@ -10,12 +10,23 @@ Once the motor feeder and branch conductors have been sized, the next step is th
 
 ## Branch-Circuit Short-Circuit and Ground-Fault Protection
 
-Motor branch circuits pull a large inrush current during startup. Sizing overcurrent protective devices (OCPDs) is governed by **NEC Table 430.52** to prevent nuisance tripping while providing short-circuit protection. Sizing limits represent a maximum percentage of motor Table FLC:
+Motor branch circuits pull a large inrush current during startup. Sizing overcurrent protective devices (OCPDs) is governed by **NEC Table 430.52(C)(1)** to prevent nuisance tripping while providing short-circuit protection. Sizing limits represent a maximum percentage of motor Table FLC:
+
+For single-phase motors, ac polyphase motors other than wound-rotor, and synchronous motors:
 
 - **Dual-Element (Time-Delay) Fuses**: Max **175%** of FLC
 - **Non-Time-Delay Fuses**: Max **300%** of FLC
 - **Inverse-Time Circuit Breakers**: Max **250%** of FLC
-- **Instantaneous Trip Breakers**: Sized up to **800%** (and up to 1300% or 1700% for high-efficiency Design B/C/D motors per 430.52(C)(3)).
+- **Instantaneous Trip Breakers**: Max **800%** of FLC
+
+Two motor types have their own row and lower limits:
+
+- **Wound-rotor**: 150% for both fuse types and for inverse-time breakers; 800% instantaneous.
+- **DC (constant voltage)**: 150% for both fuse types and for inverse-time breakers; **250%** instantaneous.
+
+Design B energy-efficient and Design B premium efficiency motors keep the 300 / 175 / 250 figures but are permitted **1100%** on an instantaneous-trip breaker.
+
+Where the tabulated setting will not start the motor, 430.52(C)(3) Exception No. 1 permits the instantaneous-trip setting to be raised to **1300%** of FLC, or **1700%** for Design B energy-efficient motors.
 
 If the calculated maximum protective rating does not correspond to a standard rating, NEC 430.52(C)(1) Exception No. 1 permits rounding up to the next standard rating as listed in NEC 240.6(A).
 
@@ -27,22 +38,24 @@ Under **NEC 430.62(A)**, feeder short-circuit and ground-fault protection must p
 
 Assume the following three motors are connected to a single feeder:
 
-| Motor No. | FLC (Table 430.250) | OCPD Type  | Table 430.52 Limit | Calculated Target | Standard OCPD Size (Round Up) |
-| --------- | ------------------- | ---------- | ------------------ | ----------------- | ----------------------------- |
-| $M_1$     | 62 A                | Time-Delay | 62 A × 1.75        | 108.5 A           | **110 A** (Standard Size)     |
-| $M_2$     | 27 A                | Time-Delay | 27 A × 1.75        | 47.25 A           | **50 A** (Standard Size)      |
-| $M_3$     | 11 A                | Time-Delay | 11 A × 1.75        | 19.25 A           | **20 A** (Standard Size)      |
+All three motors are 460 V, 3-phase, so their FLCs come from the 460 V column of Table 430.250.
+
+| Motor No. | Size | FLC (Table 430.250) | OCPD Type  | Table 430.52(C)(1) Limit | Calculated Target | Standard OCPD Size (Round Up) |
+| --------- | ---- | ------------------- | ---------- | ------------------ | ----------------- | ----------------------------- |
+| $M_1$     | 50 HP  | 65 A              | Time-Delay | 65 A × 1.75        | 113.75 A          | **125 A** (Standard Size)     |
+| $M_2$     | 20 HP  | 27 A              | Time-Delay | 27 A × 1.75        | 47.25 A           | **50 A** (Standard Size)      |
+| $M_3$     | 7½ HP  | 11 A              | Time-Delay | 11 A × 1.75        | 19.25 A           | **20 A** (Standard Size)      |
 
 To size the feeder OCPD supplying all three motors using Dual-Element Time-Delay Fuses (NEC 430.62(A)):
 
-- Step 1: Identify the largest individual branch OCPD rating = **110 A** (for $M_1$).
+- Step 1: Identify the largest individual branch OCPD rating = **125 A** (for $M_1$).
 - Step 2: Sum the remaining motor FLCs = 27 A + 11 A = **38 A**.
-- Step 3: Feeder OCPD Limit = $110\text{ A} + 38\text{ A} = 148\text{ A}$.
-- Step 4: Round **down** to the next standard fuse rating to remain below the 148A ceiling: **Select standard 125 A fuses** for the feeder disconnect.
+- Step 3: Feeder OCPD Limit = $125\text{ A} + 38\text{ A} = 163\text{ A}$.
+- Step 4: Round **down** to the next standard fuse rating to remain below the 163A ceiling: **Select standard 150 A fuses** for the feeder disconnect.
 
 To size the same feeder using an Inverse-Time Circuit Breaker:
 
-- Step 1: Max branch CB for $M_1$ = $62\text{ A} \times 2.50 = 155\text{ A} \quad \Rightarrow \text{Select standard 175 A CB}$ (rounded up per Exception 1).
+- Step 1: Max branch CB for $M_1$ = $65\text{ A} \times 2.50 = 162.5\text{ A} \quad \Rightarrow \text{Select standard 175 A CB}$ (rounded up per Exception 1).
 - Step 2: Sum remaining FLCs = 27 A + 11 A = **38 A**.
 - Step 3: Feeder CB Limit = $175\text{ A} + 38\text{ A} = 213\text{ A}$.
 - Step 4: Round **down** to the next standard circuit breaker rating: **Select standard 200 A CB** for the feeder.
@@ -89,6 +102,5 @@ Section 430.102 — Location of Disconnecting Means
 
 ### Related NEC Tables
 
-Table 240.6(A) — Standard Ampere Ratings for Fuses and Circuit Breakers<br/>
-Table 430.52 — Maximum Rating of Motor Branch-Circuit Protective Devices<br/>
+Table 430.52(C)(1) — Maximum Rating of Motor Branch-Circuit Protective Devices<br/>
 Table 430.250 — Three-Phase AC Motor Full-Load Currents
