@@ -7,9 +7,8 @@ Specifically, the **Informational Notes to NEC 210.19(A)** (branch circuits) and
 - A maximum of **3%** on the branch circuit or the feeder individually.
 - A maximum of **5%** combined total from the service point to the final outlet.
 
-These are Informational Notes, which under NEC 90.5(C) are explanatory and **not enforceable as Code requirements**. They are routinely written into project specifications as hard limits, so in practice they are usually treated as such.
 
-To accommodate this, conductors must be upsized when necessary to lower overall circuit impedance.
+Conductors must be upsized when necessary to lower overall circuit impedance.
 
 ---
 
@@ -93,7 +92,6 @@ $$
 
 ### Related NEC Articles
 
-Section 90.5(C) — Explanatory Material (status of Informational Notes)<br/>
 Section 210.19(A) — Branch Circuit Voltage Drop Informational Note<br/>
 Section 215.2(A)(1) — Feeder Voltage Drop Informational Note
 
