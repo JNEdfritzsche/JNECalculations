@@ -19,7 +19,7 @@ The design configuration determines the fill limits under NEC Article 392:
 
 ### Fittings
 
-Fittings include tees, elbows, crosses, and vertical risers. Sizing horizontal bends must respect the minimum bending radius of the cables being installed (NEC 300.34 and Article 392).
+Fittings include tees, elbows, crosses, and vertical risers. Sizing horizontal bends must respect the minimum bending radius of the cables being installed (NEC 305.13(C) and Article 392).
 
 ### Expansion Joints
 
@@ -76,7 +76,7 @@ Note that the threshold here is 2000 V rather than the 600 V often assumed. Belo
 
 ### Related NEC Articles
 
-Section 300.34 — Conductor Bending Radius<br/>
+Section 305.13(C) — Conductor Bending Radius<br/>
 Section 392.10 — Uses Permitted for Cable Trays<br/>
 Section 392.20 — Cable and Conductor Installation in Trays<br/>
 Section 392.22 — Number of Cables or Conductors in Cable Trays<br/>

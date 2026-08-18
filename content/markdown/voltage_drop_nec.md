@@ -2,7 +2,7 @@
 
 Voltage drop must be accounted for in circuit design, especially for long conductor runs. Under the National Electrical Code (NEC) 2026, voltage drop parameters are defined by advisory guidelines rather than rigid branch-circuit rules. 
 
-Specifically, the **Informational Notes to NEC 210.19(A)** (branch circuits) and **NEC 215.2(A)(1)** (feeders) recommend limiting voltage drop to:
+Specifically, the **Informational Notes to NEC 210.19(A)** (branch circuits) and **NEC 215.4(A)(1)** (feeders) recommend limiting voltage drop to:
 
 - A maximum of **3%** on the branch circuit or the feeder individually.
 - A maximum of **5%** combined total from the service point to the final outlet.
@@ -93,7 +93,7 @@ $$
 ### Related NEC Articles
 
 Section 210.19(A) — Branch Circuit Voltage Drop Informational Note<br/>
-Section 215.2(A)(1) — Feeder Voltage Drop Informational Note
+Section 215.4(A)(1) — Feeder Voltage Drop Informational Note
 
 ### Related NEC Tables
 

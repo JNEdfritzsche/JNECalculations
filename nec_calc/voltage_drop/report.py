@@ -215,7 +215,7 @@ def _footnotes(results: list[dict[str, Any]]) -> list[str]:
 
     notes += [
         "Target voltage drop is typically ≤ 3% for branch circuits and ≤ 5% total, per the "
-        f"Informational Notes to {edition} 210.19(A) and 215.2(A), unless project "
+        f"Informational Notes to {edition} 210.19(A) and 215.4(A), unless project "
         "specifications or the authority having jurisdiction dictate otherwise.",
         "This report is based on the input values entered into the calculator. Final selections "
         "and design decisions should be verified against the NEC, project specifications, "

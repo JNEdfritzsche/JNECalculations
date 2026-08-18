@@ -109,7 +109,7 @@ $$ \%\Delta V = \frac{5.41 \text{ V}}{125 \text{ V}} \times 100\% = 4.33\% \leq 
 ### Related NEC Articles
 
 Section 210.19(A) — Branch Circuit Voltage Drop Informational Note<br/>
-Section 215.2(A)(1) — Feeder Voltage Drop Informational Note
+Section 215.4(A)(1) — Feeder Voltage Drop Informational Note
 
 ### Related NEC Tables
 

@@ -18,7 +18,7 @@ Conduit fill limits are based on the number of conductors to ensure proper heat 
 - Where conduit nipples do not exceed 24 inches (600 mm) in length, they are permitted to be filled up to **60%** of their cross-sectional area, and ampacity adjustment factors of Table 310.15(C)(1) do not apply.
 
 **Voltage Segregation:**
-- Under NEC 300.3(C)(1), conductors of different systems (such as 120V and 480V) can occupy the same conduit, provided all conductors are insulated for the maximum system voltage of any conductor in the enclosure. However, low-voltage instrumentation/control signals should be isolated from power runs to prevent electromagnetic interference.
+- Under NEC 300.5(C)(1), conductors of different systems (such as 120V and 480V) can occupy the same conduit, provided all conductors are insulated for the maximum system voltage of any conductor in the enclosure. However, low-voltage instrumentation/control signals should be isolated from power runs to prevent electromagnetic interference.
 
 ---
 
@@ -92,9 +92,8 @@ To prevent physical stress on the conductor insulation during installation, the 
 
 ### Related NEC Articles
 
-Section 300.3 — Conductors of Different Systems<br/>
-Section 310.15 — Ampacity Correction and Adjustment Factors<br/>
-Section 310.16 — Allowable Ampacities of Conductors
+Section 300.5 — Conductors of Different Systems<br/>
+Section 310.15 — Ampacity Correction and Adjustment Factors
 
 ### Related NEC Tables
 

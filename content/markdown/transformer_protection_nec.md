@@ -66,7 +66,7 @@ Note 1 of Table 450.5(B) is written against "125 percent of this current" only, 
 
 ### Continuous Circuit Loading
 
-Under NEC 215.2(A)(1), transformer supply feeders must be sized for 125% of the continuous load. This thermal margin must be maintained to prevent conductor degradation.
+Under NEC 215.4(A)(1), transformer supply feeders must be sized for 125% of the continuous load. This thermal margin must be maintained to prevent conductor degradation.
 
 ### Fuses vs. Circuit Breakers
 

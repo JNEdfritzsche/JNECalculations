@@ -78,7 +78,7 @@ $$\frac{V_1}{V_2} = \frac{13{,}800}{600} = 23$$
 
 ### Related NEC Articles
 
-Section 215.2 — Feeder Minimum Rating and Size<br/>
+Section 4 — Feeder Minimum Rating and Size<br/>
 Section 450.5 — Overcurrent Protection of Transformers
 
 ### Related NEC Tables
