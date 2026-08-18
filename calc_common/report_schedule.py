@@ -219,8 +219,19 @@ def _grouped(columns: list[Column], spec: ReportSpec) -> list[Column]:
         ))
     return out
 
-def _constants_line(constant: list[tuple[str, Any]]) -> str:
-    return "Same for all rows:   " + "   ·   ".join(f"{header} {value}" for header, value in constant)
+CONSTANTS_HEADING = "Same for all rows"
+
+
+def _write_constants_word(doc, constant: list[tuple[str, Any]]) -> None:
+    # One line, but bold the input name so it reads apart from the value it carries.
+    para = doc.add_paragraph()
+    for index, (header, value) in enumerate(constant):
+        prefix = f"{CONSTANTS_HEADING}:   " if index == 0 else "   ·   "
+        for text, bold in ((prefix, index == 0), (f"{header}: ", True), (str(value), False)):
+            run = para.add_run(text)
+            run.bold = bold
+            run.italic = True
+            run.font.size = Pt(8)
 
 
 # ============================================================
@@ -342,6 +353,36 @@ def _write_schedule_table(ws, header_row: int, tag: str, cols: list[Column],
         last = get_column_letter(len(headers))
         ws.auto_filter.ref = f"A{header_row}:{last}{header_row + len(table_rows)}"
 
+def _fit_column(ws, col_idx: int, widest: int) -> None:
+    # Grow a column to fit the constants block, never shrink it — the schedule table above sized these same columns for its own data and still has to fit.
+    letter = get_column_letter(col_idx)
+    current = ws.column_dimensions[letter].width or 0
+    ws.column_dimensions[letter].width = max(current, min(MAX_COL_WIDTH, widest + 2))
+
+
+def _write_constants_excel(ws, row: int, constant: list[tuple[str, Any]]) -> int:
+    # A key/value block rather than one crammed line: column A is always the input, column B always its value, so nothing depends on reading a separator right. Returns the first row below the block.
+    heading = ws.cell(row=row, column=1, value=CONSTANTS_HEADING)
+    heading.font = Font(bold=True)
+    row += 1
+
+    labels, values = [], []
+    for header, value in constant:
+        label = ws.cell(row=row, column=1, value=header)
+        label.font = Font(bold=True, size=9)
+        label.fill = INPUT_HEADER_FILL
+        cell = ws.cell(row=row, column=2, value=_excel_value(value, False, False))
+        cell.font = Font(size=9)
+        labels.append(len(header))
+        values.append(_display_len(cell.value))
+        row += 1
+
+    # The heading is not fitted — its row leaves column B empty, so it can overflow.
+    _fit_column(ws, 1, max(labels))
+    _fit_column(ws, 2, max(values))
+    return row
+
+
 def _set_landscape(doc) -> None:
     """Widen to landscape so the multi-column schedule table isn't cramped."""
     try:
@@ -387,10 +428,7 @@ def build_schedule_word(spec: ReportSpec, rows: list[dict[str, Any]]):
             )
 
         if constant:
-            para = doc.add_paragraph()
-            run = para.add_run(_constants_line(constant))
-            run.italic = True
-            run.font.size = Pt(8)
+            _write_constants_word(doc, constant)
 
     # Calculator-supplied reference content (equations, etc.).
     if spec.word_reference:
@@ -430,9 +468,7 @@ def build_schedule_excel(spec: ReportSpec, rows: list[dict[str, Any]]):
         row += len(table_rows) + 2
 
         if constant:
-            cell = ws.cell(row=row, column=1, value=_constants_line(constant))
-            cell.font = Font(italic=True, size=9)
-            row += 2
+            row = _write_constants_excel(ws, row, constant) + 1
 
         if index:
             continue
