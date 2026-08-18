@@ -1247,7 +1247,7 @@ elif page == "Panel Schedule":
         show_code_note(code_mode)
         st.markdown(
             "- Enter header and schedule data below to build a panel schedule workbook.\n"
-            "- Use the **Download Empty Template** button for a clean copy with today’s date.\n"
+            "- Use the **Download Empty Template** button for a clean copy with today's date.\n"
             "- The exported file preserves the template layout, styles, and formulas."
         )
 
