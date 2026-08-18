@@ -72,7 +72,7 @@ Under NEC 215.4(A)(1), transformer supply feeders must be sized for 125% of the 
 
 Circuit breakers are often specified for high-value industrial assets to prevent single-phase tripping (which can damage downstream three-phase motors). Fuses are cost-effective and offer exceptionally high short-circuit interrupting ratings. Standard ratings are defined in NEC 240.6(A).
 
----
+<!-----
 
 ## Sizing Examples (Supervised Industrial Location)
 
@@ -188,7 +188,7 @@ Based on the calculated nominal FLCs and standard NEC rules, the required overcu
 **75 kVA, 600 V / 208 V, Dry-Type, Both Sides Protected Transformer**
 
 - Primary: 175 A rated fuse or circuit breaker
-- Secondary: 300 A rated fuse or circuit breaker
+- Secondary: 300 A rated fuse or circuit breaker -->
 
 ---
 

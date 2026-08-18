@@ -16,7 +16,7 @@ For continuous duty motor branch circuits, NEC 430.22 requires sizing conductors
 
 $$I_{\text{target}} = 1.25 \times I_{\text{FLC}}$$
 
----
+<!-- ---
 
 ## Example 1 — Single-Phase AC Motor
 
@@ -82,7 +82,7 @@ Conductor Sizing (NEC Table 310.16):
 
 **Result: Table I_FLC = 20 A &nbsp;|&nbsp; Conductor Sizing Target = 25 A**
 
----
+--- -->
 
 ## Appendix
 <!-- 

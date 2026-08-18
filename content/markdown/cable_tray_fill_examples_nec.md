@@ -1,6 +1,6 @@
 ## Overview
 
-Sizing cable trays under the NEC requires evaluating the type of cables, quantities, and cross-sectional dimensions. Cable tray fill evaluation is based on **NEC 392.22** to ensure proper heat dissipation and mechanical safety.
+<!-- Sizing cable trays under the NEC requires evaluating the type of cables, quantities, and cross-sectional dimensions. Cable tray fill evaluation is based on **NEC 392.22** to ensure proper heat dissipation and mechanical safety.
 
 Depending on the cable sizes present, 392.22 applies one of two tests:
 
@@ -11,7 +11,7 @@ $$ \text{Width test:} \quad \sum \text{OD}_{\text{cable}} \leq \text{inside widt
 
 Where the area test applies, utilization is expressed against the *allowable fill area*:
 
-$$ \text{Utilization} = \frac{\sum A_{\text{cable}}}{A_{\text{allowable}}} \times 100\% $$
+$$ \text{Utilization} = \frac{\sum A_{\text{cable}}}{A_{\text{allowable}}} \times 100\% $$ -->
 
 ---
 

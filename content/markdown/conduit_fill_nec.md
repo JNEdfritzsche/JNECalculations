@@ -22,7 +22,7 @@ Conduit fill limits are based on the number of conductors to ensure proper heat 
 
 ---
 
-## General Method
+<!-- ## General Method
 
 Once conductors have been sized, they are routed through conduit runs based on voltage level and conductor size. Below are two examples.
 
@@ -76,11 +76,11 @@ At 40% fill, a 3" RMC can only carry 3.000 in². Thus, the #10 AWG run will over
   - Total Conductor Area = $123 × 0.0211 = 2.5953 \text{ in}^2$
   - Fill% = $(2.5953 / 7.500) \times 100\% = 34.60\% \leq 40\% \quad \checkmark$
 
----
+--- -->
 
 ## Bend Radii
 
-To prevent physical stress on the conductor insulation during installation, the conduit bend radius must comply with NEC Chapter 9, Table 2 (or standard bending requirements defined in specific raceway Articles, such as NEC 344.24 for RMC and NEC 358.24 for EMT).
+To prevent physical stress on the conductor insulation during installation, the conduit bend radius must comply with NEC Chapter 9, Table 2 (or standard bending requirements defined in specific raceway Articles 3XX.24, such as NEC 344.24 for RMC and NEC 358.24 for EMT).
 
 ---
 
@@ -94,6 +94,8 @@ To prevent physical stress on the conductor insulation during installation, the 
 
 Section 300.5 — Conductors of Different Systems<br/>
 Section 310.15 — Ampacity Correction and Adjustment Factors
+Section 344.24 — Bending radius (NM/NMC)
+Section 358.24 — Bending radius (EMT)
 
 ### Related NEC Tables
 

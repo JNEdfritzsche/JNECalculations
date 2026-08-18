@@ -2,9 +2,9 @@
 
 This section walks through worked examples for calculating and sizing transformer Overcurrent Protective Devices (OCPDs) under the National Electrical Code (NEC) 2026. Sizing is governed by NEC Article 450.5 and the corresponding Tables 450.5(A) and 450.5(B). Sizing maximums differ based on whether the primary nominal voltage is over 1000V or 1000V and less, and whether secondary protection is provided.
 
----
+<!-----
 
-## Example 1 — Transformers Over 1000V; Primary-Only Protection
+ ## Example 1 — Transformers Over 1000V; Primary-Only Protection
 
 A transformer has the following nameplate parameters:
 
@@ -136,7 +136,7 @@ $$ I_{\text{sec, max}} = 62.5 \text{ A} \times 1.25 = 78.13 \text{ A} $$
 Since rounding up is permitted for the 125% secondary limit, we round up to the next standard rating:
 - **Select standard 80 A fuse or circuit breaker**
 
----
+--- -->
 
 ## Appendix
 

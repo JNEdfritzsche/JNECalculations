@@ -10,7 +10,7 @@ Where $S$ is the apparent power (VA) and $V$ is the line-to-line voltage (V).
 
 ---
 
-## Example 1 — Single-Phase Step-Down Transformer
+<!-- ## Example 1 — Single-Phase Step-Down Transformer
 
 **50 kVA | 1φ | 600 V primary / 240 V secondary**
 
@@ -64,7 +64,7 @@ $$I_{\text{sec}} = \frac{S}{\sqrt{3} \cdot V_{\text{sec}}} = \frac{300{,}000}{\s
 
 $$\frac{V_1}{V_2} = \frac{13{,}800}{600} = 23$$
 
-**Result: I_pri = 12.55 A &nbsp;|&nbsp; I_sec = 288.68 A &nbsp;|&nbsp; Turns ratio = 23**
+**Result: I_pri = 12.55 A &nbsp;|&nbsp; I_sec = 288.68 A &nbsp;|&nbsp; Turns ratio = 23** -->
 
 ---
 

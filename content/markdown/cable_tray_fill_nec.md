@@ -51,10 +51,10 @@ Unlike other standards that rely on arbitrary fill margins, the **NEC mandates s
 
 Single-conductor cables in tray must be 1/0 AWG or larger, and are sized per **NEC 392.22(B)(1)**, which splits four ways by conductor size:
 
-- **(B)(1)(a)** — all cables 1000 kcmil or larger: sum of **diameters** must not exceed the tray width.
-- **(B)(1)(b)** — all cables 250 kcmil through 900 kcmil: sum of **areas** must not exceed Column 1 of Table 392.22(B)(1).
-- **(B)(1)(c)** — 1000 kcmil and larger installed with smaller cables: the smaller cables are limited by the Column 2 computation, *(Column 1 value) − (1.1 × Sd)*.
-- **(B)(1)(d)** — where any cables **1/0 through 4/0** are installed: sum of **diameters** must not exceed the tray width. This is the common industrial case, and it is a width check.
+- **(a)** — all cables 1000 kcmil or larger: sum of **diameters** must not exceed the tray width.
+- **(b)** — all cables 250 kcmil through 900 kcmil: sum of **areas** must not exceed Column 1 of Table 392.22(B)(1).
+- **(c)** — 1000 kcmil and larger installed with smaller cables: the smaller cables are limited by the Column 2 computation, *(Column 1 value) − (1.1 × Sd)*.
+- **(d)** — where any cables **1/0 through 4/0** are installed: sum of **diameters** must not exceed the tray width. This is the common industrial case, and it is a width check.
 
 ### Voltage Segregation (Barrier Strips)
 

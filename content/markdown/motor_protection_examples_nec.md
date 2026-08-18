@@ -10,7 +10,7 @@ Where $k$ is the multiplier from NEC Table 430.52(C)(1), and $I_{\text{FLC}}$ is
 
 Standard ratings are as listed in NEC 240.6(A).
 
----
+<!-- ---
 
 ## Example 1 — DC Motor (Constant Voltage)
 
@@ -175,7 +175,7 @@ $$ I_{\text{NTD}} = 125 \text{ A} \times 1.50 = 187.5 \text{ A} \quad \Rightarro
 
 $$ I_{\text{CB}} = 125 \text{ A} \times 1.50 = 187.5 \text{ A} \quad \Rightarrow \text{Select standard 200 A circuit breaker} $$
 
----
+--- -->
 
 ## Appendix
 
