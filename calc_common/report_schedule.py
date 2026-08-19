@@ -102,15 +102,43 @@ def get_rows(spec: ReportSpec) -> list[dict[str, Any]]:
         st.session_state[key] = []
     return st.session_state[key]
 
+# Streamlit refuses a session_state write for these, and raises when the widget is
+# next created rather than at the write, so they have to be kept out of the snapshot.
+UNSETTABLE_VALUE_TYPES = {
+    "trigger_value", "string_trigger_value", "json_trigger_value",
+    "chat_input_value", "file_uploader_state_value", "bytes_value",
+}
+
+def _unsettable(keys: list[str]) -> set[str]:
+    # The widget type isn't derivable from the key, so it is read off Streamlit's
+    # widget metadata. Only valid while the widgets are live — metadata for another
+    # page has already been discarded.
+    try:
+        from streamlit.runtime.state import get_session_state
+
+        state = get_session_state()._state
+        metadata = state._new_widget_state.widget_metadata
+        mapper = state._key_id_mapper
+        return {
+            key for key in keys
+            if (m := metadata.get(mapper.get_id_from_key(key))) is not None
+            and m.value_type in UNSETTABLE_VALUE_TYPES
+        }
+    except Exception:
+        # internals moved: drop the shapes a trigger or uploader would hold
+        return {k for k in keys if st.session_state.get(k) is False
+                or st.session_state.get(k) is None}
+
 def _snapshot_inputs(spec: ReportSpec) -> dict[str, Any]:
     # spec.prefix itself starts with the widget prefix, so without excluding it the
     # row list would be snapshotted into one of its own rows.
-    return {
-        key: value
-        for key, value in st.session_state.items()
+    keys = [
+        key for key in st.session_state
         if any(key.startswith(p) for p in spec.input_prefixes)
         and not key.startswith(spec.prefix)
-    }
+    ]
+    skip = _unsettable(keys)
+    return {key: st.session_state[key] for key in keys if key not in skip}
 
 def add_row(spec: ReportSpec, tag: str, result: dict[str, Any]):
     get_rows(spec).append({"tag": tag, "result": result, "inputs": _snapshot_inputs(spec)})
