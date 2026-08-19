@@ -157,25 +157,25 @@ def render_calc():
             else:
                 st.warning("No trade size of this conduit type accepts these cables.")
 
-        if st.checkbox("Show conduit cross-section diagram", value=True,
-                       key="oesc_conduit_fill_show_viz"):
-            if not result["internal_area_mm2"]:
-                st.warning("Select a conduit type and trade size to render the cross-section.")
-            else:
-                svg = build_cross_section_svg(result)
-                if svg is None:
-                    st.info("Add at least one cable with an area to render the layout.")
-                else:
-                    st.markdown(svg, unsafe_allow_html=True)
-                    for index, group in enumerate(result["groups"]):
-                        swatch = group_swatch_svg(group, index)
-                        legend, label = st.columns([1, 6], vertical_alignment="center")
-                        if swatch:
-                            legend.markdown(swatch, unsafe_allow_html=True)
-                        label.caption(
-                            f"{group['name'] or '[unnamed]'} — {group['qty']}× "
-                            f"{group['conductors_per_cable']}-conductor"
-                        )
+        # if st.checkbox("Show conduit cross-section diagram", value=True,
+        #                key="oesc_conduit_fill_show_viz"):
+        #     if not result["internal_area_mm2"]:
+        #         st.warning("Select a conduit type and trade size to render the cross-section.")
+        #     else:
+        #         svg = build_cross_section_svg(result)
+        #         if svg is None:
+        #             st.info("Add at least one cable with an area to render the layout.")
+        #         else:
+        #             st.markdown(svg, unsafe_allow_html=True)
+        #             for index, group in enumerate(result["groups"]):
+        #                 swatch = group_swatch_svg(group, index)
+        #                 legend, label = st.columns([1, 6], vertical_alignment="center")
+        #                 if swatch:
+        #                     legend.markdown(swatch, unsafe_allow_html=True)
+        #                 label.caption(
+        #                     f"{group['name'] or '[unnamed]'} — {group['qty']}× "
+        #                     f"{group['conductors_per_cable']}-conductor"
+        #                 )
 
         st.divider()
         render_add_to_schedule(result)
