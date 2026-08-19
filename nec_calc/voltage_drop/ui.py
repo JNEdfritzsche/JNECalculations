@@ -2,6 +2,7 @@ from typing import Any
 
 import streamlit as st
 
+from calc_common.report_schedule import apply_restore
 from calc_common.enums import (
     ConductorMaterial,
     ConduitMaterial,
@@ -22,7 +23,11 @@ from lib.nec_tables import (
 )
 
 from nec_calc.voltage_drop.calculation import calc_voltage_drop
-from nec_calc.voltage_drop.report import render_add_to_schedule, render_schedule_section
+from nec_calc.voltage_drop.report import (
+    VD_SCHEDULE_SPEC,
+    render_add_to_schedule,
+    render_schedule_section,
+)
 
 def enum_key(value):
     return value.key if value is not None else None
@@ -78,6 +83,8 @@ def _render_equations_used(vd_mode: VDMode, use_custom_pf: bool, use_custom_T_op
 
 @st.fragment()
 def render_calc():
+    apply_restore(VD_SCHEDULE_SPEC)
+
     inputs_pane, result_pane = st.columns([1.45,1], gap="large")
     
     with inputs_pane, st.container(border=True):
@@ -102,10 +109,11 @@ def render_calc():
         # VD CALC MODE & SYSTEM TYPE
         # --------------------
         c1, c2 = st.columns(2)
-        vd_mode = enum_radio(c1, "Calculation method", VDMode)
+        vd_mode = enum_radio(c1, "Calculation method", VDMode, key="vd_mode")
         
         ex = (SystemTypes.DC,) if vd_mode == VDMode.TABLE9_Z else ()
-        system_type = enum_selectbox(c2, "System Type", SystemTypes.exclude(ex))
+        system_type = enum_selectbox(c2, "System Type", SystemTypes.exclude(ex),
+                                      key=f"vd_system_type_{'t9' if ex else 'all'}")
         system_type_label = system_type.label
         
         # --------------------
@@ -117,7 +125,8 @@ def render_calc():
             "Calculation current (A)",
             min_value=0.0,
             value=50.0,
-            step=0.1
+            step=0.1,
+            key="vd_current",
         )
         current = Current(I_calc)
 
@@ -125,7 +134,8 @@ def render_calc():
             "Nominal voltage (V)",
             min_value=1.0,
             value=600.0,
-            step=1.0
+            step=1.0,
+            key="vd_vnom",
         )
         voltage = Voltage(V_nom)
         
@@ -134,8 +144,8 @@ def render_calc():
 
         c1, c2 = st.columns(2)
 
-        L_ft = c1.number_input("One-way length (ft)", min_value=0.0, value=80.0, step=1.0)
-        n_parallel = c2.number_input("Parallel conductors per phase/pole", min_value=1, value=1, step=1)
+        L_ft = c1.number_input("One-way length (ft)", min_value=0.0, value=80.0, step=1.0, key="vd_length")
+        n_parallel = c2.number_input("Parallel conductors per phase/pole", min_value=1, value=1, step=1, key="vd_parallel")
 
         # ----------
         # Resistance Method (NEC: Chapter 9, Table 8)
@@ -147,22 +157,23 @@ def render_calc():
                 max_value=1.0,
                 step=0.01,
                 value=0.85,
-                key="power_factor"
+                key="vd_power_factor"
             )
 
             size = st.selectbox(
                 "Conductor size",
                 list(get_standard_conductor_sizes_t8().keys()),
                 index=0,
+                key="vd_size_t8",
             )
             size_num, size_unit = size.split()
 
             c1, c2 = st.columns(2)
 
-            conductor_material = enum_selectbox(c1, "Conductor material", ConductorMaterial.exclude(ConductorMaterial.NA))
+            conductor_material = enum_selectbox(c1, "Conductor material", ConductorMaterial.exclude(ConductorMaterial.NA), key="vd_material")
 
             if conductor_material == ConductorMaterial.CU:
-                coating_type = enum_selectbox(c2, "Coating type", CopperCoating)
+                coating_type = enum_selectbox(c2, "Coating type", CopperCoating, key="vd_coating")
             else:
                 coating_type = None
 
@@ -171,6 +182,7 @@ def render_calc():
                 min_value=0.0,
                 value=75.0,
                 step=1.0,
+                key="vd_T_op",
             )
 
             # skin_effect = ... maybe??
@@ -183,9 +195,9 @@ def render_calc():
         if vd_mode == VDMode.TABLE9_Z:
             c1, c2 = st.columns(2)
 
-            conductor_material = enum_selectbox(c1, "Conductor material", ConductorMaterial.exclude(ConductorMaterial.NA))
+            conductor_material = enum_selectbox(c1, "Conductor material", ConductorMaterial.exclude(ConductorMaterial.NA), key="vd_material")
 
-            conduit_material = enum_selectbox(c2, "Conduit material", ConduitMaterial, index=1)
+            conduit_material = enum_selectbox(c2, "Conduit material", ConduitMaterial, index=1, key="vd_conduit")
 
             valid_sizes = [
                 size for size in list(get_standard_conductor_sizes_t9().keys())
@@ -200,6 +212,7 @@ def render_calc():
                 "Conductor size",
                 valid_sizes,
                 index=0,
+                key="vd_size_t9",
             )
             size_num, size_unit = size.split()
 
@@ -210,14 +223,14 @@ def render_calc():
                 value=False,
                 on_change=reset_to_default,
                 args=(
-                    "use_custom_pf",
+                    "vd_use_custom_pf",
                     {
-                        "power_factor": 0.85,
-                        "use_custom_T_op": False,
-                        "T_op": 75.0,
+                        "vd_power_factor": 0.85,
+                        "vd_use_custom_T_op": False,
+                        "vd_T_op": 75.0,
                     },
                 ),
-                key="use_custom_pf",
+                key="vd_use_custom_pf",
             )
 
             power_factor = c2.number_input(
@@ -227,7 +240,7 @@ def render_calc():
                 step=0.01,
                 value=0.85,
                 disabled=not use_custom_pf,
-                key="power_factor"
+                key="vd_power_factor"
             )
 
             c1, c2 = st.columns(2, vertical_alignment="bottom")
@@ -238,12 +251,12 @@ def render_calc():
                 disabled=not use_custom_pf,
                 on_change=reset_to_default,
                 args=(
-                    "use_custom_T_op",
+                    "vd_use_custom_T_op",
                     {
-                        "T_op": 75.0,
+                        "vd_T_op": 75.0,
                     },
                 ),
-                key="use_custom_T_op",
+                key="vd_use_custom_T_op",
             )
 
             T_op = c2.number_input(
@@ -252,7 +265,7 @@ def render_calc():
                 value=75.0,
                 step=1.0,
                 disabled=not use_custom_T_op,
-                key="T_op",
+                key="vd_T_op",
             )
 
         # ----------
@@ -265,25 +278,26 @@ def render_calc():
                 max_value=1.0,
                 step=0.01,
                 value=0.85,
-                key="power_factor"
+                key="vd_power_factor"
             )
 
-            manual_r = st.number_input("Manual R-value (Ω/kft)", min_value=0.0, value=0.05)
+            manual_r = st.number_input("Manual R-value (Ω/kft)", min_value=0.0, value=0.05, key="vd_manual_r")
             st.caption("Enter the resistance value to use directly. This should already reflect the conductor size, material, and temperature you intend to use.")
 
             # OPTIONAL INPUTS FOR DOCUMENTATION
             with st.expander("Optional conductor reference fields", expanded=False):
                 c1, c2, c3 = st.columns(3)
 
-                conductor_material = enum_selectbox(c1, "Conductor material", ConductorMaterial)
+                conductor_material = enum_selectbox(c1, "Conductor material", ConductorMaterial, key="vd_material_manual")
                 
-                coating_type = enum_selectbox(c2, "Coating type", CopperCoating)
+                coating_type = enum_selectbox(c2, "Coating type", CopperCoating, key="vd_coating")
 
 
                 size = c2.selectbox(
                     "Conductor size",
                     ["Not specified"] + list(get_standard_conductor_sizes_t8().keys()),
                     index=0,
+                    key="vd_size_manual",
                 )
 
                 T_op = c3.number_input(
@@ -291,6 +305,7 @@ def render_calc():
                     min_value=0.0,
                     value=75.0,
                     step=1.0,
+                    key="vd_T_op_manual",
                 )
 
                 if size != "Not specified":

@@ -12,6 +12,7 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 import pandas as pd
 import streamlit as st
+from streamlit.components.v1 import html as components_html
 
 from calc_common.formatting import Quantity, fmt
 from calc_common.report_helper import (
@@ -30,7 +31,6 @@ INPUT_HEADER_FILL = PatternFill("solid", fgColor="EDEDED")
 RESULT_HEADER_FILL = PatternFill("solid", fgColor="D6E4F0")
 RESULT_FONT_COLORS = {"green": "1B7F3B", "blue": "1F4E79"}
 
-
 RESULTS_SHEET = "Results"
 INPUTS_SHEET = "Inputs"
 
@@ -48,7 +48,7 @@ class Group:
 class Column:
     header: str
     get: ValueGetter
-    color: str | None = None  # headline emphasis: green = the answer, blue = the key selection
+    color: str | None = None  # export font colour: green = the answer, blue = the key selection
     result: bool = False  # value the calculator derived, as opposed to one the designer entered
     group: str | None = None  # key into ReportSpec.groups — Word prints the group in one cell
     always: bool = False  # keep the column even when every row shares one value
@@ -66,10 +66,13 @@ class ReportSpec:
     tag: str = "Tag"
     word_reference: WordRefBuilder | None = None  # appends equations/assumptions to the Word report
     groups: dict[str, Group] = field(default_factory=dict)  # Word-only cell merging
+    input_prefixes: tuple[str, ...] | None = None  # widget key prefixes to snapshot; () disables Edit
     prefix: str = field(init=False)  # namespaces every session_state and widget key
 
     def __post_init__(self):
         self.prefix = f"{self.code}_{self.calculator}_schedule"
+        if self.input_prefixes is None:
+            self.input_prefixes = (f"{self.code}_{self.calculator}_",)
 
 
 # ============================================================
@@ -99,8 +102,29 @@ def get_rows(spec: ReportSpec) -> list[dict[str, Any]]:
         st.session_state[key] = []
     return st.session_state[key]
 
+def _snapshot_inputs(spec: ReportSpec) -> dict[str, Any]:
+    # spec.prefix itself starts with the widget prefix, so without excluding it the
+    # row list would be snapshotted into one of its own rows.
+    return {
+        key: value
+        for key, value in st.session_state.items()
+        if any(key.startswith(p) for p in spec.input_prefixes)
+        and not key.startswith(spec.prefix)
+    }
+
 def add_row(spec: ReportSpec, tag: str, result: dict[str, Any]):
-    get_rows(spec).append({"tag": tag, "result": result})
+    get_rows(spec).append({"tag": tag, "result": result, "inputs": _snapshot_inputs(spec)})
+
+def find_row(spec: ReportSpec, tag: str) -> dict[str, Any] | None:
+    return next((r for r in get_rows(spec) if r["tag"] == tag), None)
+
+def replace_row(spec: ReportSpec, tag: str, result: dict[str, Any]) -> None:
+    for row in get_rows(spec):
+        if row["tag"] == tag:
+            row["result"] = result
+            row["inputs"] = _snapshot_inputs(spec)
+            return
+    add_row(spec, tag, result)
 
 def remove_row(spec: ReportSpec, identifier: str | int):
     if isinstance(identifier, int):
@@ -110,6 +134,26 @@ def remove_row(spec: ReportSpec, identifier: str | int):
 
 def clear(spec: ReportSpec) -> None:
     st.session_state[_rows_key(spec)] = []
+
+def _keep_key(spec: ReportSpec) -> str:
+    return f"{spec.prefix}_keep"
+
+def apply_restore(spec: ReportSpec) -> None:
+    # Streamlit drops a widget's state on any run where the widget isn't rendered, so
+    # navigating to another calculator and back would reset every input to its default.
+    # Only absent keys are filled, so a live value is never clobbered.
+    for key, value in st.session_state.get(_keep_key(spec), {}).items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
+    # Widget state can only be written before the widget is instantiated, so the Edit
+    # button only queues the snapshot and this runs it at the top of the next pass.
+    pending = st.session_state.pop(f"{spec.prefix}_restore", None)
+    if not pending:
+        return
+    for key, value in pending["inputs"].items():
+        st.session_state[key] = value
+    st.session_state[f"{spec.prefix}_tag"] = pending["tag"]
 
 
 # ============================================================
@@ -127,8 +171,23 @@ def _safe(get: ValueGetter, result: dict[str, Any]) -> Any:
         return "—"
     return val if val not in (None, "") else "—"
 
+def _grouped_columns(spec: ReportSpec) -> list[Column]:
+    # A group header spans one contiguous run, so interleaved results and inputs
+    # would draw as alternating Results/Inputs bands rather than two.
+    columns = _as_columns(spec)
+    return [c for c in columns if c.result] + [c for c in columns if not c.result]
+
 def _headers(spec: ReportSpec) -> list[str]:
-    return [spec.tag] + [c.header for c in _as_columns(spec)]
+    return [spec.tag] + [c.header for c in _grouped_columns(spec)]
+
+def _grouped_headers(spec: ReportSpec) -> pd.MultiIndex:
+    # Streamlit draws the upper level as a spanning group header. An empty upper
+    # level is dropped rather than grouped under, which is what the tag wants.
+    return pd.MultiIndex.from_tuples(
+        [("", spec.tag)]
+        + [(RESULTS_SHEET if c.result else INPUTS_SHEET, c.header)
+           for c in _grouped_columns(spec)]
+    )
 
 def _rows_for(spec: ReportSpec, rows: list[dict[str, Any]], columns: list[Column]) -> list[dict[str, Any]]:
     table_rows: list[dict[str, Any]] = []
@@ -141,10 +200,7 @@ def _rows_for(spec: ReportSpec, rows: list[dict[str, Any]], columns: list[Column
     return table_rows
 
 def _build_table_rows(spec: ReportSpec, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return _rows_for(spec, rows, _as_columns(spec))
-
-def _result_headers(spec: ReportSpec) -> set[str]:
-    return {c.header for c in _as_columns(spec) if c.result}
+    return _rows_for(spec, rows, _grouped_columns(spec))
 
 def _split_columns(spec: ReportSpec) -> list[tuple[str, list[Column]]]:
     """Results first — the answers are what the schedule is read for."""
@@ -223,7 +279,7 @@ CONSTANTS_HEADING = "Same for all rows"
 
 
 def _write_constants_word(doc, constant: list[tuple[str, Any]]) -> None:
-    # One line, but bold the input name so it reads apart from the value it carries.
+    # Bold the input name so it reads apart from the value it carries.
     para = doc.add_paragraph()
     for index, (header, value) in enumerate(constant):
         prefix = f"{CONSTANTS_HEADING}:   " if index == 0 else "   ·   "
@@ -354,14 +410,14 @@ def _write_schedule_table(ws, header_row: int, tag: str, cols: list[Column],
         ws.auto_filter.ref = f"A{header_row}:{last}{header_row + len(table_rows)}"
 
 def _fit_column(ws, col_idx: int, widest: int) -> None:
-    # Grow a column to fit the constants block, never shrink it — the schedule table above sized these same columns for its own data and still has to fit.
+    # Never shrink: the table above sized these same columns for its own data.
     letter = get_column_letter(col_idx)
     current = ws.column_dimensions[letter].width or 0
     ws.column_dimensions[letter].width = max(current, min(MAX_COL_WIDTH, widest + 2))
 
 
 def _write_constants_excel(ws, row: int, constant: list[tuple[str, Any]]) -> int:
-    # A key/value block rather than one crammed line: column A is always the input, column B always its value, so nothing depends on reading a separator right. Returns the first row below the block.
+    # Column A is always the input, column B its value. Returns the row below the block.
     heading = ws.cell(row=row, column=1, value=CONSTANTS_HEADING)
     heading.font = Font(bold=True)
     row += 1
@@ -377,7 +433,7 @@ def _write_constants_excel(ws, row: int, constant: list[tuple[str, Any]]) -> int
         values.append(_display_len(cell.value))
         row += 1
 
-    # The heading is not fitted — its row leaves column B empty, so it can overflow.
+    # The heading is left unfitted; its row leaves column B empty so it can overflow.
     _fit_column(ws, 1, max(labels))
     _fit_column(ws, 2, max(values))
     return row
@@ -495,9 +551,15 @@ def build_schedule_excel(spec: ReportSpec, rows: list[dict[str, Any]]):
 def render_schedule_commit(spec: ReportSpec, result: dict[str, Any] | None, can_add: bool) -> None:
     rows = get_rows(spec)
     placeholder = f"Calc {len(rows) + 1}"
+    tag_key = f"{spec.prefix}_tag"
 
-    with st.form(f"{spec.prefix}_add_form", clear_on_submit=True, border=False):
-        tag = st.text_input(spec.tag, key=f"{spec.prefix}_tag", placeholder=placeholder)
+    # clear_on_submit would wipe a tag written by Edit, so the reset is queued instead
+    # and applied here, before the widget is instantiated
+    if st.session_state.pop(f"{spec.prefix}_clear_tag", False):
+        st.session_state[tag_key] = ""
+
+    with st.form(f"{spec.prefix}_add_form", border=False):
+        tag = st.text_input(spec.tag, key=tag_key, placeholder=placeholder)
         submitted = st.form_submit_button(
             "Add to schedule",
             width="stretch",
@@ -510,13 +572,38 @@ def render_schedule_commit(spec: ReportSpec, result: dict[str, Any] | None, can_
     elif rows:
         st.caption(f"{len(rows)} in schedule")
 
+    pending_key = f"{spec.prefix}_pending"
+
     if submitted and result is not None:
-        add_row(spec, tag.strip() or placeholder, result)
-        st.rerun()
+        name = (tag or "").strip() or placeholder
+        if find_row(spec, name):
+            st.session_state[pending_key] = {"tag": name, "result": result}
+        else:
+            add_row(spec, name, result)
+            st.session_state[f"{spec.prefix}_clear_tag"] = True
+            st.rerun()
+
+    pending = st.session_state.get(pending_key)
+    if pending:
+        st.warning(f"**{pending['tag']}** is already in the schedule.")
+        keep, cancel = st.columns(2)
+        if keep.button("Overwrite it", key=f"{spec.prefix}_overwrite",
+                       type="primary", width="stretch"):
+            replace_row(spec, pending["tag"], pending["result"])
+            del st.session_state[pending_key]
+            st.session_state[f"{spec.prefix}_clear_tag"] = True
+            st.rerun()
+        if cancel.button("Cancel", key=f"{spec.prefix}_cancel_overwrite", width="stretch"):
+            del st.session_state[pending_key]
+            st.rerun()
 
 
 def render_schedule_table(spec: ReportSpec) -> None:
     rows = get_rows(spec)
+
+    # Every input has rendered by this point, so this is where the mirror that survives
+    # navigation is taken. Above the empty-schedule return, which fires on first visit.
+    st.session_state[_keep_key(spec)] = _snapshot_inputs(spec)
 
     st.markdown("### Report schedule")
 
@@ -526,10 +613,16 @@ def render_schedule_table(spec: ReportSpec) -> None:
     c1, _, c2 = st.columns(3)
     c1.caption(f"{len(rows)} calculation{'s' if len(rows) != 1 else ''} queued — select rows to remove them.")
     
-    remove_col, clear_col = c2.columns(2)
+    can_edit = bool(spec.input_prefixes)
+    controls = c2.columns(3 if can_edit else 2)
+    edit_col = controls[0] if can_edit else None
+    remove_col, clear_col = controls[-2], controls[-1]
     
+    table = pd.DataFrame(_build_table_rows(spec, rows), columns=_headers(spec))
+    table.columns = _grouped_headers(spec)
+
     state = st.dataframe(
-        pd.DataFrame(_build_table_rows(spec, rows), columns=_headers(spec)),
+        table,
         width="stretch",
         on_select="rerun",
         selection_mode="multi-row",
@@ -541,11 +634,25 @@ def render_schedule_table(spec: ReportSpec) -> None:
         len(_partition(columns, _rows_for(spec, rows, columns))[1])
         for _title, columns in _split_columns(spec)
     )
-    note = "The exports split results and inputs into separate tables."
+    note = "Results and inputs export as separate tables."
     if hoisted:
         note += f" {hoisted} column{'s' if hoisted != 1 else ''} identical on every row move to a note."
     st.caption(note)
 
+
+    editable = rows[int(selected[0])] if len(selected) == 1 else None
+    if edit_col is not None and edit_col.button(
+        "Edit selected",
+        key=f"{spec.prefix}_edit_selected",
+        disabled=not (editable and editable.get("inputs")),
+        width="stretch",
+    ):
+        st.session_state[f"{spec.prefix}_restore"] = {
+            "inputs": editable["inputs"],
+            "tag": editable["tag"],
+        }
+        st.session_state[f"{spec.prefix}_scroll"] = True
+        st.rerun()
 
     if remove_col.button(
         f"Remove selected ({len(selected)})",

@@ -228,6 +228,7 @@ TP_SCHEDULE_SPEC = ReportSpec(
     report_title="Transformer Protection — Calculation Results",
     sheet_name="Transformer Protection Schedule",
     tag="Tag / ID",
+    input_prefixes=("tp_",),
     cols=[
         # Inputs and the references the row was resolved against.
         Column("System", _phase_label),

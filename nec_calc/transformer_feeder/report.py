@@ -169,6 +169,7 @@ TF_SCHEDULE_SPEC = ReportSpec(
     report_title="Transformer Feeder — Calculation Results",
     sheet_name="Transformer Feeder Schedule",
     tag="Tag / ID",
+    input_prefixes=("nec_tf_",),
     cols=[
         Column("System", _phase_label, group="system"),
         Column("Configuration", _configuration, group="system"),

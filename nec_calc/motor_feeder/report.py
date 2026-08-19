@@ -160,6 +160,7 @@ MF_SCHEDULE_SPEC = ReportSpec(
     report_title="Motor Feeder — Calculation Results",
     sheet_name="Motor Feeder Schedule",
     tag="Tag / ID",
+    input_prefixes=("mf_",),
     cols=[
         Column("System", lambda r: get_first(r, "phase_label", default="—")),
         Column("Motor", _hp),

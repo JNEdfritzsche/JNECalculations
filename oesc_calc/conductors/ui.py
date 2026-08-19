@@ -1,6 +1,7 @@
 import streamlit as st
 
 from calc_common.formatting import fmt, format_cond_size
+from calc_common.report_schedule import apply_restore
 from calc_common.ui_helpers import eq
 
 from oesc_calc.common import tables
@@ -20,7 +21,11 @@ from oesc_calc.conductors.calculation import (
     calc_conductors,
     select_subrule,
 )
-from oesc_calc.conductors.report import render_add_to_schedule, render_schedule_section
+from oesc_calc.conductors.report import (
+    COND_SCHEDULE_SPEC,
+    render_add_to_schedule,
+    render_schedule_section,
+)
 
 
 def _correction_factor(corr_table: str | None, n_conductors: int) -> tuple[float, str]:
@@ -62,6 +67,8 @@ def _correction_factor(corr_table: str | None, n_conductors: int) -> tuple[float
 
 @st.fragment
 def render_calc():
+    apply_restore(COND_SCHEDULE_SPEC)
+
     inputs_pane, result_pane = st.columns([1.45, 1], gap="large")
 
     with inputs_pane, st.container(border=True):

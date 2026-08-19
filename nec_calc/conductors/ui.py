@@ -1,6 +1,7 @@
 import streamlit as st
 
 from calc_common.formatting import fmt
+from calc_common.report_schedule import apply_restore
 from calc_common.ui_helpers import eq
 from nec_calc.conductors.calculation import calc_conductors
 from lib.nec_tables import (
@@ -10,7 +11,11 @@ from lib.nec_tables import (
     TABLE_310_16,
     get_standard_conductor_sizes,
 )
-from nec_calc.conductors.report import render_add_to_schedule, render_schedule_section
+from nec_calc.conductors.report import (
+    COND_SCHEDULE_SPEC,
+    render_add_to_schedule,
+    render_schedule_section,
+)
 
 
 # Temperature conversions and mappings
@@ -96,6 +101,8 @@ AMBIENT_OPTIONS_BY_BASE = {
 
 @st.fragment
 def render_calc():
+    apply_restore(COND_SCHEDULE_SPEC)
+
     inputs_pane, result_pane = st.columns([1.45,1], gap="large")
     
     with inputs_pane, st.container(border=True,):

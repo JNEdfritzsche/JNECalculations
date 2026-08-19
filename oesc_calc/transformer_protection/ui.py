@@ -1,6 +1,7 @@
 import streamlit as st
 
 from calc_common.formatting import fmt
+from calc_common.report_schedule import apply_restore
 from calc_common.ui_helpers import eq
 from content.charts.flowcharts import get_oesc_transformer_protection_flowchart
 
@@ -18,7 +19,11 @@ from oesc_calc.transformer_protection.calculation import (
     calc_transformer_protection,
     oil_primary_multiplier,
 )
-from oesc_calc.transformer_protection.report import render_add_to_schedule, render_schedule_section
+from oesc_calc.transformer_protection.report import (
+    TP_SCHEDULE_SPEC,
+    render_add_to_schedule,
+    render_schedule_section,
+)
 
 
 def _show_device(entry: dict, round_to_std: bool) -> None:
@@ -33,6 +38,8 @@ def _show_device(entry: dict, round_to_std: bool) -> None:
 
 @st.fragment
 def render_calc():
+    apply_restore(TP_SCHEDULE_SPEC)
+
     st.markdown("### Transformer Protection Flowchart")
     st.graphviz_chart(get_oesc_transformer_protection_flowchart())
     st.caption("NOTE: P&S denotes direct secondary protection and **upstream** primary protection.")

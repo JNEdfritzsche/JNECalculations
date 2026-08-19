@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from lib.nec_tables import TABLES
+from calc_common.report_schedule import apply_restore
 from calc_common.enums import ServiceFactors, SystemTypes
 from calc_common.formatting import fmt
 from calc_common.table_helpers import get_row_headers
@@ -11,7 +12,11 @@ from calc_common.ui_helpers import enum_selectbox, eq
 
 from nec_calc.motor_feeder.calculation import get_appropriate_table, get_valid_voltages
 from nec_calc.motor_protection.calculation import calc_motor_protection
-from nec_calc.motor_protection.report import render_add_to_schedule, render_schedule_section
+from nec_calc.motor_protection.report import (
+    MP_SCHEDULE_SPEC,
+    render_add_to_schedule,
+    render_schedule_section,
+)
 
 
 # For a three-phase motor, one selection drives both the full-load-current
@@ -56,6 +61,8 @@ def _resolve_motor(phase: SystemTypes):
 
 @st.fragment
 def render_calc():
+    apply_restore(MP_SCHEDULE_SPEC)
+
     inputs_pane, result_pane = st.columns([1.45,1], gap="large")
     
     with inputs_pane, st.container(border=True,):
@@ -72,7 +79,7 @@ def render_calc():
         motor_type, category_key, design_group, type_label = _resolve_motor(phase)
 
         voltages = get_valid_voltages(phase.key, hp_list.get(hp), motor_type)
-        voltage = c2.selectbox("Voltage (V)", options=voltages) if voltages else None
+        voltage = c2.selectbox("Voltage (V)", options=voltages, key="mp_voltage") if voltages else None
         if voltage is None:
             st.warning(
                 "NEC Tables 430.247–430.250 list no full-load current for this HP / motor type. "

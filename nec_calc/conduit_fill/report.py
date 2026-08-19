@@ -153,6 +153,7 @@ CF_SCHEDULE_SPEC = ReportSpec(
     report_title="Conduit Fill — Calculation Results",
     sheet_name="Conduit Fill Schedule",
     tag="Tag / ID",
+    input_prefixes=("cfn_",),
     cols=[
         Column("Units", _units),
         Column("Conduit / tubing", _conduit),

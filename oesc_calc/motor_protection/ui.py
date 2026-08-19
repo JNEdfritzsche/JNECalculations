@@ -1,6 +1,7 @@
 import streamlit as st
 
 from calc_common.formatting import fmt
+from calc_common.report_schedule import apply_restore
 from calc_common.ui_helpers import eq
 
 from oesc_calc.motor_protection.calculation import (
@@ -14,11 +15,17 @@ from oesc_calc.motor_protection.calculation import (
     WOUND_ROTOR,
     calc_motor_protection,
 )
-from oesc_calc.motor_protection.report import render_add_to_schedule, render_schedule_section
+from oesc_calc.motor_protection.report import (
+    MP_SCHEDULE_SPEC,
+    render_add_to_schedule,
+    render_schedule_section,
+)
 
 
 @st.fragment
 def render_calc():
+    apply_restore(MP_SCHEDULE_SPEC)
+
     inputs_pane, result_pane = st.columns([1.45, 1], gap="large")
 
     with inputs_pane, st.container(border=True):

@@ -204,6 +204,7 @@ CT_SCHEDULE_SPEC = ReportSpec(
     report_title="Cable Tray Fill — Calculation Results",
     sheet_name="Cable Tray Fill Schedule",
     tag="Tag / ID",
+    input_prefixes=("ctfn_",),
     cols=[
         Column("Units", _units),
         Column("Cables", _cable_type),

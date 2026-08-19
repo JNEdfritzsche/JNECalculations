@@ -1,6 +1,7 @@
 import streamlit as st
 
 from calc_common.formatting import fmt
+from calc_common.report_schedule import apply_restore
 from calc_common.ui_helpers import eq
 
 from nec_calc.cable_tray_fill.calculation import (
@@ -14,12 +15,18 @@ from nec_calc.cable_tray_fill.calculation import (
     get_tray_widths,
     main_calc_cable_tray_fill,
 )
-from nec_calc.cable_tray_fill.report import render_add_to_schedule, render_schedule_section
+from nec_calc.cable_tray_fill.report import (
+    CT_SCHEDULE_SPEC,
+    render_add_to_schedule,
+    render_schedule_section,
+)
 
 MAX_GROUPS = 8
 
 @st.fragment
 def render_calc():
+    apply_restore(CT_SCHEDULE_SPEC)
+
     inputs_pane, result_pane = st.columns([1.45,1], gap="large")
     
     with inputs_pane, st.container(border=True):

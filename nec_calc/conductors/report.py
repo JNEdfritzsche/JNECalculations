@@ -125,6 +125,7 @@ COND_SCHEDULE_SPEC = ReportSpec(
     report_title="Conductors — Calculation Results",
     sheet_name="Conductors Schedule",
     tag="Tag / ID",
+    input_prefixes=("nec_cond_",),
     cols=[
         Column("Size", lambda r: get_first(r, "selected_size_display", default="—"), color="blue"),
         Column("Material", _material, group="conductor"),

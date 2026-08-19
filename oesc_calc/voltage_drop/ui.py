@@ -1,6 +1,7 @@
 import streamlit as st
 
 from calc_common.formatting import fmt
+from calc_common.report_schedule import apply_restore
 from calc_common.ui_helpers import eq
 
 from oesc_calc.voltage_drop.calculation import (
@@ -14,11 +15,19 @@ from oesc_calc.voltage_drop.calculation import (
     calc_voltage_drop,
     conductor_sizes,
 )
-from oesc_calc.voltage_drop.report import render_add_to_schedule, render_schedule_section
+from oesc_calc.voltage_drop.report import (
+    VD_SCHEDULE_SPEC,
+    render_add_to_schedule,
+    render_schedule_section,
+)
+
+K_MODES = ("Lookup k-value from Table D3 (recommended)", "Manual k-value (enter value)")
 
 
 @st.fragment
 def render_calc():
+    apply_restore(VD_SCHEDULE_SPEC)
+
     inputs_pane, result_pane = st.columns([1.45, 1], gap="large")
 
     with inputs_pane, st.container(border=True):
@@ -26,7 +35,7 @@ def render_calc():
 
         k_mode = st.radio(
             "k-value input mode",
-            ("Lookup k-value from Table D3 (recommended)", "Manual k-value (enter value)"),
+            K_MODES,
             index=0,
             key="oesc_voltage_drop_k_mode",
         )

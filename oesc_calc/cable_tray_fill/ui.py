@@ -1,6 +1,7 @@
 import streamlit as st
 
 from calc_common.formatting import fmt
+from calc_common.report_schedule import apply_restore
 from calc_common.ui_helpers import eq
 
 from oesc_calc.cable_tray_fill.calculation import (
@@ -11,7 +12,11 @@ from oesc_calc.cable_tray_fill.calculation import (
     calc_cable_tray_fill,
     to_mm,
 )
-from oesc_calc.cable_tray_fill.report import render_add_to_schedule, render_schedule_section
+from oesc_calc.cable_tray_fill.report import (
+    CT_SCHEDULE_SPEC,
+    render_add_to_schedule,
+    render_schedule_section,
+)
 
 ROWS_KEY = "oesc_cable_tray_fill_rows"
 
@@ -65,6 +70,8 @@ def _render_row(row: dict, index: int, area_unit: str, conversion: float) -> dic
 
 @st.fragment
 def render_calc():
+    apply_restore(CT_SCHEDULE_SPEC)
+
     inputs_pane, result_pane = st.columns([1.45, 1], gap="large")
 
     with inputs_pane, st.container(border=True):

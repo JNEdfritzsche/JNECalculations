@@ -241,6 +241,7 @@ MP_SCHEDULE_SPEC = ReportSpec(
     report_title="Motor Protection — Calculation Results",
     sheet_name="Motor Protection Schedule",
     tag="Tag / ID",
+    input_prefixes=("mp_",),
     cols=[
         Column("System", lambda r: get_first(r, "phase_label", default="—")),
         Column("Motor", _hp),

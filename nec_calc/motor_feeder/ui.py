@@ -3,6 +3,7 @@ from fractions import Fraction
 import streamlit as st
 
 from lib.nec_tables import TABLES
+from calc_common.report_schedule import apply_restore
 from calc_common.enums import ConductorMaterial, ServiceFactors, SystemTypes
 from calc_common.formatting import fmt, format_cond_size
 from calc_common.table_helpers import get_row_headers
@@ -13,7 +14,11 @@ from nec_calc.motor_feeder.calculation import (
     get_appropriate_table,
     get_valid_voltages,
 )
-from nec_calc.motor_feeder.report import render_add_to_schedule, render_schedule_section
+from nec_calc.motor_feeder.report import (
+    MF_SCHEDULE_SPEC,
+    render_add_to_schedule,
+    render_schedule_section,
+)
 
 TEMP_RATINGS = {"60 °C": 60, "75 °C": 75, "90 °C": 90}
 
@@ -26,8 +31,8 @@ MULT_OPTIONS = {
 
 def overload_sizing():
     if "np_fla" in st.session_state:
-        st.session_state["np_fla"] = None
-        st.session_state["sf"] = None
+        st.session_state["mf_np_fla"] = None
+        st.session_state["mf_sf"] = None
 
 def get_hp_list(phase):
     rows = TABLES.get(get_appropriate_table(phase)).get("rows")
@@ -39,20 +44,22 @@ def get_hp_list(phase):
     
         
 def phase_change():
-    st.session_state["hp_list"] = get_hp_list(st.session_state.get("phase").key)
+    st.session_state["mf_hp_list"] = get_hp_list(st.session_state.get("mf_phase").key)
     
-    if st.session_state.get("phase") == SystemTypes.DC.key:
-        st.session_state["v_idx"] = 2   # change these indexes to set default values
-        st.session_state["hp_idx"] = 2  # change these indexes to set default values
-    elif st.session_state.get("phase") == SystemTypes.SINGLE_PHASE:
-        st.session_state["v_idx"] = 2   # change these indexes to set default values
-        st.session_state["hp_idx"] = 2  # change these indexes to set default values
-    elif st.session_state.get("phase") == SystemTypes.THREE_PHASE:
-        st.session_state["v_idx"] = 4 #sets default voltage to 460 V
-        st.session_state["hp_idx"] = 11 # sets default hp to 25
+    if st.session_state.get("mf_phase") == SystemTypes.DC.key:
+        st.session_state["mf_v_idx"] = 2   # change these indexes to set default values
+        st.session_state["mf_hp_idx"] = 2  # change these indexes to set default values
+    elif st.session_state.get("mf_phase") == SystemTypes.SINGLE_PHASE:
+        st.session_state["mf_v_idx"] = 2   # change these indexes to set default values
+        st.session_state["mf_hp_idx"] = 2  # change these indexes to set default values
+    elif st.session_state.get("mf_phase") == SystemTypes.THREE_PHASE:
+        st.session_state["mf_v_idx"] = 4 #sets default voltage to 460 V
+        st.session_state["mf_hp_idx"] = 11 # sets default hp to 25
     
 @st.fragment
 def render_calc():
+    apply_restore(MF_SCHEDULE_SPEC)
+
     inputs_pane, result_pane = st.columns([1.45,1], gap="large")
         
     with inputs_pane, st.container(border=True,):
@@ -60,32 +67,32 @@ def render_calc():
         st.markdown("### Inputs")
         
         if "v_idx" not in st.session_state:
-            st.session_state["v_idx"] = 4
+            st.session_state["mf_v_idx"] = 4
         if "hp_idx" not in st.session_state:
-            st.session_state["hp_idx"] = 11
+            st.session_state["mf_hp_idx"] = 11
         if "phase" not in st.session_state:
-            st.session_state["phase"] = SystemTypes.THREE_PHASE
+            st.session_state["mf_phase"] = SystemTypes.THREE_PHASE
 
-        hp_list = get_hp_list(st.session_state["phase"].key)
+        hp_list = get_hp_list(st.session_state["mf_phase"].key)
 
         c1, c2= st.columns(2)
-        phase = enum_selectbox(c1, "Phase", SystemTypes, index=2, on_change=phase_change, key="phase")
-        hp = enum_selectbox(c2, "Horsepower (HP)", options=hp_list, format_func=lambda m: hp_list.get(m), index=st.session_state["hp_idx"])
+        phase = enum_selectbox(c1, "Phase", SystemTypes, index=2, on_change=phase_change, key="mf_phase")
+        hp = enum_selectbox(c2, "Horsepower (HP)", options=hp_list, format_func=lambda m: hp_list.get(m), index=st.session_state["mf_hp_idx"], key="mf_hp")
 
         m_type = None  # Feeder conductor sizing uses the induction full-load currents.
 
         voltages = get_valid_voltages(phase.key, hp_list.get(hp), m_type)
-        v_idx = min(st.session_state["v_idx"], len(voltages) - 1) if voltages else 0
-        v = c2.selectbox("Voltage (V)", options=voltages, index=v_idx) if voltages else None
+        v_idx = min(st.session_state["mf_v_idx"], len(voltages) - 1) if voltages else 0
+        v = c2.selectbox("Voltage (V)", options=voltages, index=v_idx, key="mf_voltage") if voltages else None
 
-        mult = enum_selectbox(c1, "Sizing multiplier (NEC 430.22 / 430.22(E))", MULT_OPTIONS)
+        mult = enum_selectbox(c1, "Sizing multiplier (NEC 430.22 / 430.22(E))", MULT_OPTIONS, key="mf_mult")
 
-        material = enum_selectbox(c1, "Conductor material", ConductorMaterial.exclude(ConductorMaterial.NA), index=1)
-        temp_label = enum_selectbox(c2, "Insulation temp rating (Table 310.16)", TEMP_RATINGS, index=1)
+        material = enum_selectbox(c1, "Conductor material", ConductorMaterial.exclude(ConductorMaterial.NA), index=1, key="mf_material")
+        temp_label = enum_selectbox(c2, "Insulation temp rating (Table 310.16)", TEMP_RATINGS, index=1, key="mf_temp")
 
-        with c1.expander("Optional (Overload Sizing)", on_change=overload_sizing, key="overload_sizing_expander"):
-            np_fla = st.number_input("Nameplate FLA (A)", min_value=0.1, value=None, step=0.1, placeholder=27.5, key="np_fla")
-            sf = enum_selectbox(st, "Service Factor", ServiceFactors, key="sf")
+        with c1.expander("Optional (Overload Sizing)", on_change=overload_sizing, key="mf_overload_expander"):
+            np_fla = st.number_input("Nameplate FLA (A)", min_value=0.1, value=None, step=0.1, placeholder=27.5, key="mf_np_fla")
+            sf = enum_selectbox(st, "Service Factor", ServiceFactors, key="mf_sf")
 
         if v is None:
             st.warning("NEC Tables 430.247–430.250 list no full-load current for this HP / motor type. Enter a nameplate FLA or choose a different motor.")

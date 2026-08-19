@@ -234,6 +234,7 @@ VD_SCHEDULE_SPEC = ReportSpec(
     report_title="Voltage Drop — Calculation Results",
     sheet_name="Voltage Drop Schedule",
     tag="Tag / ID",
+    input_prefixes=("vd_",),
     cols=[
         Column("System", lambda r: get_first(r, "system_type_label", default="—")),
         Column("Method", _method),
