@@ -5,6 +5,10 @@ from lib import nec_tables
 from calc_common.table_helpers import get_table_row
 
 
+# 310.10(H)(1) permits paralleling only at 1/0 AWG and larger
+PARALLEL_MIN_SIZE = "1/0"
+
+
 def format_conductor_size_display(size: str | None) -> str:
     if not size:
         return "—"
@@ -185,6 +189,8 @@ def calc_min_conductor_size(
 ) -> str | None:
     sizes = nec_tables.get_standard_conductor_sizes_unitless(nec_tables.TABLE_310_16) or []
     n_par = max(1, int(n_parallel))
+    if n_par > 1 and PARALLEL_MIN_SIZE in sizes:
+        sizes = sizes[sizes.index(PARALLEL_MIN_SIZE):]
     for size in sizes:
         res = calc_single_conductor(
             conductor_size=size,
@@ -203,19 +209,40 @@ def calc_min_conductor_size(
 
 
 def calc_conductors(
-    conductor_size: str,
-    material: str,
-    temp_rating: str,
-    ambient_base: str,
-    ambient_temp_c: str,
-    number_of_conductors: str,
+    conductor_size: str | None = None,
+    material: str = "cu",
+    temp_rating: str = "75",
+    ambient_base: str = "30c",
+    ambient_temp_c: str = "26-30",
+    number_of_conductors: str = "1-3",
     terminal_temp_rating: str | None = None,
     load_current: float | None = None,
     n_parallel: int = 1,
     wire_type: str | None = None,
     temp_unit: str = "C",
+    auto_size: bool = False,
     **kwargs: Any,
 ) -> dict[str, Any]:
+    n_par = max(1, int(n_parallel))
+
+    sweep = dict(
+        material=material,
+        temp_rating=temp_rating,
+        ambient_base=ambient_base,
+        ambient_temp_c=ambient_temp_c,
+        number_of_conductors=number_of_conductors,
+        terminal_temp_rating=terminal_temp_rating,
+        n_parallel=n_par,
+    )
+
+    # auto_size derives the size from the load, so the sweep replaces the caller's size
+    min_rec = None
+    if auto_size:
+        min_rec = calc_min_conductor_size(load_current=load_current or 0.0, **sweep)
+        conductor_size = min_rec
+    elif load_current is not None and load_current > 0:
+        min_rec = calc_min_conductor_size(load_current=load_current, **sweep)
+
     inputs = {
         "conductor_size": conductor_size,
         "material": material,
@@ -225,9 +252,10 @@ def calc_conductors(
         "number_of_conductors": number_of_conductors,
         "terminal_temp_rating": terminal_temp_rating,
         "load_current": load_current,
-        "n_parallel": max(1, int(n_parallel)),
+        "n_parallel": n_par,
         "wire_type": wire_type or "Not specified",
         "temp_unit": temp_unit,
+        "auto_size": auto_size,
     }
 
     #calculate for the user's selected conductor size across N parallel runs
@@ -240,23 +268,8 @@ def calc_conductors(
         number_of_conductors=number_of_conductors,
         terminal_temp_rating=terminal_temp_rating,
         load_current=load_current,
-        n_parallel=inputs["n_parallel"],
+        n_parallel=n_par,
     )
-
-    # f load current is specified, also find what the minimum recommended wire size is
-    if load_current is not None and load_current > 0:
-        min_rec = calc_min_conductor_size(
-            material=material,
-            temp_rating=temp_rating,
-            ambient_base=ambient_base,
-            ambient_temp_c=ambient_temp_c,
-            number_of_conductors=number_of_conductors,
-            terminal_temp_rating=terminal_temp_rating,
-            load_current=load_current,
-            n_parallel=inputs["n_parallel"],
-        )
-        calc["min_recommended_size"] = min_rec
-    else:
-        calc["min_recommended_size"] = None
+    calc["min_recommended_size"] = min_rec
 
     return _build_calc_result(calc=calc, **inputs)

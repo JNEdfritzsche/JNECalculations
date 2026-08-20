@@ -3,7 +3,7 @@ import streamlit as st
 from calc_common.formatting import fmt
 from calc_common.report_schedule import apply_restore
 from calc_common.ui_helpers import eq
-from nec_calc.conductors.calculation import calc_conductors
+from nec_calc.conductors.calculation import PARALLEL_MIN_SIZE, calc_conductors
 from lib.nec_tables import (
     TABLE_310_15_B_1_1,
     TABLE_310_15_B_1_2,
@@ -43,6 +43,16 @@ WIRE_TYPE_TO_RATING = {
     "XHHW (75°C)": "75",
     "TW / UF (60°C)": "60",
     "Custom / Other": None,
+}
+
+
+MODE_SIZE = "size"
+MODE_VERIFY = "verify"
+MODES = (MODE_SIZE, MODE_VERIFY)
+
+MODE_LABELS = {
+    MODE_SIZE: "Size from load current",
+    MODE_VERIFY: "Verify a chosen size",
 }
 
 
@@ -106,6 +116,17 @@ def render_calc():
     inputs_pane, result_pane = st.columns([1.45,1], gap="large")
     
     with inputs_pane, st.container(border=True,):
+        st.markdown("### Workflow")
+        mode = st.radio(
+            "Workflow",
+            options=MODES,
+            format_func=lambda m: MODE_LABELS[m],
+            horizontal=True,
+            label_visibility="collapsed",
+            key="nec_cond_mode",
+        )
+        sizing_mode = mode == MODE_SIZE
+
         st.markdown("### Display Settings")
         temp_unit = st.radio(
             "Temperature display unit",
@@ -119,19 +140,40 @@ def render_calc():
         wire_type = st.session_state.get("nec_cond_wire_type", WIRE_TYPE_OPTIONS[0]) if check_wire_type else None
         forced_rating = WIRE_TYPE_TO_RATING.get(wire_type) if check_wire_type else None
 
+        check_load = st.session_state.get("nec_cond_check_load", False)
+        check_parallel = st.session_state.get("nec_cond_check_parallel", False)
+        n_parallel = st.session_state.get("nec_cond_n_parallel", 1) if check_parallel else 1
+
         st.markdown("### Inputs")
 
         c1, c2 = st.columns(2, gap="large")
         with c1:
             std_size_dict = get_standard_conductor_sizes(TABLE_310_16) or {}
             std_size_labels = list(std_size_dict.keys())
-            conductor_size_label = st.selectbox(
-                "Conductor size",
-                options=std_size_labels,
-                index=2 if len(std_size_labels) > 2 else 0, # Default 12 AWG
-                key="nec_cond_conductor_size_label",
-            )
-            conductor_size = std_size_dict.get(conductor_size_label, "12")
+
+            if sizing_mode:
+                load_current_val = st.number_input(
+                    "Design load current (A)",
+                    min_value=0.0,
+                    value=100.0,
+                    step=1.0,
+                    key="nec_cond_load_current",
+                )
+                conductor_size = None
+            else:
+                if "nec_cond_conductor_size_label" not in st.session_state and std_size_labels:
+                    st.session_state["nec_cond_conductor_size_label"] = std_size_labels[
+                        2 if len(std_size_labels) > 2 else 0
+                    ] # Default 12 AWG
+                conductor_size_label = st.selectbox(
+                    "Conductor size",
+                    options=std_size_labels,
+                    key="nec_cond_conductor_size_label",
+                )
+                conductor_size = std_size_dict.get(conductor_size_label, "12")
+                load_current_val = (
+                    st.session_state.get("nec_cond_load_current", 100.0) if check_load else None
+                )
 
             material = st.selectbox(
                 "Conductor material",
@@ -219,12 +261,6 @@ def render_calc():
                 key="nec_cond_number_of_conductors",
             )
 
-        check_load = st.session_state.get("nec_cond_check_load", False)
-        check_parallel = st.session_state.get("nec_cond_check_parallel", False)
-
-        n_parallel = st.session_state.get("nec_cond_n_parallel", 1) if check_parallel else 1
-        load_current_val = st.session_state.get("nec_cond_load_current", 100.0) if check_load else None
-
         # Perform core calculation immediately
         result = calc_conductors(
             conductor_size=conductor_size,
@@ -238,27 +274,26 @@ def render_calc():
             n_parallel=n_parallel,
             wire_type=wire_type,
             temp_unit=temp_unit,
+            auto_size=sizing_mode,
         )
         
         st.divider()
         
         st.markdown("### Optional Add-ons")
                     
-        opt_col1, opt_col2, opt_col3 = st.columns(3)
+        opt_col1, opt_col2 = st.columns(2)
         with opt_col1:
-            st.checkbox("Check against design load & auto-size", key="nec_cond_check_load")
-        with opt_col2:
             st.checkbox("Multiple parallel runs per phase", key="nec_cond_check_parallel")
-        with opt_col3:
+        with opt_col2:
             st.checkbox("Specify wire / cable insulation type", key="nec_cond_check_wire_type")
 
 
-        if check_load or check_parallel or check_wire_type:
+        if (check_load and not sizing_mode) or check_parallel or check_wire_type:
             st.write("") # Spacer
             add_col1, add_col2, add_col3 = st.columns(3, gap="large")
             
             with add_col1:
-                if check_load:
+                if check_load and not sizing_mode:
                     st.markdown("#### Design Load Sizing")
                     st.number_input(
                         "Design load current (A)",
@@ -312,7 +347,31 @@ def render_calc():
         
 
     with result_pane, st.container(border=True):
-        st.markdown("### Allowable Ampacity Results")
+        if sizing_mode:
+            st.markdown("### Conductor Selection Results")
+
+            if not load_current_val:
+                st.info("Enter a design load current to size a conductor.")
+            else:
+                st.markdown(f"## **{result.get('selected_size_display')}**")
+                if result.get("is_adequate"):
+                    st.caption(
+                        f"Smallest Table 310.16 size carrying {fmt(load_current_val, 'A')} "
+                        f"at the {rating_choice} column."
+                    )
+                    if n_parallel > 1:
+                        st.caption(
+                            f"Sizes below {PARALLEL_MIN_SIZE} AWG are excluded — "
+                            "NEC 310.10(H)(1) is the floor for conductors in parallel."
+                        )
+                else:
+                    st.error(
+                        "**Largest size in Table 310.16 is still short of this load.** "
+                        "Add parallel runs, or raise the insulation / terminal rating."
+                    )
+            st.divider()
+        else:
+            st.markdown("### Allowable Ampacity Results")
 
         m1, m2 = st.columns(2)
         
@@ -334,7 +393,7 @@ def render_calc():
             st.write(f"- selected conductor size: **{result.get('selected_size_display', conductor_size)}**")
             if check_wire_type and wire_type:
                 st.write(f"- wire / cable insulation type: **{wire_type}**")
-            if check_load and load_current_val is not None:
+            if not sizing_mode and load_current_val is not None:
                 st.write(f"- minimum required conductor size: **{result.get('min_recommended_size_display', '—')}**")
             st.write(f"- conductor insulation temperature rating: **{rating_choice}**")
             st.write(f"- equipment terminal temperature limit: **{terminal_choice if terminal_choice else 'None'}**")

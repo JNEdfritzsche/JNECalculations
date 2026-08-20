@@ -52,6 +52,10 @@ def _terminal(result: dict[str, Any]) -> str:
     return "—"
 
 
+def _method(result: dict[str, Any]) -> str:
+    return "Sized from load" if get_first(result, "auto_size") else "Verified"
+
+
 def _yes_no(val) -> str:
     if val is None:
         return "—"
@@ -128,6 +132,7 @@ COND_SCHEDULE_SPEC = ReportSpec(
     input_prefixes=("nec_cond_",),
     cols=[
         Column("Size", lambda r: get_first(r, "selected_size_display", default="—"), color="blue"),
+        Column("Method", _method),
         Column("Material", _material, group="conductor"),
         Column("Insulation Type", _wire_type, group="conductor"),
         Column("Rating", _rating, group="conductor"),
