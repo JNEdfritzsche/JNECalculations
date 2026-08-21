@@ -696,6 +696,7 @@ else:
 # ============================
 if page == "Home":
     header("Welcome", "Start here for quick context and how to use this hub.")
+    st.warning(":warning: All calculations in this hub are valid for systems rated 5000V or less.")
     show_code_note(code_mode)
 
     st.markdown("### What you can do")

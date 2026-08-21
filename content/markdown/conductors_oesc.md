@@ -90,8 +90,8 @@ Rule 26-208 — Conductor Size for Capacitors
 
 ### Related OESC Tables
 
-Table 1/2 — Single Conductor ampacities for Copper/Aluminum<br/>
-Table 3/4 — Multi-Conductor ampacities for Copper/Aluminum<br/>
+Table 1/3 — Single Conductor ampacities for Copper/Aluminum<br/>
+Table 2/4 — Multi-Conductor ampacities for Copper/Aluminum<br/>
 Table 5A — Conductor Ambient Temperature Correction Factors<br/>
 Table 5B — Single Conductor Spacing Correction Factors<br/>
 Table 5C — Multi-Conductor Group Correction Factors<br/>
